@@ -1,5 +1,5 @@
 // Конфигурация теста
-const TEST_CONFIG = {
+window.TEST_CONFIG = {
     title: "Тестовый контрольная работа Trew",
     totalQuestions: 21,
     totalProblems: 3,
