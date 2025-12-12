@@ -326,10 +326,10 @@
                 </div>
                 
                 <input type="text" class="test-input" id="testName" 
-                       placeholder="Если пусто - КуМир">
+                       placeholder="Например: electricity">
                 
                 <button class="open-button" onclick="openTest()">
-                    <i class="fas fa-external-link-alt"></i> Открыть
+                    <i class="fas fa-external-link-alt"></i> Открыть тест
                 </button>
                 
                 <div class="kumir-note">
@@ -356,14 +356,11 @@
                 return;
             }
             
-            // Убираем расширение .html если пользователь его ввел
-            testName = testName.replace(/\.html$/i, '');
+            // Убираем расширение .js если пользователь его ввел
+            testName = testName.replace(/\.js$/i, '');
             
-            // Формируем путь к универсальному тесту с загрузкой данных из JS
-            const testPath = `test.html?test=${testName.toLowerCase()}`;
-            
-            // Открываем тест в той же вкладке
-            window.location.href = testPath;
+            // Открываем универсальную страницу теста с параметром
+            window.location.href = `test.html?test=${testName.toLowerCase()}`;
         }
         
         // Обработка нажатия Enter
@@ -435,4 +432,4 @@
     <!-- Font Awesome для иконок -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 </body>
-</html>
+            </html>
