@@ -84,56 +84,24 @@
     const urlParams = new URLSearchParams(window.location.search);
     const testName = urlParams.get('test');
     
-    console.log('Пытаемся загрузить тест:', testName);
-    
     if (!testName) {
-      // Если нет параметра, показываем ошибку
+      // Если нет параметра, загружаем дефолтный тест
       document.getElementById('test-title').textContent = 'Тест не найден';
       document.title = 'Ошибка: тест не найден';
-      console.error('Ошибка: параметр test не указан в URL');
     } else {
       // Динамически загружаем файл теста из папки test/
       const script = document.createElement('script');
       script.src = `test/${testName}.js`;
-      
       script.onload = function() {
-        console.log('Тест загружен успешно:', testName);
         // После загрузки теста, загружаем основной скрипт
         const mainScript = document.createElement('script');
         mainScript.src = 'script.js';
-        
-        mainScript.onload = function() {
-          console.log('Основной скрипт загружен');
-        };
-        
-        mainScript.onerror = function() {
-          console.error('Ошибка загрузки основного скрипта');
-        };
-        
         document.head.appendChild(mainScript);
       };
-      
       script.onerror = function() {
-        console.error('Ошибка загрузки теста:', testName);
         document.getElementById('test-title').textContent = 'Тест не найден';
         document.title = 'Ошибка: тест не найден';
-        
-        // Показать сообщение пользователю
-        const studentInfoSection = document.getElementById('student-info-section');
-        if (studentInfoSection) {
-          studentInfoSection.innerHTML = `
-            <div class="section-title">Ошибка</div>
-            <div style="color: #ff4757; text-align: center; padding: 20px;">
-              <p>Тест "${testName}" не найден!</p>
-              <p>Проверьте правильность кода теста.</p>
-              <button onclick="window.location.href='index.html'" style="margin-top: 20px;">
-                Вернуться на главную
-              </button>
-            </div>
-          `;
-        }
       };
-      
       document.head.appendChild(script);
     }
   </script>
