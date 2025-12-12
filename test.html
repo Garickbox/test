@@ -3,17 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Загрузка теста...</title>
+  <title>Тестирование - Высоковская школа 25</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
   <div class="container">
     <div class="telegram-header">
-      <h1 id="test-title">Загрузка теста...</h1>
+      <h1>Загрузка теста...</h1>
     </div>
 
     <div class="section" id="student-info-section">
-      <div class="section-title">Информация об ученике</div>
+      <div class="section-title">
+        <i class="fas fa-user-circle"></i> Информация об ученике
+      </div>
       <div class="student-info">
         <div>
           <label for="student-name">Имя:</label>
@@ -31,7 +34,9 @@
           </select>
         </div>
       </div>
-      <button class="start-test-btn" id="start-test-btn">Начать контрольную</button>
+      <button class="start-test-btn" id="start-test-btn">
+        <i class="fas fa-play-circle"></i> Начать контрольную
+      </button>
     </div>
 
     <div id="test-content" style="display: none;">
@@ -39,7 +44,7 @@
         <div class="progress-container">
           <div class="progress-bar" id="progress-bar"></div>
         </div>
-        <div class="progress-text" id="progress-text">Вопрос 0 из 24</div>
+        <div class="progress-text" id="progress-text">Вопрос 0 из 0</div>
       </div>
 
       <div class="section">
@@ -47,22 +52,18 @@
           <div class="question-type" id="question-type"></div>
           <div class="question-text" id="question-text"></div>
           <div class="options-container" id="options-container"></div>
-          <button id="confirm-btn" disabled>Подтвердить ответ</button>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="button-container">
-          <button id="reset-btn">Сбросить тест</button>
+          <button id="confirm-btn" disabled>
+            <i class="fas fa-check-circle"></i> Подтвердить ответ
+          </button>
         </div>
       </div>
 
       <div id="results" style="display: none;">
-        <h2>Результаты контрольной работы</h2>
-        <div class="score-display">Набрано баллов: <span id="score-value">0</span> из 30</div>
+        <h2><i class="fas fa-chart-bar"></i> Результаты контрольной работы</h2>
+        <div class="score-display">Набрано баллов: <span id="score-value">0</span> из <span id="max-score">0</span></div>
         <div class="points-breakdown" id="points-breakdown"></div>
         <div class="grade-display">Оценка: <span id="grade-value">—</span></div>
-        <div id="telegram-status"></div>
+        <div id="telegram-status" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px;"></div>
       </div>
     </div>
   </div>
@@ -70,40 +71,89 @@
   <!-- Полноэкранный результат -->
   <div id="fullscreen-result">
     <div class="fullscreen-content">
-      <h2>Ваш результат</h2>
+      <h2><i class="fas fa-trophy"></i> Ваш результат</h2>
       <div class="fullscreen-grade" id="fullscreen-grade">5</div>
-      <p style="margin: 15px 0; color: #666;">Набрано баллов: <span id="fullscreen-score">0</span> из 30</p>
+      <p style="margin: 15px 0; color: #666;">Набрано баллов: <span id="fullscreen-score">0</span> из <span id="fullscreen-max-score">0</span></p>
       <div id="fullscreen-breakdown" style="margin: 15px 0; color: #555; font-size: 14px;"></div>
-      <button class="fullscreen-btn" id="finish-btn">Завершить</button>
+      <button class="fullscreen-btn" id="finish-btn">
+        <i class="fas fa-check"></i> Завершить
+      </button>
     </div>
   </div>
 
-  <!-- Сначала загружаем тестовые данные, потом основной скрипт -->
+  <!-- Античит система -->
+  <div class="blocker-overlay" id="blockerOverlay"></div>
+  <div class="anticheat-modal" id="anticheatModal">
+    <div class="anticheat-title">🚨 АНТИЖУЛЬНИЧАТЕЛЬНЫЙ РЕЖИМ 🚨</div>
+    <div class="anticheat-message" id="cheatMessage"></div>
+    <div class="anticheat-timer" id="countdownTimer">03:00</div>
+    <div class="password-input-container">
+      <div class="password-label">Введите пароль для продолжения:</div>
+      <input type="text" class="password-input" id="passwordInput" 
+             maxlength="4" inputmode="numeric" placeholder="0000">
+    </div>
+    <button class="continue-btn" id="continueBtn" disabled>Продолжить тест</button>
+  </div>
+
+  <!-- Скрипт загрузки теста -->
   <script>
     // Получаем имя теста из URL
     const urlParams = new URLSearchParams(window.location.search);
     const testName = urlParams.get('test');
     
+    // Если тест не указан, показываем ошибку
     if (!testName) {
-      // Если нет параметра, загружаем дефолтный тест
-      document.getElementById('test-title').textContent = 'Тест не найден';
-      document.title = 'Ошибка: тест не найден';
+      document.querySelector('.telegram-header h1').textContent = 'Ошибка: тест не указан';
+      document.getElementById('student-info-section').innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+          <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #f44336;"></i>
+          <h3 style="color: #f44336; margin: 20px 0;">Тест не найден</h3>
+          <p>Вернитесь на главную страницу и введите правильный код теста.</p>
+          <button onclick="window.location.href='../index.html'" 
+                  style="background: #4b6cb7; color: white; border: none; padding: 12px 24px; 
+                         border-radius: 8px; margin-top: 20px; cursor: pointer;">
+            <i class="fas fa-arrow-left"></i> Вернуться на главную
+          </button>
+        </div>
+      `;
     } else {
-      // Динамически загружаем файл теста из папки test/
+      // Загружаем файл теста
       const script = document.createElement('script');
       script.src = `test/${testName}.js`;
       script.onload = function() {
-        // После загрузки теста, загружаем основной скрипт
-        const mainScript = document.createElement('script');
-        mainScript.src = 'script.js';
-        document.head.appendChild(mainScript);
+        console.log(`✅ Тест "${testName}" загружен успешно`);
+        // Устанавливаем заголовок
+        document.querySelector('.telegram-header h1').textContent = window.TEST_CONFIG.title;
+        // Устанавливаем максимальный балл
+        document.getElementById('max-score').textContent = window.TEST_CONFIG.maxScore;
+        document.getElementById('fullscreen-max-score').textContent = window.TEST_CONFIG.maxScore;
+        // Инициализируем тест
+        if (window.initTest) {
+          window.initTest();
+        }
       };
       script.onerror = function() {
-        document.getElementById('test-title').textContent = 'Тест не найден';
-        document.title = 'Ошибка: тест не найден';
+        console.error(`❌ Ошибка загрузки теста "${testName}"`);
+        document.querySelector('.telegram-header h1').textContent = 'Ошибка загрузки теста';
+        document.getElementById('student-info-section').innerHTML = `
+          <div style="text-align: center; padding: 40px;">
+            <i class="fas fa-times-circle" style="font-size: 48px; color: #f44336;"></i>
+            <h3 style="color: #f44336; margin: 20px 0;">Тест не найден</h3>
+            <p>Файл теста <strong>${testName}.js</strong> не найден в папке test/</p>
+            <p>Проверьте правильность кода теста.</p>
+            <button onclick="window.location.href='../index.html'" 
+                    style="background: #4b6cb7; color: white; border: none; padding: 12px 24px; 
+                           border-radius: 8px; margin-top: 20px; cursor: pointer;">
+              <i class="fas fa-arrow-left"></i> Вернуться на главную
+            </button>
+          </div>
+        `;
       };
       document.head.appendChild(script);
     }
   </script>
+
+  <!-- Основной скрипт -->
+  <script src="script.js"></script>
 </body>
 </html>

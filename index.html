@@ -182,11 +182,14 @@
             font-size: 16px;
             margin-bottom: 15px;
             transition: border-color 0.3s;
+            text-align: center;
+            letter-spacing: 1px;
         }
         
         .test-input:focus {
             outline: none;
             border-color: #4b6cb7;
+            box-shadow: 0 0 0 2px rgba(75, 108, 183, 0.2);
         }
         
         /* 3D Градиентная кнопка */
@@ -259,15 +262,68 @@
             100% { background-position: 0% 50%; }
         }
         
+        .available-tests {
+            margin-top: 20px;
+            background: #e8f4ff;
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid #4b6cb7;
+        }
+        
+        .tests-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #4b6cb7;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .test-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .test-badge {
+            background: white;
+            border: 2px solid #4b6cb7;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 14px;
+            color: #4b6cb7;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .test-badge:hover {
+            background: #4b6cb7;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
         .kumir-note {
             margin-top: 15px;
             font-size: 14px;
             color: #666;
             text-align: center;
             padding: 10px;
-            background: #e8f4ff;
+            background: #f0f7ff;
             border-radius: 8px;
             border-left: 4px solid #4b6cb7;
+        }
+        
+        .debug-info {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+            border: 1px dashed #ddd;
         }
         
         @media (max-width: 480px) {
@@ -290,6 +346,11 @@
             .welcome-title {
                 font-size: 24px;
             }
+            
+            .test-input {
+                padding: 12px;
+                font-size: 16px;
+            }
         }
     </style>
 </head>
@@ -302,14 +363,14 @@
         <div class="header">
             <!-- Фигуры в шапке -->
             <div class="floating-elements">
-                <div class="float-item"><i class="fas fa-snowflake"></i></div>
-                <div class="float-item"><i class="fas fa-star"></i></div>
-                <div class="float-item"><i class="fas fa-circle"></i></div>
-                <div class="float-item"><i class="fas fa-gem"></i></div>
+                <div class="float-item">❄️</div>
+                <div class="float-item">⭐</div>
+                <div class="float-item">⚡</div>
+                <div class="float-item">🔬</div>
             </div>
             
             <div class="school-name">ВЫСОКОВСКАЯ ШКОЛА №25</div>
-            <div class="school-subtitle">Платформа для тестирования учеников</div>
+            <div class="school-subtitle">Модульная система онлайн-тестирования</div>
         </div>
         
         <!-- Контент -->
@@ -317,50 +378,205 @@
             <!-- Приветствие -->
             <div class="welcome-section">
                 <div class="welcome-title">Добро пожаловать!</div>
+                <p style="color: #666; margin-top: 10px;">Введите код теста для начала работы</p>
             </div>
             
             <!-- Форма теста -->
             <div class="test-section">
                 <div class="test-title">
-                    <i class="fas fa-rocket"></i> Введите код:
+                    <span>📝</span> Введите код теста:
                 </div>
                 
                 <input type="text" class="test-input" id="testName" 
-                       placeholder="Например: electricity">
+                       placeholder="Например: electricity"
+                       autocomplete="off">
                 
                 <button class="open-button" onclick="openTest()">
-                    <i class="fas fa-external-link-alt"></i> Открыть тест
+                    <span>🚀</span> Начать тестирование
                 </button>
                 
+                <!-- Список доступных тестов -->
+                <div class="available-tests">
+                    <div class="tests-title">
+                        <span>📚</span> Доступные тесты:
+                    </div>
+                    <div class="test-list" id="testList">
+                        <!-- Тесты будут загружены динамически -->
+                        <div class="test-badge" onclick="loadTest('trew')">Демо (trew)</div>
+                        <div class="test-badge" onclick="loadTest('electricity')">Электричество</div>
+                    </div>
+                </div>
+                
                 <div class="kumir-note">
-                    <i class="fas fa-info-circle"></i> 
-                    Код для прохождения теста будет сообщен учителем на уроке.
+                    <span>ℹ️</span> 
+                    <strong>Важно:</strong> Код для прохождения теста будет сообщен учителем на уроке.
+                    Для тестирования системы используйте демо-тест "trew".
+                </div>
+                
+                <div class="debug-info">
+                    Версия системы: 3.0.0 | Модульная архитектура | Античит система активна
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Список доступных тестов (можно расширять)
+        const availableTests = [
+            { code: 'trew', name: 'Демонстрационный тест' },
+            { code: 'electricity', name: 'Электричество' },
+            { code: 'physics', name: 'Физика' },
+            { code: 'math', name: 'Математика' },
+            { code: 'chemistry', name: 'Химия' },
+            { code: 'biology', name: 'Биология' },
+            { code: 'history', name: 'История' },
+            { code: 'literature', name: 'Литература' }
+        ];
+
+        // Функция для проверки существования теста
+        async function checkTestExists(testCode) {
+            try {
+                const response = await fetch(`test/${testCode}.js`, { method: 'HEAD' });
+                return response.ok;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        // Загрузка списка доступных тестов
+        async function loadAvailableTests() {
+            const testList = document.getElementById('testList');
+            testList.innerHTML = '';
+            
+            // Всегда добавляем демо-тест
+            const demoBadge = document.createElement('div');
+            demoBadge.className = 'test-badge';
+            demoBadge.textContent = 'Демо (trew)';
+            demoBadge.onclick = () => loadTest('trew');
+            testList.appendChild(demoBadge);
+            
+            // Проверяем другие тесты
+            for (const test of availableTests) {
+                if (test.code !== 'trew') {
+                    const exists = await checkTestExists(test.code);
+                    if (exists) {
+                        const badge = document.createElement('div');
+                        badge.className = 'test-badge';
+                        badge.textContent = test.name;
+                        badge.onclick = () => loadTest(test.code);
+                        testList.appendChild(badge);
+                    }
+                }
+            }
+        }
+
         // Автоматическое приведение к нижнему регистру и разрешение только букв и цифр
         document.getElementById('testName').addEventListener('input', function(e) {
             this.value = this.value.toLowerCase().replace(/[^a-z0-9]/g, '');
         });
 
+        // Функция загрузки теста (для клика по бейджу)
+        function loadTest(testCode) {
+            document.getElementById('testName').value = testCode;
+            openTest();
+        }
+
         // Функция открытия теста
-        function openTest() {
+        async function openTest() {
             let testName = document.getElementById('testName').value.trim();
             
-            // Если поле пустое - открываем КуМир
+            // Если поле пустое - открываем демо-тест
             if (!testName) {
-                window.location.href = 'kymir.html';
+                showNotification('Введите код теста или выберите из списка', 'warning');
+                document.getElementById('testName').focus();
                 return;
             }
             
             // Убираем расширение .js если пользователь его ввел
             testName = testName.replace(/\.js$/i, '');
             
-            // Открываем универсальную страницу теста с параметром
-            window.location.href = `test.html?test=${testName.toLowerCase()}`;
+            // Проверяем существование теста
+            const testExists = await checkTestExists(testName);
+            
+            if (!testExists) {
+                showNotification(`Тест "${testName}" не найден. Проверьте правильность кода.`, 'error');
+                
+                // Предлагаем демо-тест
+                if (confirm('Хотите открыть демонстрационный тест?')) {
+                    document.getElementById('testName').value = 'trew';
+                    setTimeout(() => openTest(), 100);
+                }
+                return;
+            }
+            
+            // Формируем путь к тесту (универсальная страница test.html)
+            const testPath = `test.html?test=${testName}`;
+            
+            // Показываем сообщение о загрузке
+            showNotification(`Загружаем тест "${testName}"...`, 'info');
+            
+            // Задержка для показа сообщения
+            setTimeout(() => {
+                // Открываем тест в новой вкладке
+                window.open(testPath, '_blank');
+            }, 500);
+        }
+        
+        // Функция показа уведомлений
+        function showNotification(message, type = 'info') {
+            // Удаляем предыдущее уведомление
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <span>${type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️'}</span>
+                ${message}
+            `;
+            
+            // Стили для уведомления
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'error' ? '#f44336' : type === 'warning' ? '#ff9800' : '#4CAF50'};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                animation: slideIn 0.3s ease-out;
+                max-width: 400px;
+                font-size: 14px;
+            `;
+            
+            // Анимация
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            document.body.appendChild(notification);
+            
+            // Автоматическое скрытие через 3 секунды
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
         }
         
         // Обработка нажатия Enter
@@ -374,6 +590,15 @@
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('testName').focus();
             createSnowflakes();
+            loadAvailableTests();
+            
+            // Проверяем, если есть параметр в URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const testParam = urlParams.get('test');
+            if (testParam) {
+                document.getElementById('testName').value = testParam;
+                setTimeout(() => openTest(), 500);
+            }
         });
         
         // Создание снежинок
@@ -427,9 +652,19 @@
                 snowflakesContainer.appendChild(snowflake);
             }
         }
+        
+        // Функция для отладки (можно вызвать из консоли)
+        window.debugSystem = function() {
+            console.log('=== ДЕБАГ СИСТЕМЫ ===');
+            console.log('Доступные тесты:', availableTests);
+            console.log('Поле ввода:', document.getElementById('testName').value);
+            
+            // Проверяем все тесты
+            availableTests.forEach(async test => {
+                const exists = await checkTestExists(test.code);
+                console.log(`Тест "${test.code}" (${test.name}): ${exists ? '✅ Найден' : '❌ Не найден'}`);
+            });
+        };
     </script>
-    
-    <!-- Font Awesome для иконок -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 </body>
-            </html>
+</html>

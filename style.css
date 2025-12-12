@@ -1,392 +1,460 @@
-/* Общие стили в стиле Telegram */
+/* Основные стили для всей системы тестирования */
 * {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: linear-gradient(135deg, #1e93c4 0%, #38a1d6 100%);
-  color: #333;
-  line-height: 1.5;
-  min-height: 100vh;
-  padding: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+    padding: 20px;
 }
 
 .container {
-  max-width: 500px;
-  margin: 20px auto;
-  background-color: white;
-  border-radius: 16px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 }
 
-/* Обновленные стили для заголовка */
 .telegram-header {
-  background: linear-gradient(135deg, #1e93c4 0%, #38a1d6 100%);
-  color: white;
-  padding: 12px 16px;
-  text-align: center;
-  border-radius: 16px 16px 0 0;
+    background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+    color: white;
+    padding: 25px;
+    text-align: center;
+    border-bottom: 5px solid #3498db;
 }
 
 .telegram-header h1 {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0;
-  line-height: 1.3;
-  padding: 0;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .section {
-  padding: 20px;
-  border-bottom: 1px solid #e6e6e6;
-}
-
-.section:last-child {
-  border-bottom: none;
+    padding: 25px;
+    border-bottom: 1px solid #eee;
 }
 
 .section-title {
-  color: #1e93c4;
-  margin-bottom: 16px;
-  font-weight: 600;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #4b6cb7;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.section-title:before {
-  content: "";
-  display: inline-block;
-  width: 4px;
-  height: 16px;
-  background: #1e93c4;
-  border-radius: 2px;
-  margin-right: 8px;
-}
-
-/* Информация об ученике */
 .student-info {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.student-info div {
+    display: flex;
+    flex-direction: column;
 }
 
 .student-info label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: 500;
-  color: #555;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #555;
 }
 
 .student-info input,
 .student-info select {
-  width: 100%;
-  padding: 14px;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  font-size: 16px;
-  background: #f9f9f9;
-  transition: all 0.2s;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s;
 }
 
 .student-info input:focus,
 .student-info select:focus {
-  outline: none;
-  border-color: #1e93c4;
-  background: white;
-  box-shadow: 0 0 0 2px rgba(30, 147, 196, 0.2);
+    outline: none;
+    border-color: #4b6cb7;
 }
 
 .start-test-btn {
-  margin-top: 10px;
-  width: 100%;
-  padding: 16px;
-  font-size: 17px;
-  font-weight: 600;
+    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-top: 10px;
 }
 
-/* Прогресс-бар */
+.start-test-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+}
+
 .progress-container {
-  background-color: #e6e6e6;
-  border-radius: 10px;
-  height: 8px;
-  margin-bottom: 12px;
-  overflow: hidden;
+    height: 12px;
+    background: #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 10px;
 }
 
 .progress-bar {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #1e93c4 0%, #38a1d6 100%);
-  transition: width 0.4s ease;
-  border-radius: 10px;
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    width: 0%;
+    transition: width 0.5s ease-in-out;
 }
 
 .progress-text {
-  text-align: center;
-  font-weight: 500;
-  font-size: 14px;
-  color: #666;
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 20px;
 }
 
-/* Вопрос */
 .question-container {
-  padding: 10px 0;
-}
-
-.question-text {
-  font-size: 18px;
-  margin-bottom: 20px;
-  font-weight: 500;
-  line-height: 1.4;
-  color: #222;
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 25px;
+    border: 2px solid #4b6cb7;
 }
 
 .question-type {
-  display: inline-block;
-  padding: 4px 10px;
-  background: #e1f2ff;
-  color: #1e93c4;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 8px;
+    font-size: 16px;
+    color: #3498db;
+    font-weight: 600;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
-.problem-type {
-  background: #e1f7e9;
-  color: #34b86e;
+.question-text {
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 25px;
+    line-height: 1.5;
+    color: #2c3e50;
 }
 
 .options-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 25px;
 }
 
-.option-label {
-  display: flex;
-  align-items: center;
-  padding: 16px;
-  background-color: #f5f5f5;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 16px;
+.option {
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: white;
+    font-size: 16px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.option-label:hover {
-  background-color: #eef7fd;
-  border-color: #1e93c4;
+.option:hover {
+    border-color: #3498db;
+    background: #e8f4ff;
+    transform: translateX(5px);
 }
 
-.option-label.selected {
-  background-color: #e1f2ff;
-  border-color: #1e93c4;
-  box-shadow: 0 2px 5px rgba(30, 147, 196, 0.2);
+.option.selected {
+    border-color: #4CAF50;
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-weight: 500;
 }
 
-.option-label.correct {
-  background-color: #e1f7e9;
-  border-color: #34b86e;
-  box-shadow: 0 2px 5px rgba(52, 184, 110, 0.2);
+.option.selected::before {
+    content: "✓";
+    color: #4CAF50;
+    font-weight: bold;
 }
 
-.option-label.incorrect {
-  background-color: #fde8e8;
-  border-color: #f36;
-  box-shadow: 0 2px 5px rgba(255, 51, 102, 0.2);
+.option-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: #e0e0e0;
+    border-radius: 50%;
+    font-weight: 600;
+    margin-right: 10px;
+    flex-shrink: 0;
 }
 
-.option-label input {
-  margin-right: 12px;
-  transform: scale(1.3);
-  accent-color: #1e93c4;
+.option.selected .option-letter {
+    background: #4CAF50;
+    color: white;
 }
 
-.button-container {
-  display: flex;
-  justify-content: center;
-  margin: 20px 0 10px;
+#confirm-btn {
+    background: linear-gradient(135deg, #4CAF50, #2e7d32);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: opacity 0.3s;
 }
 
-button {
-  padding: 14px 24px;
-  font-size: 16px;
-  font-weight: 600;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  background: linear-gradient(135deg, #1e93c4 0%, #38a1d6 100%);
-  color: white;
-  box-shadow: 0 4px 10px rgba(30, 147, 196, 0.3);
-  transition: all 0.2s;
+#confirm-btn:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.7;
 }
 
-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(30, 147, 196, 0.4);
-}
-
-button:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-button:disabled {
-  background: #bdc3c7;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.reset-btn {
-  background: linear-gradient(135deg, #ff5e5e 0%, #ff7676 100%);
-  box-shadow: 0 4px 10px rgba(255, 94, 94, 0.3);
-}
-
-.reset-btn:hover:not(:disabled) {
-  box-shadow: 0 6px 12px rgba(255, 94, 94, 0.4);
-}
-
-/* Блок результатов */
-#results {
-  display: none;
-  text-align: center;
-  padding: 20px;
-  background-color: #f0f8f0;
-  border-radius: 16px;
-  margin-top: 10px;
-  border: 1px solid #d5e8d5;
+#confirm-btn:not(:disabled):hover {
+    opacity: 0.9;
 }
 
 .score-display {
-  font-size: 18px;
-  margin: 12px 0;
-  color: #27ae60;
+    font-size: 24px;
+    font-weight: 600;
+    color: #4b6cb7;
+    margin: 20px 0;
+    text-align: center;
 }
 
 .grade-display {
-  font-size: 32px;
-  font-weight: bold;
-  color: #2ecc71;
-  margin: 10px 0;
+    font-size: 32px;
+    font-weight: 700;
+    color: #4CAF50;
+    text-align: center;
+    margin: 20px 0;
 }
 
 .points-breakdown {
-  margin: 15px 0;
-  padding: 10px;
-  background: #f8f9fa;
-  border-radius: 10px;
-  font-size: 14px;
-  color: #555;
-}
-
-#telegram-status {
-  margin-top: 16px;
-  padding: 12px;
-  border-radius: 10px;
-  display: none;
-}
-
-.success {
-  background-color: #e1f7e9;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.error {
-  background-color: #fde8e8;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    border-left: 4px solid #4b6cb7;
 }
 
 /* Полноэкранный результат */
 #fullscreen-result {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: linear-gradient(135deg, #1e93c4 0%, #38a1d6 100%);
-  z-index: 1000;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  color: white;
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
 }
 
 .fullscreen-content {
-  text-align: center;
-  padding: 30px;
-  background: white;
-  color: #333;
-  border-radius: 20px;
-  max-width: 90%;
-  width: 400px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: scaleIn 0.5s ease-out;
 }
 
-.fullscreen-content h2 {
-  font-size: 24px;
-  margin-bottom: 20px;
-  color: #1e93c4;
+@keyframes scaleIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .fullscreen-grade {
-  font-size: 80px;
-  font-weight: bold;
-  margin: 20px 0;
-  color: #1e93c4;
+    font-size: 120px;
+    font-weight: 900;
+    color: #4CAF50;
+    text-shadow: 0 10px 20px rgba(76, 175, 80, 0.3);
+    margin: 20px 0;
 }
 
 .fullscreen-btn {
-  margin-top: 20px;
-  padding: 14px 30px;
-  font-size: 18px;
-  width: 100%;
+    background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: transform 0.2s;
+}
+
+.fullscreen-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Античит система */
+.blocker-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 2000;
+}
+
+.anticheat-modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #1a1a2e;
+    color: white;
+    padding: 40px;
+    border-radius: 20px;
+    z-index: 2001;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    border: 3px solid #ff4757;
+    box-shadow: 0 0 50px rgba(255, 71, 87, 0.5);
+}
+
+.anticheat-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ff4757;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+}
+
+.anticheat-message {
+    font-size: 18px;
+    margin-bottom: 30px;
+    color: #f8f9fa;
+    line-height: 1.5;
+}
+
+.anticheat-timer {
+    font-size: 48px;
+    font-weight: 900;
+    color: #ff4757;
+    margin: 20px 0;
+    font-family: 'Courier New', monospace;
+}
+
+.password-input-container {
+    margin: 30px 0;
+}
+
+.password-label {
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #aaa;
+}
+
+.password-input {
+    width: 200px;
+    padding: 15px;
+    font-size: 32px;
+    text-align: center;
+    letter-spacing: 10px;
+    background: #2c2c54;
+    border: 2px solid #ff4757;
+    border-radius: 10px;
+    color: white;
+    outline: none;
+}
+
+.continue-btn {
+    background: #ff4757;
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.continue-btn:disabled {
+    background: #666;
+    cursor: not-allowed;
+}
+
+.continue-btn:not(:disabled):hover {
+    background: #ff3838;
 }
 
 /* Адаптивность */
 @media (max-width: 768px) {
-  body {
-    padding: 5px;
-  }
-  
-  .container {
-    margin: 10px auto;
-    border-radius: 12px;
-  }
+    .student-info {
+        grid-template-columns: 1fr;
+    }
+    
+    .container {
+        border-radius: 15px;
+        margin: 10px;
+    }
+    
+    .telegram-header h1 {
+        font-size: 20px;
+    }
+    
+    .question-text {
+        font-size: 18px;
+    }
+    
+    .fullscreen-grade {
+        font-size: 80px;
+    }
+}
 
-  .telegram-header h1 {
-    font-size: 16px;
-  }
-
-  .section {
-    padding: 16px;
-  }
-
-  .question-text {
-    font-size: 17px;
-  }
-
-  .option-label {
-    padding: 14px;
-    font-size: 15px;
-  }
-
-  .fullscreen-grade {
-    font-size: 70px;
-  }
-  
-  .fullscreen-content {
-    width: 90%;
-    padding: 25px;
-  }
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    
+    .section {
+        padding: 15px;
+    }
+    
+    .question-container {
+        padding: 15px;
+    }
+    
+    .anticheat-modal {
+        padding: 20px;
+    }
+    
+    .anticheat-timer {
+        font-size: 36px;
+    }
 }
