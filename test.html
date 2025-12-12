@@ -12,96 +12,48 @@
       <h1 id="test-title">Загрузка теста...</h1>
     </div>
 
-    <div class="section" id="student-info-section">
-      <div class="section-title">Информация об ученике</div>
-      <div class="student-info">
-        <div>
-          <label for="student-name">Имя:</label>
-          <input type="text" id="student-name" placeholder="Введите ваше имя" />
-        </div>
-        <div>
-          <label for="student-class">Класс:</label>
-          <select id="student-class">
-            <option value="">Выберите класс</option>
-            <option value="7">7 класс</option>
-            <option value="8">8 класс</option>
-            <option value="9">9 класс</option>
-            <option value="10">10 класс</option>
-            <option value="11">11 класс</option>
-          </select>
-        </div>
-      </div>
-      <button class="start-test-btn" id="start-test-btn">Начать контрольную</button>
-    </div>
-
     <div id="test-content" style="display: none;">
-      <div class="section">
-        <div class="progress-container">
-          <div class="progress-bar" id="progress-bar"></div>
-        </div>
-        <div class="progress-text" id="progress-text">Вопрос 0 из 24</div>
-      </div>
-
-      <div class="section">
-        <div class="question-container">
-          <div class="question-type" id="question-type"></div>
-          <div class="question-text" id="question-text"></div>
-          <div class="options-container" id="options-container"></div>
-          <button id="confirm-btn" disabled>Подтвердить ответ</button>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="button-container">
-          <button id="reset-btn">Сбросить тест</button>
-        </div>
-      </div>
-
-      <div id="results" style="display: none;">
-        <h2>Результаты контрольной работы</h2>
-        <div class="score-display">Набрано баллов: <span id="score-value">0</span> из 30</div>
-        <div class="points-breakdown" id="points-breakdown"></div>
-        <div class="grade-display">Оценка: <span id="grade-value">—</span></div>
-        <div id="telegram-status"></div>
-      </div>
+      <!-- Здесь будет загруженный тест -->
+      <div id="loading">Загрузка теста...</div>
     </div>
   </div>
 
-  <!-- Полноэкранный результат -->
-  <div id="fullscreen-result">
-    <div class="fullscreen-content">
-      <h2>Ваш результат</h2>
-      <div class="fullscreen-grade" id="fullscreen-grade">5</div>
-      <p style="margin: 15px 0; color: #666;">Набрано баллов: <span id="fullscreen-score">0</span> из 30</p>
-      <div id="fullscreen-breakdown" style="margin: 15px 0; color: #555; font-size: 14px;"></div>
-      <button class="fullscreen-btn" id="finish-btn">Завершить</button>
-    </div>
-  </div>
-
-  <!-- Сначала загружаем тестовые данные, потом основной скрипт -->
   <script>
     // Получаем имя теста из URL
     const urlParams = new URLSearchParams(window.location.search);
     const testName = urlParams.get('test');
     
     if (!testName) {
-      // Если нет параметра, загружаем дефолтный тест
-      document.getElementById('test-title').textContent = 'Тест не найден';
-      document.title = 'Ошибка: тест не найден';
+      // Если нет параметра, показываем ошибку
+      document.getElementById('test-title').textContent = 'Тест не указан';
+      document.title = 'Ошибка: тест не указан';
     } else {
       // Динамически загружаем файл теста из папки test/
       const script = document.createElement('script');
       script.src = `test/${testName}.js`;
+      
       script.onload = function() {
-        // После загрузки теста, загружаем основной скрипт
+        console.log('Тест загружен:', testName);
+        
+        // Обновляем заголовок
+        if (window.TEST_CONFIG && window.TEST_CONFIG.title) {
+          document.title = window.TEST_CONFIG.title;
+          document.getElementById('test-title').textContent = window.TEST_CONFIG.title;
+        }
+        
+        // Загружаем основной скрипт
         const mainScript = document.createElement('script');
         mainScript.src = 'script.js';
         document.head.appendChild(mainScript);
       };
+      
       script.onerror = function() {
+        console.error('Ошибка загрузки теста:', testName);
         document.getElementById('test-title').textContent = 'Тест не найден';
         document.title = 'Ошибка: тест не найден';
+        document.getElementById('loading').textContent = 'Ошибка: тест не найден. Проверьте код теста.';
       };
+      
       document.head.appendChild(script);
     }
   </script>
