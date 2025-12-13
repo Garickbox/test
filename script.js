@@ -1,656 +1,1015 @@
-// Глобальные переменные
-const DEFAULT_BOT_TOKEN = "8344281396:AAGZ9-M2XRyPMHiI2akBSSIN7QAtRGDmLOY";
-const DEFAULT_CHAT_ID = "1189539923";
+// ====================================================================
+// ОСНОВНОЙ СКРИПТ СИСТЕМЫ ТЕСТИРОВАНИЯ
+// Версия 4.0 - На основе большого HTML-кода с пасхалками
+// ====================================================================
 
+// Глобальные переменные системы
 let currentQuestionIndex = 0;
 let totalScore = 0;
-let userAnswers = Array(24).fill(null);
+let userAnswers = [];
 let shuffledQuestionsAndProblems = [];
 let isSubmitted = false;
 let isShowingAnswer = false;
 let currentShuffledOptions = [];
+let testStarted = false;
+let testCompleted = false;
 
 // Переменные для отслеживания использования пасхалок
-let clipboardAttempts = 0;
-let tabSwitchAttempts = 0;
-let cheatBlockTimeouts = 0;
-let clipboardBlocked = false;
-let antiCheatTriggered = false;
-
-// Кэшируем DOM
-const progressBar = document.getElementById('progress-bar');
-const progressText = document.getElementById('progress-text');
-const questionText = document.getElementById('question-text');
-const questionType = document.getElementById('question-type');
-const optionsContainer = document.getElementById('options-container');
-const confirmBtn = document.getElementById('confirm-btn');
-const resetBtn = document.getElementById('reset-btn');
-const resultsDiv = document.getElementById('results');
-const scoreValue = document.getElementById('score-value');
-const gradeValue = document.getElementById('grade-value');
-const pointsBreakdown = document.getElementById('points-breakdown');
-const telegramStatus = document.getElementById('telegram-status');
-const studentNameInput = document.getElementById('student-name');
-const studentClassSelect = document.getElementById('student-class');
-const fullscreenResult = document.getElementById('fullscreen-result');
-const fullscreenGrade = document.getElementById('fullscreen-grade');
-const fullscreenScore = document.getElementById('fullscreen-score');
-const fullscreenBreakdown = document.getElementById('fullscreen-breakdown');
-const finishBtn = document.getElementById('finish-btn');
-const startTestBtn = document.getElementById('start-test-btn');
-const studentInfoSection = document.getElementById('student-info-section');
-const testContent = document.getElementById('test-content');
+let clipboardAttempts = 0;      // Количество попыток копирования
+let tabSwitchAttempts = 0;      // Количество переключений вкладок
+let cheatBlockTimeouts = 0;     // Количество срабатываний античит системы
+let clipboardBlocked = false;   // Была ли блокировка копирования
+let antiCheatTriggered = false; // Срабатывала ли античит система
 
 // ПАСХАЛКА 1: Антикопирование
 const clipboardMessages = [
-  "Высоковская школа: честность — наш девиз!",
-  "Упс! Копирование учебных материалов запрещено.",
-  "Знания ценны, когда добыты честным путём!",
-  "Наш антижульничательный детектор сработал!",
-  "Вы же не хотите попасть в школьный архив нарушителей?",
-  "Учителя видят всё... даже попытки копирования!",
-  "Этот текст самоуничтожился при попытке копирования!",
-  "Вместо списанного ответа — мудрый совет: учитесь!",
-  "Школьный совет по этике не одобряет это копирование.",
-  "Зафиксирована попытка несанкционированного копирования!",
-  "Хм... а если бы все так делали? Хаос наступил бы!",
-  "Высоковская школа гордится честными учениками!",
-  "Это не ответ на тест, это тест на вашу честность!",
-  "Попытка скопировать зафиксирована в школьном журнале!",
-  "Знания нельзя скопировать, их можно только понять!",
-  "Ваша попытка скопировать текст самоуничтожилась!",
-  "Ученик, остановись! Ты выбрал нечестный путь!",
-  "Школьный антиплагиат всегда на страже!",
-  "Вместо списанного текста — напоминание о правилах!",
-  "Честная «тройка» лучше, чем списанная «пятёрка»!"
+    "Высоковская школа: честность — наш девиз!",
+    "Упс! Копирование учебных материалов запрещено.",
+    "Знания ценны, когда добыты честным путём!",
+    "Наш антижульничательный детектор сработал!",
+    "Вы же не хотите попасть в школьный архив нарушителей?",
+    "Учителя видят всё... даже попытки копирования!",
+    "Этот текст самоуничтожился при попытке копирования!",
+    "Вместо списанного ответа — мудрый совет: учитесь!",
+    "Школьный совет по этике не одобряет это копирование.",
+    "Зафиксирована попытка несанкционированного копирования!",
+    "Хм... а если бы все так делали? Хаос наступил бы!",
+    "Высоковская школа гордится честными учениками!",
+    "Это не ответ на тест, это тест на вашу честность!",
+    "Попытка скопировать зафиксирована в школьном журнале!",
+    "Знания нельзя скопировать, их можно только понять!",
+    "Ваша попытка скопировать текст самоуничтожилась!",
+    "Ученик, остановись! Ты выбрал нечестный путь!",
+    "Школьный антиплагиат всегда на страже!",
+    "Вместо списанного текста — напоминание о правилах!",
+    "Честная «тройка» лучше, чем списанная «пятёрка»!"
 ];
-
-function isInsideInput(element) {
-  if (!element) return false;
-  
-  let currentElement = element;
-  while (currentElement) {
-    if (currentElement.tagName === 'INPUT' || 
-        currentElement.tagName === 'TEXTAREA' || 
-        (currentElement.classList && currentElement.classList.contains('test-input'))) {
-      return true;
-    }
-    currentElement = currentElement.parentElement;
-  }
-  return false;
-}
-
-document.addEventListener('copy', function(e) {
-  const selection = window.getSelection();
-  const selectedText = selection.toString();
-  
-  if (selectedText.length > 0 && !isInsideInput(document.activeElement)) {
-    const randomIndex = Math.floor(Math.random() * clipboardMessages.length);
-    const randomMessage = clipboardMessages[randomIndex];
-    
-    e.clipboardData.setData('text/plain', randomMessage);
-    e.preventDefault();
-    
-    clipboardAttempts++;
-    clipboardBlocked = true;
-    
-    console.log(`Попытка копирования заблокирована (${clipboardAttempts} раз)`);
-  }
-});
-
-// Блокировка Ctrl+A
-document.addEventListener('keydown', function(e) {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
-    if (!isInsideInput(document.activeElement)) {
-      e.preventDefault();
-      clipboardAttempts++;
-      clipboardBlocked = true;
-      console.log(`Попытка выделения всего текста заблокирована (${clipboardAttempts} раз)`);
-    }
-  }
-});
-
-// Блокировка перетаскивания текста
-document.addEventListener('dragstart', function(e) {
-  if (!isInsideInput(e.target)) {
-    e.preventDefault();
-    clipboardAttempts++;
-    clipboardBlocked = true;
-    console.log(`Попытка перетаскивания текста заблокирована (${clipboardAttempts} раз)`);
-  }
-});
 
 // ПАСХАЛКА 2: Античит система
 const cheatMessages = [
-  "Ой! Кажется, наш детектор жульничества снова сработал! 📡",
-  "Ш-ш-ш! Вы пытались подсмотреть ответы? Не выйдет! 👀",
-  "Высоковский античит-радар засек подозрительную активность! 🚨",
-  "Кажется, кто-то искал Google вместо знаний... 🔍",
-  "Школьные правила: 1) Не жульничать 2) См. пункт 1 📚",
-  "Наш ИИ-учитель заметил вашу хитрость! 🤖",
-  "Вместо подсматривания - подумайте! Мозг тренируется 💪",
-  "Вы пойманы на горячем! Вернее, на 'Ctrl+C' 🎯",
-  "Шепотом: 'Честность — лучшая политика'. Кричим: 'НЕ СПИСЫВАТЬ!' 📢",
-  "Ваша попытка жульничества самоуничтожится через... *смотрит на таймер*",
-  "Учителя уже в курсе! Ну, почти... 👨‍🏫",
-  "Вы активировали режим 'Честный ученик'. Ожидайте... ⏳",
-  "Наши сенсоры засекли утечку мозгов в другую вкладку! 🧠",
-  "Кажется, вы нашли клавишу 'Копировать', но потеряли 'Думать' 🤔",
-  "Школьный хакер-детектор v2.0: Жульничество — 0, Честность — 1 🏆",
-  "Вам бан! Шутка... но ненадолго 😄",
-  "Вы перешли границу Ученик-Google. Возвращайтесь! 🚧",
-  "Система 'Честный тест' активирована. Обратный отсчет начался! ⏰",
-  "Наш робот-надзиратель не дремлет! 🤖👮",
-  "Ещё одна попытка — и мы вызовем директора! Ну, почти... 🏫"
+    "Ой! Кажется, наш детектор жульничества снова сработал! 📡",
+    "Ш-ш-ш! Вы пытались подсмотреть ответы? Не выйдет! 👀",
+    "Высоковский античит-радар засек подозрительную активность! 🚨",
+    "Кажется, кто-то искал Google вместо знаний... 🔍",
+    "Школьные правила: 1) Не жульничать 2) См. пункт 1 📚",
+    "Наш ИИ-учитель заметил вашу хитрость! 🤖",
+    "Вместо подсматривания - подумайте! Мозг тренируется 💪",
+    "Вы пойманы на горячем! Вернее, на 'Ctrl+C' 🎯",
+    "Шепотом: 'Честность — лучшая политика'. Кричим: 'НЕ СПИСЫВАТЬ!' 📢",
+    "Ваша попытка жульничества самоуничтожится через... *смотрит на таймер*",
+    "Учителя уже в курсе! Ну, почти... 👨‍🏫",
+    "Вы активировали режим 'Честный ученик'. Ожидайте... ⏳",
+    "Наши сенсоры засекли утечку мозгов в другую вкладку! 🧠",
+    "Кажется, вы нашли клавишу 'Копировать', но потеряли 'Думать' 🤔",
+    "Школьный хакер-детектор v2.0: Жульничество — 0, Честность — 1 🏆",
+    "Вам бан! Шутка... но ненадолго 😄",
+    "Вы перешли границу Ученик-Google. Возвращайтесь! 🚧",
+    "Система 'Честный тест' активирована. Обратный отсчет начался! ⏰",
+    "Наш робот-надзиратель не дремлет! 🤖👮",
+    "Ещё одна попытка — и мы вызовем директора! Ну, почти... 🏫"
 ];
 
-let cheatAttempts = 0;
+// DOM элементы
+let progressBar, progressText, questionText, questionType, optionsContainer, confirmBtn;
+let resetBtn, resultsDiv, scoreValue, gradeValue, pointsBreakdown, telegramStatus;
+let studentNameInput, studentClassSelect, fullscreenResult, fullscreenGrade;
+let fullscreenScore, fullscreenBreakdown, finishBtn, startTestBtn;
+let studentInfoSection, testContent, blockerOverlay, anticheatModal;
+let cheatMessageElement, countdownTimer, passwordInput, continueBtn;
+
+// Константы античит системы
+const PASSWORD = "3265";
 let blockTimer = null;
 let remainingTime = 0;
-const PASSWORD = "3265";
+let cheatAttempts = 0;
 
-function formatTime(seconds) {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
+// ==================== ИНИЦИАЛИЗАЦИЯ ТЕСТА ====================
 
-function showAntiCheat() {
-  if (studentInfoSection.style.display !== 'none' || 
-      fullscreenResult.style.display === 'flex' ||
-      resultsDiv.style.display === 'block') {
-    return;
-  }
-  
-  cheatAttempts++;
-  tabSwitchAttempts++;
-  antiCheatTriggered = true;
-  
-  const messageIndex = Math.floor(Math.random() * cheatMessages.length);
-  document.getElementById('cheatMessage').textContent = cheatMessages[messageIndex];
-  
-  remainingTime = 3 * 60;
-  document.getElementById('countdownTimer').textContent = formatTime(remainingTime);
-  
-  document.getElementById('passwordInput').value = '';
-  document.getElementById('continueBtn').disabled = true;
-  
-  document.getElementById('blockerOverlay').style.display = 'block';
-  document.getElementById('anticheatModal').style.display = 'block';
-  
-  if (navigator.vibrate) {
-    navigator.vibrate([200, 100, 200]);
-  }
-  
-  startBlockTimer();
-  
-  console.log(`Античит сработал! Попыток переключения вкладок: ${tabSwitchAttempts}`);
-}
-
-function startBlockTimer() {
-  clearInterval(blockTimer);
-  
-  blockTimer = setInterval(() => {
-    remainingTime--;
-    document.getElementById('countdownTimer').textContent = formatTime(remainingTime);
-    
-    if (remainingTime <= 10) {
-      const timer = document.getElementById('countdownTimer');
-      timer.classList.remove('pulse');
-      timer.classList.remove('pulse-strong');
-      
-      if (remainingTime <= 5) {
-        timer.classList.add('pulse-strong');
-      } else {
-        timer.classList.add('pulse');
-      }
-    } else {
-      const timer = document.getElementById('countdownTimer');
-      timer.classList.remove('pulse');
-      timer.classList.remove('pulse-strong');
-    }
-    
-    if (remainingTime <= 0) {
-      clearInterval(blockTimer);
-      document.getElementById('continueBtn').disabled = false;
-      cheatBlockTimeouts++;
-      console.log(`Таймер античит системы истек (${cheatBlockTimeouts} раз)`);
-    }
-  }, 1000);
-}
-
-function closeAntiCheat() {
-  clearInterval(blockTimer);
-  document.getElementById('blockerOverlay').style.display = 'none';
-  document.getElementById('anticheatModal').style.display = 'none';
-  console.log('Античит система отключена');
-}
-
-// Обработка ввода пароля
-document.getElementById('passwordInput').addEventListener('input', function(e) {
-  this.value = this.value.replace(/\D/g, '');
-  
-  if (this.value.length === 4) {
-    if (this.value === PASSWORD) {
-      document.getElementById('continueBtn').disabled = false;
-      setTimeout(() => {
-        document.getElementById('continueBtn').click();
-      }, 500);
-    }
-  }
-});
-
-// Обработка кнопки "Продолжить"
-document.getElementById('continueBtn').addEventListener('click', function() {
-  if (!this.disabled) {
-    closeAntiCheat();
-  }
-});
-
-// Отслеживание ухода/возврата на вкладку
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) {
-    showAntiCheat();
-  }
-});
-
-// Функция для перемешивания массива
-function shuffleArray(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
-}
-
-// Инициализация контрольной работы
+/**
+ * Основная функция инициализации теста
+ * Вызывается после загрузки конфигурации теста
+ */
 function initTest() {
-  const selectedQuestions = shuffleArray([...questionsBank]).slice(0, 21);
-  const selectedProblems = shuffleArray([...problemsBank]).slice(0, 3);
-  
-  shuffledQuestionsAndProblems = [...selectedQuestions, ...selectedProblems];
-  shuffledQuestionsAndProblems = shuffleArray(shuffledQuestionsAndProblems);
-  
-  currentQuestionIndex = 0;
-  totalScore = 0;
-  userAnswers = Array(24).fill(null);
-  isSubmitted = false;
-  isShowingAnswer = false;
-  currentShuffledOptions = [];
-  
-  clipboardAttempts = 0;
-  tabSwitchAttempts = 0;
-  cheatBlockTimeouts = 0;
-  clipboardBlocked = false;
-  antiCheatTriggered = false;
-  
-  confirmBtn.disabled = false;
-  resultsDiv.style.display = 'none';
-  fullscreenResult.style.display = 'none';
-  
-  showQuestion(0);
-}
-
-// Показать вопрос/задачу
-function showQuestion(index) {
-  const item = shuffledQuestionsAndProblems[index];
-  questionText.textContent = item.text;
-  
-  if (item.points === 3) {
-    questionType.textContent = "Задача (3 балла)";
-    questionType.className = "question-type problem-type";
-  } else {
-    questionType.textContent = "Теоретический вопрос (1 балл)";
-    questionType.className = "question-type";
-  }
-  
-  currentShuffledOptions = shuffleArray([...item.options]);
-  
-  optionsContainer.innerHTML = '';
-  currentShuffledOptions.forEach((option, i) => {
-    const label = document.createElement('label');
-    label.className = 'option-label';
-    if (userAnswers[index] === option.v) {
-      label.classList.add('selected');
+    console.log('🚀 Инициализация теста:', window.TEST_CONFIG.title);
+    
+    // Проверка конфигурации
+    if (!window.TEST_CONFIG) {
+        console.error('❌ Конфигурация теста не загружена!');
+        showError('Конфигурация теста не загружена. Проверьте код теста.');
+        return;
     }
     
-    const radio = document.createElement('input');
-    radio.type = 'radio';
-    radio.name = 'option';
-    radio.value = option.v;
-    radio.disabled = isShowingAnswer;
-    
-    label.appendChild(radio);
-    label.appendChild(document.createTextNode(option.t));
-    
-    if (!isShowingAnswer) {
-      label.addEventListener('click', () => {
-        document.querySelectorAll('.option-label').forEach(l => l.classList.remove('selected'));
-        label.classList.add('selected');
-        radio.checked = true;
-        confirmBtn.disabled = false;
-      });
+    if (!window.questionsBank || !window.problemsBank) {
+        console.error('❌ Банки вопросов не загружены!');
+        showError('Вопросы теста не загружены.');
+        return;
     }
     
-    optionsContainer.appendChild(label);
-  });
-  
-  updateProgress();
-}
-
-// Подсветка правильного ответа
-function highlightCorrectAnswer() {
-  const options = optionsContainer.querySelectorAll('.option-label');
-  
-  options.forEach((option, index) => {
-    const radio = option.querySelector('input');
-    if (currentShuffledOptions[index].v === 'correct') {
-      option.classList.add('correct');
-    } else if (radio.checked && currentShuffledOptions[index].v === 'wrong') {
-      option.classList.add('incorrect');
+    // Кэширование DOM элементов
+    cacheDOMElements();
+    
+    console.log('📊 Вопросов в банке:', window.questionsBank.length);
+    console.log('📊 Задач в банке:', window.problemsBank.length);
+    console.log('🎯 Максимальный балл:', window.TEST_CONFIG.maxScore);
+    
+    // Устанавливаем заголовок теста
+    document.title = window.TEST_CONFIG.title;
+    const pageTitle = document.getElementById('page-title');
+    if (pageTitle) {
+        pageTitle.textContent = window.TEST_CONFIG.title;
     }
     
-    radio.disabled = true;
-  });
-}
-
-// Обновление прогресса
-function updateProgress() {
-  const percent = ((currentQuestionIndex + 1) / 24) * 100;
-  progressBar.style.width = `${percent}%`;
-  progressText.textContent = `Вопрос ${currentQuestionIndex + 1} из 24`;
-}
-
-// Подтверждение ответа
-function confirmAnswer() {
-  const selectedOption = document.querySelector('input[name="option"]:checked');
-  if (!selectedOption) {
-    alert('Выберите вариант ответа');
-    return;
-  }
-  
-  userAnswers[currentQuestionIndex] = selectedOption.value;
-  
-  confirmBtn.disabled = true;
-  isShowingAnswer = true;
-  
-  highlightCorrectAnswer();
-  
-  setTimeout(() => {
-    isShowingAnswer = false;
+    // Настройка событий
+    setupEventListeners();
     
-    if (currentQuestionIndex < 23) {
-      currentQuestionIndex++;
-      showQuestion(currentQuestionIndex);
-      confirmBtn.disabled = true;
-    } else {
-      finishTest();
+    // Настройка антикопирования
+    setupAnticopySystem();
+    
+    console.log('✅ Тест инициализирован успешно');
+}
+
+/**
+ * Кэширование DOM элементов
+ */
+function cacheDOMElements() {
+    progressBar = document.getElementById('progress-bar');
+    progressText = document.getElementById('progress-text');
+    questionText = document.getElementById('question-text');
+    questionType = document.getElementById('question-type');
+    optionsContainer = document.getElementById('options-container');
+    confirmBtn = document.getElementById('confirm-btn');
+    resetBtn = document.getElementById('reset-btn');
+    resultsDiv = document.getElementById('results');
+    scoreValue = document.getElementById('score-value');
+    gradeValue = document.getElementById('grade-value');
+    pointsBreakdown = document.getElementById('points-breakdown');
+    telegramStatus = document.getElementById('telegram-status');
+    studentNameInput = document.getElementById('student-name');
+    studentClassSelect = document.getElementById('student-class');
+    fullscreenResult = document.getElementById('fullscreen-result');
+    fullscreenGrade = document.getElementById('fullscreen-grade');
+    fullscreenScore = document.getElementById('fullscreen-score');
+    fullscreenBreakdown = document.getElementById('fullscreen-breakdown');
+    finishBtn = document.getElementById('finish-btn');
+    startTestBtn = document.getElementById('start-test-btn');
+    studentInfoSection = document.getElementById('student-info-section');
+    testContent = document.getElementById('test-content');
+    blockerOverlay = document.getElementById('blockerOverlay');
+    anticheatModal = document.getElementById('anticheatModal');
+    cheatMessageElement = document.getElementById('cheatMessage');
+    countdownTimer = document.getElementById('countdownTimer');
+    passwordInput = document.getElementById('passwordInput');
+    continueBtn = document.getElementById('continueBtn');
+}
+
+/**
+ * Показать ошибку
+ */
+function showError(message) {
+    const studentInfoSection = document.getElementById('student-info-section');
+    if (studentInfoSection) {
+        studentInfoSection.innerHTML = `
+            <div style="text-align: center; padding: 40px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #f44336;"></i>
+                <h3 style="color: #f44336; margin: 20px 0;">Ошибка загрузки</h3>
+                <p>${message}</p>
+                <button onclick="window.location.href='index.html'" 
+                        style="background: #4b6cb7; color: white; border: none; padding: 12px 24px; 
+                               border-radius: 8px; margin-top: 20px; cursor: pointer;">
+                    <i class="fas fa-arrow-left"></i> Вернуться на главную
+                </button>
+            </div>
+        `;
     }
-  }, 2000);
 }
 
-// Завершение контрольной работы
-function finishTest() {
-  totalScore = 0;
-  let questionScore = 0;
-  let problemScore = 0;
-  let correctQuestions = 0;
-  let correctProblems = 0;
-  
-  for (let i = 0; i < 24; i++) {
-    const item = shuffledQuestionsAndProblems[i];
-    if (userAnswers[i] === 'correct') {
-      totalScore += item.points;
-      if (item.points === 1) {
-        questionScore += 1;
-        correctQuestions++;
-      } else if (item.points === 3) {
-        problemScore += 3;
-        correctProblems++;
-      }
-    }
-  }
-  
-  const grade = getGrade(totalScore);
-  
-  fullscreenGrade.textContent = grade;
-  fullscreenScore.textContent = totalScore;
-  fullscreenBreakdown.innerHTML = `
-    <div>Правильных вопросов: ${correctQuestions}/21 (${questionScore} баллов)</div>
-    <div>Правильных задач: ${correctProblems}/3 (${problemScore} баллов)</div>
-  `;
-  fullscreenResult.style.display = 'flex';
-  
-  scoreValue.textContent = totalScore;
-  gradeValue.textContent = grade;
-  pointsBreakdown.innerHTML = `
-    <div>Правильных вопросов: ${correctQuestions} из 21 (${questionScore} баллов)</div>
-    <div>Правильных задач: ${correctProblems} из 3 (${problemScore} баллов)</div>
-    <div>Всего баллов: ${totalScore} из 30</div>
-  `;
-  
-  sendResultsToTelegram(totalScore, grade, correctQuestions, correctProblems, questionScore, problemScore);
-}
+// ==================== НАСТРОЙКА СИСТЕМЫ ====================
 
-// Получение оценки по баллам
-function getGrade(score) {
-  if (score >= 27) return 5;
-  if (score >= 22) return 4;
-  if (score >= 10) return 3;
-  return 2;
-}
-
-// Отправка в Telegram
-async function sendTelegramMessage(botToken, chatId, text) {
-  const resp = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' })
-  });
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-  const data = await resp.json();
-  if (!data.ok) throw new Error(data.description);
-}
-
-// Отправка результатов
-async function sendResultsToTelegram(score, grade, correctQuestions, correctProblems, questionScore, problemScore) {
-  if (isSubmitted) return;
-  
-  const name = studentNameInput.value.trim();
-  const klass = studentClassSelect.value;
-  
-  if (!name || !klass) {
-    console.log('Имя или класс не заполнены, пропускаем отправку в Telegram');
-    return;
-  }
-  
-  try {
-    const now = new Date().toLocaleString('ru-RU');
-    
-    const easterEggsStats = [];
-    
-    if (clipboardBlocked) {
-      easterEggsStats.push(`📋 Антикопирование: ${clipboardAttempts} раз(а)`);
-    } else {
-      easterEggsStats.push(`📋 Антикопирование: Не использовалось ✅`);
+/**
+ * Настройка обработчиков событий
+ */
+function setupEventListeners() {
+    // Кнопка начала теста
+    if (startTestBtn) {
+        startTestBtn.addEventListener('click', startTest);
     }
     
-    if (antiCheatTriggered) {
-      easterEggsStats.push(`🚨 Античит система: ${tabSwitchAttempts} раз(а)`);
-      if (cheatBlockTimeouts > 0) {
-        easterEggsStats.push(`⏱️ Блокировки по таймеру: ${cheatBlockTimeouts} раз(а)`);
-      }
-    } else {
-      easterEggsStats.push(`🚨 Античит система: Не срабатывала ✅`);
+    // Кнопка подтверждения ответа
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', confirmAnswer);
     }
     
-    let msg = `⚡ Результаты контрольной работы "Электризация тел. Электрический ток":
-
-👤 Студент: ${name}
-🏫 Класс: ${klass}
-🎯 Баллы: ${score}/30 (${Math.round(score/30*100)}%)
-📝 Оценка: ${grade}
-
-Детализация:
-📖 Правильных вопросов: ${correctQuestions}/21 (${questionScore} баллов)
-📐 Правильных задач: ${correctProblems}/3 (${problemScore} баллов)
-
-`;
-
-    if (clipboardBlocked || antiCheatTriggered) {
-      msg += `
-🚨 **Статистика антижульничания:**
-`;
-      easterEggsStats.forEach(stat => {
-        msg += `• ${stat}\n`;
-      });
-    } else {
-      msg += `✅ **Честность:** Все системы защиты не срабатывали (чистая работа)\n`;
+    // Кнопка сброса теста
+    if (resetBtn) {
+        resetBtn.addEventListener('click', resetAll);
     }
     
-    msg += `
-📅 Дата: ${now}`;
+    // Кнопка завершения полноэкранного режима
+    if (finishBtn) {
+        finishBtn.addEventListener('click', finishFullScreen);
+    }
     
-    await sendTelegramMessage(DEFAULT_BOT_TOKEN, DEFAULT_CHAT_ID, msg);
-    console.log('Результаты отправлены в Telegram');
-  } catch (err) {
-    console.error('Ошибка отправки в Telegram:', err);
-  }
-  
-  isSubmitted = true;
+    // Кнопка продолжения в античит системе
+    if (continueBtn) {
+        continueBtn.addEventListener('click', function() {
+            if (!this.disabled) {
+                closeAntiCheat();
+            }
+        });
+    }
+    
+    // Ввод пароля в античит системе
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/\D/g, '');
+            
+            if (this.value.length === 4) {
+                if (this.value === PASSWORD) {
+                    continueBtn.disabled = false;
+                    setTimeout(() => {
+                        if (continueBtn) continueBtn.click();
+                    }, 500);
+                }
+            }
+        });
+    }
+    
+    // Обработка Escape для закрытия полноэкранного режима
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && fullscreenResult && fullscreenResult.style.display === 'flex') {
+            finishFullScreen();
+        }
+    });
+    
+    console.log('✅ Обработчики событий установлены');
 }
 
-// Завершение полноэкранного режима - ИСПРАВЛЕННАЯ ВЕРСИЯ
-function finishFullScreen() {
-  console.log('=== finishFullScreen вызвана ===');
-  
-  // Закрываем античит-окно, если открыто
-  const blockerOverlay = document.getElementById('blockerOverlay');
-  const anticheatModal = document.getElementById('anticheatModal');
-  
-  if (blockerOverlay && blockerOverlay.style.display === 'block') {
-    blockerOverlay.style.display = 'none';
-  }
-  if (anticheatModal && anticheatModal.style.display === 'block') {
-    anticheatModal.style.display = 'none';
-  }
-  
-  // Скрываем полноэкранный результат
-  if (fullscreenResult) {
-    fullscreenResult.style.display = 'none';
-  }
-  
-  // Показываем блок результатов
-  if (resultsDiv) {
-    resultsDiv.style.display = 'block';
+/**
+ * Настройка антикопирования
+ */
+function setupAnticopySystem() {
+    function isInsideInput(element) {
+        if (!element) return false;
+        
+        let currentElement = element;
+        while (currentElement) {
+            if (currentElement.tagName === 'INPUT' || 
+                currentElement.tagName === 'TEXTAREA' || 
+                (currentElement.classList && currentElement.classList.contains('test-input'))) {
+                return true;
+            }
+            currentElement = currentElement.parentElement;
+        }
+        return false;
+    }
+
+    // Блокировка копирования
+    document.addEventListener('copy', function(e) {
+        const selection = window.getSelection();
+        const selectedText = selection.toString();
+        
+        if (selectedText.length > 0 && !isInsideInput(document.activeElement)) {
+            const randomIndex = Math.floor(Math.random() * clipboardMessages.length);
+            const randomMessage = clipboardMessages[randomIndex];
+            
+            e.clipboardData.setData('text/plain', randomMessage);
+            e.preventDefault();
+            
+            // Фиксируем попытку копирования
+            clipboardAttempts++;
+            clipboardBlocked = true;
+            
+            console.log(`Попытка копирования заблокирована (${clipboardAttempts} раз)`);
+        }
+    });
+
+    // Блокировка Ctrl+A
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+            if (!isInsideInput(document.activeElement)) {
+                e.preventDefault();
+                
+                // Фиксируем попытку выделения всего текста
+                clipboardAttempts++;
+                clipboardBlocked = true;
+                
+                console.log(`Попытка выделения всего текста заблокирована (${clipboardAttempts} раз)`);
+            }
+        }
+    });
+
+    // Блокировка перетаскивания текста
+    document.addEventListener('dragstart', function(e) {
+        if (!isInsideInput(e.target)) {
+            e.preventDefault();
+            
+            // Фиксируем попытку перетаскивания
+            clipboardAttempts++;
+            clipboardBlocked = true;
+            
+            console.log(`Попытка перетаскивания текста заблокирована (${clipboardAttempts} раз)`);
+        }
+    });
+}
+
+// ==================== ОСНОВНАЯ ЛОГИКА ТЕСТИРОВАНИЯ ====================
+
+/**
+ * Начать тест
+ */
+function startTest() {
+    const name = studentNameInput.value.trim();
+    const studentClass = studentClassSelect.value;
+    
+    if (!name || !studentClass) {
+        alert('Пожалуйста, введите имя и выберите класс');
+        return;
+    }
+    
+    // Сохраняем данные ученика
+    window.STUDENT_INFO = {
+        name: name,
+        class: studentClass,
+        startTime: new Date().toISOString(),
+        testName: window.TEST_CONFIG.title
+    };
+    
+    // Скрываем форму ввода и показываем тест
+    studentInfoSection.style.display = 'none';
     testContent.style.display = 'block';
-  }
-  
-  // Показываем сообщение о статусе отправки
-  if (telegramStatus) {
+    
+    testStarted = true;
+    
+    // Начинаем мониторинг античит системы
+    startAnticheatMonitoring();
+    
+    // Инициализируем вопросы
+    initQuestions();
+    
+    // Показываем первый вопрос
+    showQuestion(0);
+    
+    console.log('✅ Тест начат для ученика:', name, studentClass);
+    console.log('🚀 Античит мониторинг активирован');
+}
+
+/**
+ * Инициализация вопросов и задач
+ */
+function initQuestions() {
+    // Проверяем наличие вопросов
+    if (!window.questionsBank || window.questionsBank.length < window.TEST_CONFIG.totalQuestions) {
+        console.error('❌ Недостаточно теоретических вопросов');
+        showError(`Недостаточно теоретических вопросов. Нужно: ${window.TEST_CONFIG.totalQuestions}, доступно: ${window.questionsBank ? window.questionsBank.length : 0}`);
+        return;
+    }
+    
+    if (!window.problemsBank || window.problemsBank.length < window.TEST_CONFIG.totalProblems) {
+        console.error('❌ Недостаточно задач');
+        showError(`Недостаточно задач. Нужно: ${window.TEST_CONFIG.totalProblems}, доступно: ${window.problemsBank ? window.problemsBank.length : 0}`);
+        return;
+    }
+    
+    // Выбираем случайные вопросы из банка
+    const selectedQuestions = shuffleArray([...window.questionsBank]).slice(0, window.TEST_CONFIG.totalQuestions);
+    const selectedProblems = shuffleArray([...window.problemsBank]).slice(0, window.TEST_CONFIG.totalProblems);
+    
+    // Объединяем вопросы и задачи
+    shuffledQuestionsAndProblems = [...selectedQuestions, ...selectedProblems];
+    
+    // Перемешиваем порядок
+    shuffledQuestionsAndProblems = shuffleArray(shuffledQuestionsAndProblems);
+    
+    currentQuestionIndex = 0;
+    totalScore = 0;
+    userAnswers = Array(window.TEST_CONFIG.totalQuestions + window.TEST_CONFIG.totalProblems).fill(null);
+    isSubmitted = false;
+    isShowingAnswer = false;
+    currentShuffledOptions = [];
+    
+    // Сбрасываем статистику пасхалок
+    clipboardAttempts = 0;
+    tabSwitchAttempts = 0;
+    cheatBlockTimeouts = 0;
+    clipboardBlocked = false;
+    antiCheatTriggered = false;
+    
+    if (confirmBtn) confirmBtn.disabled = false;
+    if (resultsDiv) resultsDiv.style.display = 'none';
+    if (fullscreenResult) fullscreenResult.style.display = 'none';
+    
+    console.log(`✅ Выбрано ${selectedQuestions.length} вопросов и ${selectedProblems.length} задач`);
+}
+
+/**
+ * Перемешивание массива (алгоритм Фишера-Йейтса)
+ */
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+/**
+ * Показать вопрос/задачу
+ */
+function showQuestion(index) {
+    if (!shuffledQuestionsAndProblems || index >= shuffledQuestionsAndProblems.length) {
+        console.error('Нет вопросов для отображения');
+        return;
+    }
+    
+    const item = shuffledQuestionsAndProblems[index];
+    
+    if (questionText) questionText.textContent = item.text;
+    
+    // Устанавливаем тип задания
+    if (item.points === 3) {
+        if (questionType) {
+            questionType.textContent = "Задача (3 балла)";
+            questionType.className = "question-type problem-type";
+        }
+    } else {
+        if (questionType) {
+            questionType.textContent = "Теоретический вопрос (1 балл)";
+            questionType.className = "question-type";
+        }
+    }
+    
+    // Перемешиваем варианты ответов для текущего вопроса
+    currentShuffledOptions = shuffleArray([...item.options]);
+    
+    if (optionsContainer) {
+        optionsContainer.innerHTML = '';
+        currentShuffledOptions.forEach((option, i) => {
+            const label = document.createElement('label');
+            label.className = 'option-label';
+            if (userAnswers[index] === option.v) {
+                label.classList.add('selected');
+            }
+            
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = 'option';
+            radio.value = option.v;
+            radio.disabled = isShowingAnswer;
+            
+            label.appendChild(radio);
+            label.appendChild(document.createTextNode(option.t));
+            
+            if (!isShowingAnswer) {
+                label.addEventListener('click', () => {
+                    document.querySelectorAll('.option-label').forEach(l => l.classList.remove('selected'));
+                    label.classList.add('selected');
+                    radio.checked = true;
+                    if (confirmBtn) confirmBtn.disabled = false;
+                });
+            }
+            
+            optionsContainer.appendChild(label);
+        });
+    }
+    
+    updateProgress();
+}
+
+/**
+ * Подсветка правильного ответа
+ */
+function highlightCorrectAnswer() {
+    const options = optionsContainer.querySelectorAll('.option-label');
+    
+    options.forEach((option, index) => {
+        const radio = option.querySelector('input');
+        if (currentShuffledOptions[index].v === 'correct') {
+            option.classList.add('correct');
+        } else if (radio && radio.checked && currentShuffledOptions[index].v === 'wrong') {
+            option.classList.add('incorrect');
+        }
+        
+        if (radio) radio.disabled = true;
+    });
+}
+
+/**
+ * Обновление прогресса
+ */
+function updateProgress() {
+    if (!progressBar || !progressText) return;
+    
+    const totalQuestions = shuffledQuestionsAndProblems.length;
+    const percent = (currentQuestionIndex / totalQuestions) * 100;
+    progressBar.style.width = `${percent}%`;
+    progressText.textContent = `Задание ${currentQuestionIndex + 1} из ${totalQuestions}`;
+}
+
+/**
+ * Подтверждение ответа
+ */
+function confirmAnswer() {
+    const selectedOption = document.querySelector('input[name="option"]:checked');
+    if (!selectedOption) {
+        alert('Выберите вариант ответа');
+        return;
+    }
+    
+    userAnswers[currentQuestionIndex] = selectedOption.value;
+    
+    if (confirmBtn) confirmBtn.disabled = true;
+    isShowingAnswer = true;
+    
+    highlightCorrectAnswer();
+    
+    setTimeout(() => {
+        isShowingAnswer = false;
+        
+        if (currentQuestionIndex < shuffledQuestionsAndProblems.length - 1) {
+            currentQuestionIndex++;
+            showQuestion(currentQuestionIndex);
+            if (confirmBtn) confirmBtn.disabled = true;
+        } else {
+            showResults();
+        }
+    }, 2000);
+}
+
+// ==================== РЕЗУЛЬТАТЫ И ОЦЕНКИ ====================
+
+/**
+ * Показать результаты
+ */
+function showResults() {
+    testCompleted = true;
+    
+    // Останавливаем мониторинг античит системы
+    stopAnticheatMonitoring();
+    
+    // Скрываем контейнер с вопросами
+    if (testContent) testContent.style.display = 'none';
+    
+    // Подсчет результатов
+    totalScore = 0;
+    let questionScore = 0;
+    let problemScore = 0;
+    let correctQuestions = 0;
+    let correctProblems = 0;
+    
+    for (let i = 0; i < shuffledQuestionsAndProblems.length; i++) {
+        const item = shuffledQuestionsAndProblems[i];
+        if (userAnswers[i] === 'correct') {
+            totalScore += item.points;
+            if (item.points === 1) {
+                questionScore += 1;
+                correctQuestions++;
+            } else if (item.points === 3) {
+                problemScore += 3;
+                correctProblems++;
+            }
+        }
+    }
+    
+    // Рассчитываем оценку
+    const grade = calculateGrade(totalScore);
+    const maxScore = window.TEST_CONFIG.maxScore;
+    
+    // Обновляем результаты
+    if (scoreValue) scoreValue.textContent = totalScore;
+    if (gradeValue) {
+        gradeValue.textContent = grade;
+        gradeValue.style.color = getGradeColor(grade);
+    }
+    
+    // Формируем детализацию
+    if (pointsBreakdown) {
+        pointsBreakdown.innerHTML = `
+            <div>Правильных вопросов: ${correctQuestions} из ${window.TEST_CONFIG.totalQuestions} (${questionScore} баллов)</div>
+            <div>Правильных задач: ${correctProblems} из ${window.TEST_CONFIG.totalProblems} (${problemScore} баллов)</div>
+            <div>Всего баллов: ${totalScore} из ${maxScore}</div>
+        `;
+    }
+    
+    // Показываем результаты
+    if (resultsDiv) resultsDiv.style.display = 'block';
+    
+    // Отправляем результаты в Telegram
+    sendResultsToTelegram(grade, correctQuestions, correctProblems, questionScore, problemScore);
+    
+    // Показываем полноэкранный результат
+    showFullscreenResult(grade, totalScore, maxScore, correctQuestions, correctProblems, questionScore, problemScore);
+    
+    console.log('📊 Тест завершен. Результаты:', {
+        score: totalScore,
+        grade: grade,
+        correctAnswers: correctQuestions + correctProblems,
+        totalQuestions: shuffledQuestionsAndProblems.length
+    });
+}
+
+/**
+ * Рассчитать оценку по баллам
+ */
+function calculateGrade(score) {
+    const scale = window.TEST_CONFIG.gradingScale;
+    
+    if (score >= scale[5]) return 5;
+    if (score >= scale[4]) return 4;
+    if (score >= scale[3]) return 3;
+    return 2;
+}
+
+/**
+ * Получить цвет для оценки
+ */
+function getGradeColor(grade) {
+    const colors = {
+        5: '#4CAF50',
+        4: '#8BC34A',
+        3: '#FFC107',
+        2: '#F44336'
+    };
+    return colors[grade] || '#333';
+}
+
+/**
+ * Показать полноэкранный результат
+ */
+function showFullscreenResult(grade, score, maxScore, correctQuestions, correctProblems, questionScore, problemScore) {
+    if (!fullscreenResult || !fullscreenGrade || !fullscreenScore || !fullscreenBreakdown) return;
+    
+    fullscreenResult.style.display = 'flex';
+    fullscreenGrade.textContent = grade;
+    fullscreenGrade.style.color = getGradeColor(grade);
+    fullscreenScore.textContent = `${score} из ${maxScore}`;
+    fullscreenBreakdown.innerHTML = `
+        <div>Правильных вопросов: ${correctQuestions} (${questionScore} баллов)</div>
+        <div>Правильных задач: ${correctProblems} (${problemScore} баллов)</div>
+    `;
+}
+
+/**
+ * Завершить полноэкранный режим
+ */
+function finishFullScreen() {
+    if (!fullscreenResult || !resultsDiv || !telegramStatus) return;
+    
+    fullscreenResult.style.display = 'none';
+    resultsDiv.style.display = 'block';
+    
     telegramStatus.textContent = 'Результаты отправлены учителю!';
     telegramStatus.className = 'success';
     telegramStatus.style.display = 'block';
-  }
-  
-  console.log('Сообщение показано, начинаю таймер для перенаправления...');
-  
-  // Через 5 секунд перенаправляем на главную страницу
-  setTimeout(() => {
-    console.log('Таймер сработал, перенаправляю...');
     
-    // Определяем путь для перенаправления
-    const currentPath = window.location.pathname;
-    console.log('Текущий путь:', currentPath);
-    
-    if (currentPath.includes('/test/') || currentPath.includes('ftesttokv3')) {
-      // Если находимся в папке test, поднимаемся на уровень выше
-      window.location.href = '/index.html';
-    } else {
-      // Если в корне, просто index.html
-      window.location.href = 'index.html';
-    }
-    
-    // На всякий случай - дополнительный таймер на случай если перенаправление не сработает
     setTimeout(() => {
-      if (window.location.href.indexOf('index.html') === -1) {
-        console.log('Перенаправление не сработало, пробую принудительно...');
-        window.location.replace('../index.html');
-      }
-    }, 2000);
-    
-  }, 5000);
+        telegramStatus.style.display = 'none';
+        // Возвращаем на главную страницу через 5 секунд
+        setTimeout(() => {
+            window.location.href = "index.html";
+        }, 2000);
+    }, 5000);
 }
 
-// Сброс контрольной работы
+/**
+ * Сброс контрольной работы
+ */
 function resetAll() {
-  if (!confirm('Сбросить всю контрольную работу? Весь прогресс будет потерян.')) return;
-  
-  studentInfoSection.style.display = 'block';
-  testContent.style.display = 'none';
-  
-  studentNameInput.value = '';
-  studentClassSelect.value = '';
-  
-  closeAntiCheat();
-  
-  clipboardAttempts = 0;
-  tabSwitchAttempts = 0;
-  cheatBlockTimeouts = 0;
-  clipboardBlocked = false;
-  antiCheatTriggered = false;
+    if (!confirm('Сбросить всю контрольную работу? Весь прогресс будет потерян.')) return;
+    
+    if (studentInfoSection) studentInfoSection.style.display = 'block';
+    if (testContent) testContent.style.display = 'none';
+    
+    if (studentNameInput) studentNameInput.value = '';
+    if (studentClassSelect) studentClassSelect.value = '';
+    
+    // Закрыть античит окно, если открыто
+    closeAntiCheat();
+    
+    // Останавливаем мониторинг античит
+    stopAnticheatMonitoring();
+    
+    // Сброс статистики пасхалок
+    clipboardAttempts = 0;
+    tabSwitchAttempts = 0;
+    cheatBlockTimeouts = 0;
+    clipboardBlocked = false;
+    antiCheatTriggered = false;
+    testStarted = false;
+    testCompleted = false;
 }
 
-// Валидация формы
-function validateForm() {
-  const name = studentNameInput.value.trim();
-  const klass = studentClassSelect.value;
-  if (!name) { alert('Введите имя'); return false; }
-  if (!klass) { alert('Выберите класс'); return false; }
-  return true;
+// ==================== АНТИЧИТ СИСТЕМА ====================
+
+/**
+ * Начать мониторинг античит системы
+ */
+function startAnticheatMonitoring() {
+    console.log('🔍 Запуск мониторинга античит системы');
+    
+    // Мониторинг потери фокуса
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('focus', handleWindowFocus);
 }
 
-// Начало контрольной работы
-function startTest() {
-  if (!validateForm()) return;
-  
-  studentInfoSection.style.display = 'none';
-  testContent.style.display = 'block';
-  
-  initTest();
+/**
+ * Остановить мониторинг античит системы
+ */
+function stopAnticheatMonitoring() {
+    console.log('🛑 Остановка мониторинга античит системы');
+    
+    // Удаляем обработчики событий
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.removeEventListener('blur', handleWindowBlur);
+    window.removeEventListener('focus', handleWindowFocus);
 }
 
-// Инициализация
-window.onload = function () {
-  console.log('Скрипт загружен, инициализирую обработчики...');
-  
-  if (startTestBtn) startTestBtn.addEventListener('click', startTest);
-  if (confirmBtn) confirmBtn.addEventListener('click', confirmAnswer);
-  if (resetBtn) resetBtn.addEventListener('click', resetAll);
-  
-  // Проверяем, что кнопка finishBtn существует
-  if (finishBtn) {
-    console.log('Кнопка finishBtn найдена, добавляю обработчик');
-    finishBtn.addEventListener('click', finishFullScreen);
-  } else {
-    console.error('Кнопка finishBtn не найдена! Проверьте HTML');
-  }
-  
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && fullscreenResult && fullscreenResult.style.display === 'flex') {
-      finishFullScreen();
+/**
+ * Обработка изменения видимости страницы
+ */
+function handleVisibilityChange() {
+    if (document.hidden && testStarted && !testCompleted) {
+        console.log('👀 Страница скрыта - срабатывает античит');
+        triggerAnticheat();
     }
-  });
-  
-  // Проверка всех элементов для отладки
-  console.log('Элементы DOM:');
-  console.log('- startTestBtn:', !!startTestBtn);
-  console.log('- confirmBtn:', !!confirmBtn);
-  console.log('- resetBtn:', !!resetBtn);
-  console.log('- finishBtn:', !!finishBtn);
-  console.log('- resultsDiv:', !!resultsDiv);
-  console.log('- telegramStatus:', !!telegramStatus);
-  console.log('- fullscreenResult:', !!fullscreenResult);
-  console.log('- anticheatModal:', !!document.getElementById('anticheatModal'));
-  console.log('- blockerOverlay:', !!document.getElementById('blockerOverlay'));
+}
+
+/**
+ * Обработка потери фокуса окна
+ */
+function handleWindowBlur() {
+    if (testStarted && !testCompleted) {
+        console.log('💨 Окно потеряло фокус - срабатывает античит');
+        triggerAnticheat();
+    }
+}
+
+/**
+ * Обработка получения фокуса окна
+ */
+function handleWindowFocus() {
+    // Можно добавить логику при возвращении на страницу
+    console.log('🎯 Окно получило фокус');
+}
+
+/**
+ * Форматирование времени
+ */
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+/**
+ * Запустить античит блокировку
+ */
+function triggerAnticheat() {
+    if (!testStarted || testCompleted) {
+        console.log('⚠️ Античит не сработал: тест не начат или завершен');
+        return;
+    }
+    
+    cheatAttempts++;
+    tabSwitchAttempts++;
+    antiCheatTriggered = true;
+    
+    const messageIndex = Math.floor(Math.random() * cheatMessages.length);
+    if (cheatMessageElement) cheatMessageElement.textContent = cheatMessages[messageIndex];
+    
+    remainingTime = 3 * 60;
+    if (countdownTimer) countdownTimer.textContent = formatTime(remainingTime);
+    
+    if (passwordInput) passwordInput.value = '';
+    if (continueBtn) continueBtn.disabled = true;
+    
+    if (blockerOverlay) blockerOverlay.style.display = 'block';
+    if (anticheatModal) anticheatModal.style.display = 'block';
+    
+    // Вибрация (если поддерживается)
+    if (navigator.vibrate) {
+        navigator.vibrate([200, 100, 200]);
+    }
+    
+    startBlockTimer();
+    
+    console.log(`🚨 Античит сработал! Попыток переключения вкладок: ${tabSwitchAttempts}`);
+}
+
+/**
+ * Запустить обратный отсчет
+ */
+function startBlockTimer() {
+    clearInterval(blockTimer);
+    
+    blockTimer = setInterval(() => {
+        remainingTime--;
+        if (countdownTimer) countdownTimer.textContent = formatTime(remainingTime);
+        
+        if (remainingTime <= 10 && countdownTimer) {
+            countdownTimer.style.animation = remainingTime % 2 === 0 ? 'none' : 'pulse 0.5s';
+        }
+        
+        if (remainingTime <= 0) {
+            clearInterval(blockTimer);
+            if (continueBtn) continueBtn.disabled = false;
+            cheatBlockTimeouts++;
+            console.log(`⏱️ Таймер античит системы истек (${cheatBlockTimeouts} раз)`);
+        }
+    }, 1000);
+}
+
+/**
+ * Разблокировать тест
+ */
+function closeAntiCheat() {
+    clearInterval(blockTimer);
+    
+    if (blockerOverlay) blockerOverlay.style.display = 'none';
+    if (anticheatModal) anticheatModal.style.display = 'none';
+    if (passwordInput) passwordInput.value = '';
+    
+    console.log('✅ Античит система отключена');
+}
+
+// ==================== TELEGRAM ИНТЕГРАЦИЯ ====================
+
+/**
+ * Отправить результаты в Telegram
+ */
+async function sendResultsToTelegram(grade, correctQuestions, correctProblems, questionScore, problemScore) {
+    if (isSubmitted) return;
+    
+    const config = window.TEST_CONFIG.telegram;
+    
+    if (!config || !config.botToken || !config.chatId) {
+        console.warn('Telegram не настроен');
+        if (telegramStatus) {
+            telegramStatus.innerHTML = 
+                '<p style="color: #ff9800;">⚠️ Telegram не настроен. Сообщите учителю о результате.</p>';
+            telegramStatus.style.display = 'block';
+        }
+        return;
+    }
+    
+    // Проверяем, есть ли токен (не дефолтный)
+    if (config.botToken === "ВАШ_BOT_TOKEN" || config.botToken === "DEMO_TOKEN") {
+        console.warn('⚠️ Используется тестовый токен Telegram');
+        if (telegramStatus) {
+            telegramStatus.innerHTML = 
+                '<p style="color: #ff9800;">⚠️ Telegram настроен для тестирования. В реальном тесте будут использоваться реальные данные.</p>';
+            telegramStatus.style.display = 'block';
+        }
+        return;
+    }
+    
+    const student = window.STUDENT_INFO;
+    const testName = window.TEST_CONFIG.title;
+    const maxScore = window.TEST_CONFIG.maxScore;
+    
+    // Подготавливаем статистику пасхалок
+    const easterEggsStats = [];
+    
+    if (clipboardBlocked) {
+        easterEggsStats.push(`📋 Антикопирование: ${clipboardAttempts} раз(а)`);
+    } else {
+        easterEggsStats.push(`📋 Антикопирование: Не использовалось ✅`);
+    }
+    
+    if (antiCheatTriggered) {
+        easterEggsStats.push(`🚨 Античит система: ${tabSwitchAttempts} раз(а)`);
+        if (cheatBlockTimeouts > 0) {
+            easterEggsStats.push(`⏱️ Блокировки по таймеру: ${cheatBlockTimeouts} раз(а)`);
+        }
+    } else {
+        easterEggsStats.push(`🚨 Античит система: Не срабатывала ✅`);
+    }
+    
+    // Создаем сообщение с учетом пасхалок
+    let msg = `⚡ Результаты контрольной работы "${testName}":
+
+👤 Студент: ${student.name}
+🏫 Класс: ${student.class}
+🎯 Баллы: ${totalScore}/${maxScore} (${Math.round(totalScore/maxScore*100)}%)
+📝 Оценка: ${grade}
+
+Детализация:
+📖 Правильных вопросов: ${correctQuestions}/${window.TEST_CONFIG.totalQuestions} (${questionScore} баллов)
+📐 Правильных задач: ${correctProblems}/${window.TEST_CONFIG.totalProblems} (${problemScore} баллов)
+
+`;
+
+    // Добавляем статистику пасхалок только если они срабатывали
+    if (clipboardBlocked || antiCheatTriggered) {
+        msg += `
+🚨 **Статистика антижульничания:**
+`;
+        easterEggsStats.forEach(stat => {
+            msg += `• ${stat}\n`;
+        });
+    } else {
+        msg += `✅ **Честность:** Все системы защиты не срабатывали (чистая работа)\n`;
+    }
+    
+    msg += `
+📅 Дата: ${new Date().toLocaleString('ru-RU')}`;
+    
+    try {
+        // Отправляем запрос к Telegram Bot API
+        const response = await fetch(
+            `https://api.telegram.org/bot${config.botToken}/sendMessage`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    chat_id: config.chatId,
+                    text: msg,
+                    parse_mode: 'Markdown'
+                })
+            }
+        );
+        
+        const data = await response.json();
+        
+        if (data.ok) {
+            console.log('✅ Результаты отправлены в Telegram');
+            if (telegramStatus) {
+                telegramStatus.innerHTML = 
+                    '<p style="color: #4CAF50;">✅ Результаты отправлены учителю в Telegram!</p>';
+                telegramStatus.style.display = 'block';
+            }
+        } else {
+            throw new Error(data.description || 'Неизвестная ошибка Telegram');
+        }
+    } catch (error) {
+        console.error('Ошибка отправки в Telegram:', error);
+        if (telegramStatus) {
+            telegramStatus.innerHTML = 
+                `<p style="color: #f44336;">❌ Ошибка отправки: ${error.message}</p>`;
+            telegramStatus.style.display = 'block';
+        }
+    }
+    
+    isSubmitted = true;
+}
+
+/**
+ * Функция для тестирования Telegram
+ */
+window.testTelegram = async function() {
+    const config = window.TEST_CONFIG.telegram;
+    
+    if (!config || !config.botToken || !config.chatId) {
+        alert('❌ Telegram не настроен в конфигурации теста');
+        return;
+    }
+    
+    const url = `https://api.telegram.org/bot${config.botToken}/sendMessage`;
+    
+    console.log('🔄 Тестируем отправку в Telegram...');
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: config.chatId,
+                text: '🔧 *Тестовая отправка из системы тестирования*\n\n✅ Система работает корректно!\n📅 Время: ' + new Date().toLocaleString('ru-RU'),
+                parse_mode: 'Markdown'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.ok) {
+            alert('✅ Тестовая отправка в Telegram прошла успешно!');
+        } else {
+            alert('❌ Ошибка Telegram: ' + (data.description || 'Неизвестная ошибка'));
+        }
+    } catch (error) {
+        alert('❌ Ошибка сети: ' + error.message);
+    }
 };
+
+// ==================== ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ ====================
+
+// Экспортируем функции для глобального использования
+window.initTest = initTest;
+
+console.log('📚 Основной скрипт системы тестирования загружен (версия с пасхалками)');
+console.log('⏳ Ожидаем загрузку конфигурации теста...');
+
+// Если конфигурация уже загружена (например, в test.html скрипт теста загрузился раньше)
+if (window.TEST_CONFIG) {
+    console.log('✅ Конфигурация теста уже загружена, инициализируем...');
+    setTimeout(() => initTest(), 100);
+}
+
+// Отправляем событие о загрузке скрипта
+document.addEventListener('DOMContentLoaded', function() {
+    const event = new Event('scriptLoaded');
+    document.dispatchEvent(event);
+    console.log('📢 Событие scriptLoaded отправлено');
+});
