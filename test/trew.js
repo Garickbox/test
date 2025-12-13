@@ -6,8 +6,8 @@ window.TEST_CONFIG = {
     maxScore: 8,
     
     telegram: {
-        botToken: "DEMO_TOKEN",
-        chatId: "DEMO_CHAT"
+        botToken: "8344281396:AAGZ9-M2XRyPMHiI2akBSSIN7QAtRGDmLOY",
+        chatId: "1189539923"
     },
     
     gradingScale: {
@@ -94,3 +94,6 @@ window.problemsBank = [
 ];
 
 console.log('✅ Демо-тест trew.js загружен успешно!');
+console.log('📊 Теоретических вопросов:', window.questionsBank.length);
+console.log('📊 Задач:', window.problemsBank.length);
+console.log('🎯 Максимальный балл:', window.TEST_CONFIG.maxScore);
