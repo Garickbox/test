@@ -1,6 +1,6 @@
 // ====================================================================
 // ОСНОВНОЙ СКРИПТ СИСТЕМЫ ТЕСТИРОВАНИЯ
-// Версия 4.0 - На основе большого HTML-кода с пасхалками
+// Версия 5.0 - С автосохранением и кнопкой "Пропустить"
 // ====================================================================
 
 // Глобальные переменные системы
@@ -13,6 +13,11 @@ let isShowingAnswer = false;
 let currentShuffledOptions = [];
 let testStarted = false;
 let testCompleted = false;
+
+// Для сохранения прогресса
+let isTestRestored = false;
+let testStartTimestamp = 0;
+let skipQuestions = []; // Массив для хранения пропущенных вопросов
 
 // Переменные для отслеживания использования пасхалок
 let clipboardAttempts = 0;
@@ -72,7 +77,7 @@ const cheatMessages = [
 // DOM элементы
 let progressBar, progressText, questionText, questionType, optionsContainer, confirmBtn;
 let studentNameInput, studentClassSelect, fullscreenResult, fullscreenGrade;
-let fullscreenScore, fullscreenBreakdown, finishBtn, startTestBtn;
+let fullscreenScore, fullscreenBreakdown, finishBtn, startTestBtn, skipBtn;
 let studentInfoSection, testContent, blockerOverlay, anticheatModal;
 let cheatMessageElement, countdownTimer, passwordInput, continueBtn;
 
@@ -81,6 +86,147 @@ const PASSWORD = "3265";
 let blockTimer = null;
 let remainingTime = 0;
 let cheatAttempts = 0;
+
+// Таймер автосохранения
+let saveTimer = null;
+
+// ==================== АВТОСОХРАНЕНИЕ ====================
+
+/**
+ * Сохранить прогресс теста в localStorage
+ */
+function saveProgress() {
+    if (!testStarted || testCompleted) return;
+    
+    const progress = {
+        testName: window.TEST_CONFIG.title,
+        student: window.STUDENT_INFO,
+        currentQuestionIndex: currentQuestionIndex,
+        userAnswers: userAnswers,
+        totalScore: totalScore,
+        shuffledQuestionsAndProblems: shuffledQuestionsAndProblems,
+        timestamp: Date.now(),
+        startedAt: testStartTimestamp,
+        skipQuestions: skipQuestions,
+        isTestRestored: isTestRestored
+    };
+    
+    try {
+        localStorage.setItem('testProgress', JSON.stringify(progress));
+        console.log('💾 Прогресс сохранен');
+        
+        // Показываем уведомление
+        showSaveNotification();
+    } catch (e) {
+        console.error('Ошибка сохранения:', e);
+    }
+}
+
+/**
+ * Загрузить прогресс из localStorage
+ */
+function loadProgress() {
+    const saved = localStorage.getItem('testProgress');
+    if (!saved) return null;
+    
+    try {
+        const progress = JSON.parse(saved);
+        
+        // Проверяем, что это тот же тест и прошло не более 2 часов
+        if (progress.testName === window.TEST_CONFIG.title && 
+            (Date.now() - progress.timestamp) < 2 * 60 * 60 * 1000) {
+            return progress;
+        } else {
+            localStorage.removeItem('testProgress');
+        }
+    } catch (e) {
+        console.error('Ошибка загрузки прогресса:', e);
+        localStorage.removeItem('testProgress');
+    }
+    
+    return null;
+}
+
+/**
+ * Восстановить тест
+ */
+function restoreTest() {
+    const progress = loadProgress();
+    if (!progress) return false;
+    
+    if (!confirm(`Обнаружен незавершенный тест "${progress.testName}" от ${new Date(progress.timestamp).toLocaleString()}.\n\nВосстановить прогресс?`)) {
+        localStorage.removeItem('testProgress');
+        return false;
+    }
+    
+    // Восстанавливаем данные
+    currentQuestionIndex = progress.currentQuestionIndex;
+    userAnswers = progress.userAnswers;
+    totalScore = progress.totalScore;
+    shuffledQuestionsAndProblems = progress.shuffledQuestionsAndProblems;
+    skipQuestions = progress.skipQuestions || [];
+    window.STUDENT_INFO = progress.student;
+    
+    // Восстанавливаем состояние
+    testStarted = true;
+    isTestRestored = true;
+    testStartTimestamp = progress.startedAt;
+    
+    // Скрываем форму ввода
+    if (studentInfoSection) studentInfoSection.style.display = 'none';
+    if (testContent) testContent.style.display = 'block';
+    
+    // Показываем вопрос
+    showQuestion(currentQuestionIndex);
+    
+    // Восстанавливаем античит мониторинг
+    startAnticheatMonitoring();
+    
+    console.log('🔄 Тест восстановлен с вопроса', currentQuestionIndex + 1);
+    console.log('📊 Сохраненные ответы:', userAnswers);
+    
+    return true;
+}
+
+/**
+ * Показать уведомление о сохранении
+ */
+function showSaveNotification() {
+    const notification = document.getElementById('save-notification');
+    if (!notification) return;
+    
+    notification.style.display = 'block';
+    
+    setTimeout(() => {
+        notification.style.display = 'none';
+    }, 2000);
+}
+
+/**
+ * Начать автосохранение
+ */
+function startAutoSave() {
+    if (saveTimer) clearInterval(saveTimer);
+    
+    saveTimer = setInterval(() => {
+        if (testStarted && !testCompleted) {
+            saveProgress();
+        }
+    }, 30000); // Сохраняем каждые 30 секунд
+    
+    console.log('🔄 Автосохранение запущено');
+}
+
+/**
+ * Остановить автосохранение
+ */
+function stopAutoSave() {
+    if (saveTimer) {
+        clearInterval(saveTimer);
+        saveTimer = null;
+        console.log('🛑 Автосохранение остановлено');
+    }
+}
 
 // ==================== ИНИЦИАЛИЗАЦИЯ ТЕСТА ====================
 
@@ -114,6 +260,16 @@ function initTest() {
     setupEventListeners();
     setupAnticopySystem();
     
+    // Пробуем восстановить тест
+    if (!restoreTest()) {
+        console.log('🆕 Начинаем новый тест');
+        // Показываем форму для ввода данных
+        if (studentInfoSection) studentInfoSection.style.display = 'block';
+    } else {
+        // Если тест восстановлен, запускаем автосохранение
+        startAutoSave();
+    }
+    
     console.log('✅ Тест инициализирован успешно');
 }
 
@@ -124,6 +280,7 @@ function cacheDOMElements() {
     questionType = document.getElementById('question-type');
     optionsContainer = document.getElementById('options-container');
     confirmBtn = document.getElementById('confirm-btn');
+    skipBtn = document.getElementById('skip-btn');
     studentNameInput = document.getElementById('student-name');
     studentClassSelect = document.getElementById('student-class');
     fullscreenResult = document.getElementById('fullscreen-result');
@@ -143,6 +300,7 @@ function cacheDOMElements() {
     
     console.log('🔍 Кэширование DOM элементов:');
     console.log('- finishBtn найден:', !!finishBtn);
+    console.log('- skipBtn найден:', !!skipBtn);
     console.log('- fullscreenResult найден:', !!fullscreenResult);
 }
 
@@ -185,6 +343,11 @@ function setupEventListeners() {
         console.error('❌ finishBtn не найден в DOM!');
     }
     
+    if (skipBtn) {
+        skipBtn.addEventListener('click', skipQuestion);
+        console.log('✅ Обработчик для skipBtn установлен');
+    }
+    
     if (continueBtn) {
         continueBtn.addEventListener('click', function() {
             if (!this.disabled) {
@@ -208,9 +371,13 @@ function setupEventListeners() {
         });
     }
     
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && fullscreenResult && fullscreenResult.style.display === 'flex') {
-            // Теперь не закрываем по Escape
+    // Предотвращаем случайное обновление
+    window.addEventListener('beforeunload', function(e) {
+        if (testStarted && !testCompleted) {
+            e.preventDefault();
+            e.returnValue = 'Вы уверены, что хотите покинуть страницу? Весь прогресс теста будет сохранен.';
+            saveProgress(); // Сохраняем перед выходом
+            return 'Вы уверены, что хотите покинуть страницу? Весь прогресс теста будет сохранен.';
         }
     });
     
@@ -294,8 +461,10 @@ function startTest() {
     testContent.style.display = 'block';
     
     testStarted = true;
+    testStartTimestamp = Date.now();
     
     startAnticheatMonitoring();
+    startAutoSave(); // Запускаем автосохранение
     
     initQuestions();
     
@@ -331,6 +500,7 @@ function initQuestions() {
     isSubmitted = false;
     isShowingAnswer = false;
     currentShuffledOptions = [];
+    skipQuestions = [];
     
     clipboardAttempts = 0;
     tabSwitchAttempts = 0;
@@ -339,6 +509,7 @@ function initQuestions() {
     antiCheatTriggered = false;
     
     if (confirmBtn) confirmBtn.disabled = false;
+    if (skipBtn) skipBtn.disabled = false;
     if (fullscreenResult) fullscreenResult.style.display = 'none';
     
     console.log(`✅ Выбрано ${selectedQuestions.length} вопросов и ${selectedProblems.length} задач`);
@@ -362,6 +533,7 @@ function showQuestion(index) {
     
     if (questionText) questionText.textContent = item.text;
     
+    // Показываем тип задания
     if (item.points === 3) {
         if (questionType) {
             questionType.textContent = "Задача (3 балла)";
@@ -372,6 +544,15 @@ function showQuestion(index) {
             questionType.textContent = "Теоретический вопрос (1 балл)";
             questionType.className = "question-type";
         }
+    }
+    
+    // Показываем информацию о пропущенных вопросах
+    const skippedCount = skipQuestions.length;
+    if (skippedCount > 0 && questionType) {
+        const span = document.createElement('span');
+        span.className = 'question-counter';
+        span.textContent = `Пропущено: ${skippedCount}`;
+        questionType.appendChild(span);
     }
     
     currentShuffledOptions = shuffleArray([...item.options]);
@@ -407,6 +588,20 @@ function showQuestion(index) {
         });
     }
     
+    // Управляем кнопками
+    if (confirmBtn) confirmBtn.disabled = true;
+    if (skipBtn) {
+        // Нельзя пропустить последний непропущенный вопрос
+        const remainingQuestions = shuffledQuestionsAndProblems.length - index - skipQuestions.length;
+        if (remainingQuestions <= 1) {
+            skipBtn.disabled = true;
+            skipBtn.title = "Это последний непропущенный вопрос";
+        } else {
+            skipBtn.disabled = false;
+            skipBtn.title = "Пропустить вопрос и вернуться к нему позже";
+        }
+    }
+    
     updateProgress();
 }
 
@@ -429,7 +624,7 @@ function updateProgress() {
     if (!progressBar || !progressText) return;
     
     const totalQuestions = shuffledQuestionsAndProblems.length;
-    const percent = (currentQuestionIndex / totalQuestions) * 100;
+    const percent = ((currentQuestionIndex) / totalQuestions) * 100;
     progressBar.style.width = `${percent}%`;
     progressText.textContent = `Задание ${currentQuestionIndex + 1} из ${totalQuestions}`;
 }
@@ -444,6 +639,7 @@ function confirmAnswer() {
     userAnswers[currentQuestionIndex] = selectedOption.value;
     
     if (confirmBtn) confirmBtn.disabled = true;
+    if (skipBtn) skipBtn.disabled = true;
     isShowingAnswer = true;
     
     highlightCorrectAnswer();
@@ -451,14 +647,81 @@ function confirmAnswer() {
     setTimeout(() => {
         isShowingAnswer = false;
         
-        if (currentQuestionIndex < shuffledQuestionsAndProblems.length - 1) {
-            currentQuestionIndex++;
+        // Сохраняем прогресс
+        saveProgress();
+        
+        // Переходим к следующему непропущенному вопросу
+        let nextIndex = currentQuestionIndex + 1;
+        
+        // Пропускаем вопросы из skipQuestions
+        while (skipQuestions.includes(nextIndex) && nextIndex < shuffledQuestionsAndProblems.length) {
+            nextIndex++;
+        }
+        
+        if (nextIndex < shuffledQuestionsAndProblems.length) {
+            currentQuestionIndex = nextIndex;
             showQuestion(currentQuestionIndex);
             if (confirmBtn) confirmBtn.disabled = true;
         } else {
-            showResults();
+            // Проверяем, есть ли пропущенные вопросы
+            const unansweredSkipped = skipQuestions.filter(idx => userAnswers[idx] === null);
+            
+            if (unansweredSkipped.length > 0) {
+                // Переходим к первому непропущенному вопросу
+                currentQuestionIndex = unansweredSkipped[0];
+                showQuestion(currentQuestionIndex);
+                alert(`Осталось ответить на ${unansweredSkipped.length} пропущенных вопросов`);
+            } else {
+                // Все вопросы отвечены
+                localStorage.removeItem('testProgress');
+                stopAutoSave();
+                showResults();
+            }
         }
     }, 2000);
+}
+
+/**
+ * Пропустить вопрос
+ */
+function skipQuestion() {
+    if (!shuffledQuestionsAndProblems || currentQuestionIndex >= shuffledQuestionsAndProblems.length) {
+        console.log('❌ Нельзя пропустить вопрос');
+        return;
+    }
+    
+    // Проверяем, сколько осталось непропущенных вопросов
+    const remainingQuestions = shuffledQuestionsAndProblems.length - currentQuestionIndex - skipQuestions.length - 1;
+    if (remainingQuestions <= 0) {
+        alert('Это последний непропущенный вопрос. Пропустить нельзя.');
+        return;
+    }
+    
+    console.log('⏭️ Пропускаем вопрос', currentQuestionIndex + 1);
+    
+    // Добавляем текущий вопрос в список пропущенных
+    if (!skipQuestions.includes(currentQuestionIndex)) {
+        skipQuestions.push(currentQuestionIndex);
+    }
+    
+    // Ищем следующий непропущенный вопрос
+    let nextIndex = currentQuestionIndex + 1;
+    while (skipQuestions.includes(nextIndex) && nextIndex < shuffledQuestionsAndProblems.length) {
+        nextIndex++;
+    }
+    
+    if (nextIndex < shuffledQuestionsAndProblems.length) {
+        currentQuestionIndex = nextIndex;
+        showQuestion(currentQuestionIndex);
+        
+        // Сохраняем прогресс
+        saveProgress();
+        
+        console.log('✅ Вопрос пропущен, переходим к вопросу', currentQuestionIndex + 1);
+    } else {
+        // Все вопросы пропущены или пройдены
+        alert('Все вопросы просмотрены. Вернитесь к пропущенным вопросам.');
+    }
 }
 
 // ==================== РЕЗУЛЬТАТЫ И ОЦЕНКИ ====================
@@ -467,6 +730,7 @@ function showResults() {
     testCompleted = true;
     
     stopAnticheatMonitoring();
+    stopAutoSave();
     
     if (testContent) testContent.style.display = 'none';
     
@@ -503,7 +767,8 @@ function showResults() {
         score: totalScore,
         grade: grade,
         correctAnswers: correctQuestions + correctProblems,
-        totalQuestions: shuffledQuestionsAndProblems.length
+        totalQuestions: shuffledQuestionsAndProblems.length,
+        skippedQuestions: skipQuestions.length
     });
 }
 
@@ -555,10 +820,19 @@ function showFullscreenResult(grade, score, maxScore, correctQuestions, correctP
         fullscreenMaxScore.textContent = maxScore;
     }
     
+    let skippedInfo = '';
+    if (skipQuestions.length > 0) {
+        skippedInfo = `<div style="color: #ff9800; margin-top: 10px;">
+            <i class="fas fa-exclamation-circle"></i>
+            Пропущенных вопросов: ${skipQuestions.length}
+        </div>`;
+    }
+    
     fullscreenBreakdown.innerHTML = `
         <div>Правильных вопросов: ${correctQuestions} из ${window.TEST_CONFIG.totalQuestions} (${questionScore} баллов)</div>
         <div>Правильных задач: ${correctProblems} из ${window.TEST_CONFIG.totalProblems} (${problemScore} баллов)</div>
         <div>Всего баллов: ${score} из ${maxScore}</div>
+        ${skippedInfo}
     `;
     
     console.log('✅ Полноэкранный результат показан');
@@ -592,10 +866,19 @@ function finishFullScreen() {
     }
     
     // Формируем детализацию для экрана "Работа принята"
+    let skippedInfo = '';
+    if (skipQuestions.length > 0) {
+        skippedInfo = `<div style="color: #ff9800; margin-top: 8px;">
+            <i class="fas fa-exclamation-circle"></i>
+            Пропущенных вопросов: ${skipQuestions.length}
+        </div>`;
+    }
+    
     const breakdown = `
         <div style="margin-bottom: 8px;">Правильных вопросов: ${window.TEST_CONFIG.correctQuestions || 0} из ${window.TEST_CONFIG.totalQuestions}</div>
         <div style="margin-bottom: 8px;">Правильных задач: ${window.TEST_CONFIG.correctProblems || 0} из ${window.TEST_CONFIG.totalProblems}</div>
         <div>Всего баллов: ${score} из ${maxScore}</div>
+        ${skippedInfo}
     `;
     
     console.log('📤 Отправляем результаты в Telegram...');
@@ -802,6 +1085,11 @@ async function sendResultsToTelegram(grade, correctQuestions, correctProblems, q
         easterEggsStats.push(`🚨 Античит система: Не срабатывала ✅`);
     }
     
+    // Добавляем информацию о пропущенных вопросах
+    if (skipQuestions.length > 0) {
+        easterEggsStats.push(`⏭️ Пропущенных вопросов: ${skipQuestions.length}`);
+    }
+    
     let msg = `⚡ Результаты контрольной работы "${testName}":
 
 👤 Студент: ${student.name}
@@ -815,9 +1103,13 @@ async function sendResultsToTelegram(grade, correctQuestions, correctProblems, q
 
 `;
 
-    if (clipboardBlocked || antiCheatTriggered) {
+    if (skipQuestions.length > 0) {
+        msg += `⏭️ Пропущенных вопросов: ${skipQuestions.length}\n\n`;
+    }
+
+    if (clipboardBlocked || antiCheatTriggered || skipQuestions.length > 0) {
         msg += `
-🚨 **Статистика антижульничания:**
+🚨 **Статистика:**
 `;
         easterEggsStats.forEach(stat => {
             msg += `• ${stat}\n`;
@@ -899,7 +1191,7 @@ window.testTelegram = async function() {
 
 window.initTest = initTest;
 
-console.log('📚 Основной скрипт системы тестирования загружен (версия с пасхалками)');
+console.log('📚 Основной скрипт системы тестирования загружен (версия с автосохранением и пропуском)');
 console.log('⏳ Ожидаем загрузку конфигурации теста...');
 
 if (window.TEST_CONFIG) {

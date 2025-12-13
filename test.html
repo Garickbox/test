@@ -32,9 +32,81 @@
       opacity: 0.8;
     }
     
+    /* Стили для кнопки пропуска */
+    .skip-btn {
+      background: linear-gradient(135deg, #ff9800, #ff5722);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-left: 10px;
+      box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3);
+    }
+    
+    .skip-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      background: linear-gradient(135deg, #f57c00, #e64a19);
+      box-shadow: 0 6px 12px rgba(255, 152, 0, 0.4);
+    }
+    
+    .skip-btn:disabled {
+      background: #cccccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+      opacity: 0.6;
+    }
+    
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+    
+    .question-counter {
+      display: inline-block;
+      background: #e1f5fe;
+      color: #0288d1;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+    
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Стили для предупреждения о сохранении */
+    .save-notification {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #4CAF50;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 10000;
+      display: none;
+      animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
     }
   </style>
 </head>
@@ -83,13 +155,16 @@
           <div class="question-type" id="question-type"></div>
           <div class="question-text" id="question-text"></div>
           <div class="options-container" id="options-container"></div>
-          <button id="confirm-btn" disabled>
-            <i class="fas fa-check-circle"></i> Подтвердить ответ
-          </button>
+          <div class="button-group">
+            <button id="confirm-btn" disabled>
+              <i class="fas fa-check-circle"></i> Подтвердить ответ
+            </button>
+            <button id="skip-btn" class="skip-btn" disabled>
+              <i class="fas fa-forward"></i> Пропустить
+            </button>
+          </div>
         </div>
       </div>
-
-      <!-- Убрали секцию результатов, так как теперь все показывается в полноэкранном окне -->
     </div>
   </div>
 
@@ -146,6 +221,11 @@
              maxlength="4" inputmode="numeric" placeholder="0000">
     </div>
     <button class="continue-btn" id="continueBtn" disabled>Продолжить тест</button>
+  </div>
+
+  <!-- Уведомление о сохранении -->
+  <div class="save-notification" id="save-notification">
+    <i class="fas fa-save"></i> Прогресс сохранен
   </div>
 
   <!-- Основной скрипт системы -->
