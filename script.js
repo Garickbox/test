@@ -140,6 +140,10 @@ function cacheDOMElements() {
     countdownTimer = document.getElementById('countdownTimer');
     passwordInput = document.getElementById('passwordInput');
     continueBtn = document.getElementById('continueBtn');
+    
+    console.log('🔍 Кэширование DOM элементов:');
+    console.log('- finishBtn найден:', !!finishBtn);
+    console.log('- fullscreenResult найден:', !!fullscreenResult);
 }
 
 function showError(message) {
@@ -165,14 +169,20 @@ function showError(message) {
 function setupEventListeners() {
     if (startTestBtn) {
         startTestBtn.addEventListener('click', startTest);
+        console.log('✅ Обработчик для startTestBtn установлен');
     }
     
     if (confirmBtn) {
         confirmBtn.addEventListener('click', confirmAnswer);
+        console.log('✅ Обработчик для confirmBtn установлен');
     }
     
     if (finishBtn) {
+        console.log('🎯 Назначаем обработчик для finishBtn');
         finishBtn.addEventListener('click', finishFullScreen);
+        console.log('✅ Обработчик для finishBtn установлен');
+    } else {
+        console.error('❌ finishBtn не найден в DOM!');
     }
     
     if (continueBtn) {
@@ -200,11 +210,11 @@ function setupEventListeners() {
     
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && fullscreenResult && fullscreenResult.style.display === 'flex') {
-            // Теперь не закрываем по Escape, так как есть таймер
+            // Теперь не закрываем по Escape
         }
     });
     
-    console.log('✅ Обработчики событий установлены');
+    console.log('✅ Все обработчики событий установлены');
 }
 
 function setupAnticopySystem() {
@@ -517,13 +527,23 @@ function getGradeColor(grade) {
 }
 
 function showFullscreenResult(grade, score, maxScore, correctQuestions, correctProblems, questionScore, problemScore) {
-    if (!fullscreenResult || !fullscreenGrade || !fullscreenScore || !fullscreenBreakdown) return;
+    console.log('📱 Показываем полноэкранный результат...');
+    
+    if (!fullscreenResult || !fullscreenGrade || !fullscreenScore || !fullscreenBreakdown) {
+        console.error('❌ Не найдены элементы полноэкранного результата');
+        return;
+    }
     
     fullscreenResult.style.display = 'flex';
     
     // Убедимся, что показывается правильный экран (с оценкой)
-    document.getElementById('grade-screen').style.display = 'block';
-    document.getElementById('accepted-screen').style.display = 'none';
+    const gradeScreen = document.getElementById('grade-screen');
+    const acceptedScreen = document.getElementById('accepted-screen');
+    
+    if (gradeScreen && acceptedScreen) {
+        gradeScreen.style.display = 'block';
+        acceptedScreen.style.display = 'none';
+    }
     
     fullscreenGrade.textContent = grade;
     fullscreenGrade.style.color = getGradeColor(grade);
@@ -540,18 +560,24 @@ function showFullscreenResult(grade, score, maxScore, correctQuestions, correctP
         <div>Правильных задач: ${correctProblems} из ${window.TEST_CONFIG.totalProblems} (${problemScore} баллов)</div>
         <div>Всего баллов: ${score} из ${maxScore}</div>
     `;
+    
+    console.log('✅ Полноэкранный результат показан');
 }
 
 /**
  * Завершить полноэкранный режим (новая логика)
  */
 function finishFullScreen() {
-    if (!fullscreenResult || !fullscreenGrade || !fullscreenScore || !fullscreenBreakdown) return;
+    console.log('🔄 Нажата кнопка "Завершить"');
+    
+    if (!fullscreenResult || !fullscreenGrade || !fullscreenScore || !fullscreenBreakdown) {
+        console.error('❌ Не найдены элементы для завершения');
+        return;
+    }
     
     // Получаем данные для передачи на следующий экран
     const grade = fullscreenGrade.textContent;
     const scoreText = fullscreenScore.textContent;
-    const breakdownHTML = fullscreenBreakdown.innerHTML;
     
     // Извлекаем баллы из текста (например: "15 из 20")
     const scoreMatch = scoreText.match(/(\d+)\s*из\s*(\d+)/);
@@ -561,6 +587,8 @@ function finishFullScreen() {
     if (scoreMatch) {
         score = scoreMatch[1];
         maxScore = scoreMatch[2];
+    } else {
+        console.warn('Не удалось извлечь баллы из текста:', scoreText);
     }
     
     // Формируем детализацию для экрана "Работа принята"
@@ -569,6 +597,8 @@ function finishFullScreen() {
         <div style="margin-bottom: 8px;">Правильных задач: ${window.TEST_CONFIG.correctProblems || 0} из ${window.TEST_CONFIG.totalProblems}</div>
         <div>Всего баллов: ${score} из ${maxScore}</div>
     `;
+    
+    console.log('📤 Отправляем результаты в Telegram...');
     
     // Отправляем результаты в Telegram
     sendResultsToTelegram(
@@ -579,26 +609,36 @@ function finishFullScreen() {
         (window.TEST_CONFIG.correctProblems || 0) * 3
     );
     
+    console.log('🔄 Переключаем на экран "Работа принята"');
+    
     // Переключаем на экран "Работа принята"
-    if (window.showWorkAcceptedScreen) {
-        window.showWorkAcceptedScreen(grade, score, maxScore, breakdown);
-    } else {
-        // Резервный вариант, если функция не загрузилась
-        console.warn('Функция showWorkAcceptedScreen не найдена, используем резервный метод');
+    const gradeScreen = document.getElementById('grade-screen');
+    const acceptedScreen = document.getElementById('accepted-screen');
+    
+    if (gradeScreen && acceptedScreen) {
+        gradeScreen.style.display = 'none';
+        acceptedScreen.style.display = 'block';
         
-        // Переключаем экраны
-        document.getElementById('grade-screen').style.display = 'none';
-        document.getElementById('accepted-screen').style.display = 'block';
+        // Заполняем данные на втором экране
+        const acceptedGrade = document.getElementById('accepted-grade');
+        const acceptedScore = document.getElementById('accepted-score');
+        const acceptedMaxScore = document.getElementById('accepted-max-score');
+        const acceptedBreakdown = document.getElementById('accepted-breakdown');
+        const timerMessage = document.getElementById('timer-message');
         
-        // Заполняем данные
-        document.getElementById('accepted-grade').textContent = grade;
-        document.getElementById('accepted-score').textContent = score;
-        document.getElementById('accepted-max-score').textContent = maxScore;
-        document.getElementById('accepted-breakdown').innerHTML = breakdown;
+        if (acceptedGrade) acceptedGrade.textContent = grade;
+        if (acceptedScore) acceptedScore.textContent = score;
+        if (acceptedMaxScore) acceptedMaxScore.textContent = maxScore;
+        if (acceptedBreakdown) acceptedBreakdown.innerHTML = breakdown;
+        
+        console.log('⏱️ Запускаем таймер обратного отсчета...');
         
         // Запускаем таймер обратного отсчета
         let seconds = 8;
-        const timerMessage = document.getElementById('timer-message');
+        if (timerMessage) {
+            timerMessage.textContent = `Через ${seconds} секунд вы будете перенаправлены на главную страницу...`;
+        }
+        
         const timerInterval = setInterval(() => {
             seconds--;
             if (timerMessage) {
@@ -607,9 +647,14 @@ function finishFullScreen() {
             
             if (seconds <= 0) {
                 clearInterval(timerInterval);
+                console.log('🔄 Перенаправляем на главную страницу...');
                 window.location.href = "index.html";
             }
         }, 1000);
+    } else {
+        console.error('❌ Не найдены элементы экранов');
+        console.log('- gradeScreen:', gradeScreen);
+        console.log('- acceptedScreen:', acceptedScreen);
     }
 }
 
@@ -719,7 +764,10 @@ function closeAntiCheat() {
 // ==================== TELEGRAM ИНТЕГРАЦИЯ ====================
 
 async function sendResultsToTelegram(grade, correctQuestions, correctProblems, questionScore, problemScore) {
-    if (isSubmitted) return;
+    if (isSubmitted) {
+        console.log('📤 Результаты уже отправлены');
+        return;
+    }
     
     const config = window.TEST_CONFIG.telegram;
     
@@ -782,6 +830,7 @@ async function sendResultsToTelegram(grade, correctQuestions, correctProblems, q
 📅 Дата: ${new Date().toLocaleString('ru-RU')}`;
     
     try {
+        console.log('📨 Отправка сообщения в Telegram...');
         const response = await fetch(
             `https://api.telegram.org/bot${config.botToken}/sendMessage`,
             {
@@ -805,7 +854,7 @@ async function sendResultsToTelegram(grade, correctQuestions, correctProblems, q
             throw new Error(data.description || 'Неизвестная ошибка Telegram');
         }
     } catch (error) {
-        console.error('Ошибка отправки в Telegram:', error);
+        console.error('❌ Ошибка отправки в Telegram:', error);
     }
     
     isSubmitted = true;
