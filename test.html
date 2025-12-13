@@ -1,696 +1,207 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Контрольная работа | Система тестирования</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 20px auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            overflow: hidden;
-            position: relative;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
-            color: white;
-            padding: 25px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            font-size: 16px;
-            opacity: 0.9;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .header::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
-            opacity: 0.1;
-        }
-
-        .content {
-            padding: 30px;
-            min-height: 500px;
-        }
-
-        .section-title {
-            font-size: 22px;
-            font-weight: 600;
-            color: #4b6cb7;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        /* Студенческая информация */
-        .student-info {
-            background: #f9f9ff;
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 25px;
-            border: 1px solid #e6e6ff;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-group label {
-            display: block;
-            font-weight: 500;
-            margin-bottom: 8px;
-            color: #555;
-        }
-
-        .input-group input,
-        .input-group select {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        .input-group input:focus,
-        .input-group select:focus {
-            border-color: #4b6cb7;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(75, 108, 183, 0.1);
-        }
-
-        /* Прогресс бар */
-        .progress-container {
-            margin: 25px 0;
-            background: #f0f0f0;
-            border-radius: 10px;
-            overflow: hidden;
-            height: 12px;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #4b6cb7, #764ba2);
-            width: 0%;
-            transition: width 0.5s ease;
-            border-radius: 10px;
-        }
-
-        .progress-text {
-            text-align: center;
-            font-weight: 500;
-            margin-top: 5px;
-            color: #666;
-        }
-
-        /* Вопросы */
-        .question-container {
-            background: #fff;
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            border: 1px solid #eee;
-        }
-
-        .question-type {
-            display: inline-block;
-            background: #4b6cb7;
-            color: white;
-            padding: 6px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 15px;
-        }
-
-        .question-type.problem-type {
-            background: #ff6b6b;
-        }
-
-        .question-text {
-            font-size: 18px;
-            line-height: 1.6;
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        /* Варианты ответов */
-        .options-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .option-label {
-            display: flex;
-            align-items: center;
-            padding: 15px;
-            border: 2px solid #e6e6ff;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            background: #f9f9ff;
-        }
-
-        .option-label:hover {
-            background: #f0f0ff;
-            border-color: #b8b8ff;
-        }
-
-        .option-label.selected {
-            background: #e6f0ff;
-            border-color: #4b6cb7;
-        }
-
-        .option-label.correct {
-            background: #e7f7e7;
-            border-color: #4CAF50;
-        }
-
-        .option-label.incorrect {
-            background: #fdeaea;
-            border-color: #f44336;
-        }
-
-        .option-label input[type="radio"] {
-            margin-right: 12px;
-            cursor: pointer;
-        }
-
-        /* Кнопки */
-        .button-container {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 30px;
-        }
-
-        .btn {
-            padding: 14px 28px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn i {
-            font-size: 18px;
-        }
-
-        .start-btn {
-            background: linear-gradient(135deg, #4CAF50, #2E7D32);
-            color: white;
-        }
-
-        .start-btn:hover {
-            background: linear-gradient(135deg, #43A047, #1B5E20);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
-        }
-
-        .confirm-btn {
-            background: linear-gradient(135deg, #4b6cb7, #182848);
-            color: white;
-        }
-
-        .confirm-btn:hover {
-            background: linear-gradient(135deg, #3a56a5, #0d1c3d);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(75, 108, 183, 0.3);
-        }
-
-        .confirm-btn:disabled {
-            background: #cccccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .finish-btn {
-            background: linear-gradient(135deg, #9C27B0, #6A1B9A);
-            color: white;
-        }
-
-        .finish-btn:hover {
-            background: linear-gradient(135deg, #8E24AA, #4A148C);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(156, 39, 176, 0.3);
-        }
-
-        /* Результаты */
-        .results-container {
-            background: #f9f9ff;
-            border-radius: 10px;
-            padding: 30px;
-            margin-top: 30px;
-            text-align: center;
-            border: 1px solid #e6e6ff;
-        }
-
-        .results-container h3 {
-            font-size: 24px;
-            color: #4b6cb7;
-            margin-bottom: 20px;
-        }
-
-        .score-display {
-            font-size: 48px;
-            font-weight: 700;
-            color: #4b6cb7;
-            margin: 20px 0;
-        }
-
-        .grade-display {
-            font-size: 72px;
-            font-weight: 800;
-            margin: 20px 0;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .points-breakdown {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 25px 0;
-            text-align: left;
-            border: 1px solid #eee;
-        }
-
-        .points-breakdown div {
-            padding: 8px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .points-breakdown div:last-child {
-            border-bottom: none;
-        }
-
-        /* Сообщение Telegram */
-        #telegram-status {
-            background: #e7f7e7;
-            border: 1px solid #4CAF50;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 20px 0;
-            color: #2E7D32;
-            font-weight: 500;
-            display: none;
-        }
-
-        #telegram-status.error {
-            background: #fdeaea;
-            border-color: #f44336;
-            color: #c62828;
-        }
-
-        #telegram-status.warning {
-            background: #fff8e1;
-            border-color: #ff9800;
-            color: #ef6c00;
-        }
-
-        /* Полноэкранный результат */
-        #fullscreen-result {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            z-index: 1000;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            text-align: center;
-        }
-
-        #fullscreen-result h2 {
-            font-size: 36px;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        #fullscreen-result .grade {
-            font-size: 120px;
-            font-weight: 800;
-            margin: 20px 0;
-            text-shadow: 3px 3px 6px rgba(0,0,0,0.4);
-        }
-
-        #fullscreen-result .score {
-            font-size: 48px;
-            margin-bottom: 30px;
-            opacity: 0.9;
-        }
-
-        #fullscreen-result .breakdown {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px;
-            max-width: 500px;
-            backdrop-filter: blur(10px);
-        }
-
-        /* Античит блокировка */
-        #blockerOverlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 9999;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            text-align: center;
-        }
-
-        #anticheatModal {
-            background: white;
-            color: #333;
-            padding: 40px;
-            border-radius: 15px;
-            max-width: 600px;
-            width: 90%;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-
-        #cheatMessage {
-            font-size: 20px;
-            margin-bottom: 25px;
-            color: #f44336;
-            font-weight: 600;
-        }
-
-        #countdownTimer {
-            font-size: 48px;
-            font-weight: 700;
-            color: #f44336;
-            margin: 20px 0;
-            font-family: monospace;
-        }
-
-        .password-input {
-            width: 200px;
-            padding: 15px;
-            font-size: 24px;
-            text-align: center;
-            letter-spacing: 5px;
-            margin: 20px auto;
-            border: 3px solid #4b6cb7;
-            border-radius: 8px;
-            font-family: monospace;
-        }
-
-        .continue-btn {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-
-        .continue-btn:disabled {
-            background: #cccccc;
-            cursor: not-allowed;
-        }
-
-        /* Анимации */
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease;
-        }
-
-        /* Футер */
-        .footer {
-            text-align: center;
-            padding: 20px;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
-            background: rgba(0, 0, 0, 0.2);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        /* Адаптивность */
-        @media (max-width: 768px) {
-            .container {
-                margin: 10px;
-                border-radius: 10px;
-            }
-            
-            .header h1 {
-                font-size: 24px;
-            }
-            
-            .content {
-                padding: 20px;
-            }
-            
-            .button-container {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-            }
-            
-            .grade-display {
-                font-size: 60px;
-            }
-            
-            #fullscreen-result .grade {
-                font-size: 80px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Загрузка теста...</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1 id="page-title">Контрольная работа по математике</h1>
-            <p>Высоковская школа • Честность — наш девиз!</p>
-        </div>
-
-        <div class="content">
-            <!-- Секция ввода данных ученика -->
-            <section id="student-info-section">
-                <div class="section-title">Информация об ученике</div>
-                <div class="student-info">
-                    <div class="input-group">
-                        <label for="student-name"><i class="fas fa-user"></i> Фамилия и имя ученика</label>
-                        <input type="text" id="student-name" placeholder="Иванов Иван" maxlength="50">
-                    </div>
-                    <div class="input-group">
-                        <label for="student-class"><i class="fas fa-graduation-cap"></i> Класс</label>
-                        <select id="student-class">
-                            <option value="">Выберите класс</option>
-                            <option value="7А">7А</option>
-                            <option value="7Б">7Б</option>
-                            <option value="7В">7В</option>
-                            <option value="8А">8А</option>
-                            <option value="8Б">8Б</option>
-                            <option value="8В">8В</option>
-                            <option value="9А">9А</option>
-                            <option value="9Б">9Б</option>
-                            <option value="9В">9В</option>
-                            <option value="10А">10А</option>
-                            <option value="10Б">10Б</option>
-                            <option value="10В">10В</option>
-                            <option value="11А">11А</option>
-                            <option value="11Б">11Б</option>
-                            <option value="11В">11В</option>
-                        </select>
-                    </div>
-                    <div class="button-container">
-                        <button class="btn start-btn" id="start-test-btn">
-                            <i class="fas fa-play-circle"></i> Начать контрольную
-                        </button>
-                    </div>
-                </div>
-                <div class="footer-note">
-                    <p><i class="fas fa-info-circle"></i> На выполнение работы даётся 45 минут. После начала теста нельзя переключать вкладки или копировать текст. Удачи!</p>
-                </div>
-            </section>
-
-            <!-- Секция теста -->
-            <section id="test-content" style="display: none;">
-                <div class="progress-container">
-                    <div class="progress-bar" id="progress-bar"></div>
-                </div>
-                <div class="progress-text" id="progress-text">Задание 1 из 10</div>
-
-                <div class="question-container">
-                    <div class="question-type" id="question-type">Теоретический вопрос (1 балл)</div>
-                    <div class="question-text" id="question-text">
-                        Здесь будет текст вопроса или задачи...
-                    </div>
-                    
-                    <div class="options-container" id="options-container">
-                        <!-- Варианты ответов будут генерироваться JavaScript -->
-                    </div>
-                    
-                    <div class="button-container">
-                        <button class="btn confirm-btn" id="confirm-btn" disabled>
-                            <i class="fas fa-check-circle"></i> Подтвердить ответ
-                        </button>
-                    </div>
-                </div>
-                
-                <div id="telegram-status"></div>
-            </section>
-
-            <!-- Секция результатов -->
-            <section id="results" style="display: none;">
-                <div class="section-title">Результаты контрольной работы</div>
-                <div class="results-container">
-                    <h3>Ваша оценка:</h3>
-                    <div class="grade-display" id="grade-value">5</div>
-                    <div class="score-display" id="score-value">15 из 20</div>
-                    
-                    <div class="points-breakdown" id="points-breakdown">
-                        <div>Правильных вопросов: 10 из 10 (10 баллов)</div>
-                        <div>Правильных задач: 2 из 5 (6 баллов)</div>
-                        <div>Всего баллов: 16 из 25</div>
-                    </div>
-                    
-                    <div class="button-container">
-                        <button class="btn finish-btn" id="finish-btn">
-                            <i class="fas fa-check-circle"></i> Завершить тест
-                        </button>
-                    </div>
-                </div>
-            </section>
-        </div>
-
-        <div class="footer">
-            <p>Высоковская школа • Система тестирования v4.0 • <span id="current-year">2024</span></p>
-            <p><i class="fas fa-shield-alt"></i> Используется защита от списывания</p>
-        </div>
+  <div class="container">
+    <div class="telegram-header">
+      <h1 id="page-title">Загрузка теста...</h1>
     </div>
 
-    <!-- Полноэкранный результат -->
-    <div id="fullscreen-result">
-        <h2>Ваша оценка:</h2>
-        <div class="grade" id="fullscreen-grade">5</div>
-        <div class="score" id="fullscreen-score">15 из 20</div>
-        <div class="breakdown" id="fullscreen-breakdown">
-            <div>Правильных вопросов: 10 из 10 (10 баллов)</div>
-            <div>Правильных задач: 2 из 5 (6 баллов)</div>
+    <div class="section" id="student-info-section">
+      <div class="section-title">
+        <i class="fas fa-user-circle"></i> Информация об ученике
+      </div>
+      <div class="student-info">
+        <div>
+          <label for="student-name">Имя:</label>
+          <input type="text" id="student-name" placeholder="Введите ваше имя" />
         </div>
-        <p style="opacity: 0.8; margin-top: 30px; font-size: 18px;">
-            Через несколько секунд вы будете перенаправлены на главную страницу...
-        </p>
+        <div>
+          <label for="student-class">Класс:</label>
+          <select id="student-class">
+            <option value="">Выберите класс</option>
+            <option value="7">7 класс</option>
+            <option value="8">8 класс</option>
+            <option value="9">9 класс</option>
+            <option value="10">10 класс</option>
+            <option value="11">11 класс</option>
+          </select>
+        </div>
+      </div>
+      <button class="start-test-btn" id="start-test-btn">
+        <i class="fas fa-play-circle"></i> Начать контрольную
+      </button>
     </div>
 
-    <!-- Античит блокировка -->
-    <div id="blockerOverlay">
-        <div id="anticheatModal">
-            <i class="fas fa-user-secret" style="font-size: 60px; color: #f44336; margin-bottom: 20px;"></i>
-            <div id="cheatMessage">Ой! Кажется, наш детектор жульничества снова сработал!</div>
-            <div style="font-size: 18px; margin-bottom: 20px; color: #666;">
-                Система заблокирована на:
-            </div>
-            <div id="countdownTimer">03:00</div>
-            <div style="margin: 25px 0; color: #666;">
-                Для продолжения введите пароль, который вам сообщил учитель:
-            </div>
-            <input type="text" id="passwordInput" class="password-input" maxlength="4" placeholder="____">
-            <div>
-                <button class="continue-btn" id="continueBtn" disabled>
-                    <i class="fas fa-unlock"></i> Продолжить тест
-                </button>
-            </div>
+    <div id="test-content" style="display: none;">
+      <div class="section">
+        <div class="progress-container">
+          <div class="progress-bar" id="progress-bar"></div>
         </div>
-    </div>
+        <div class="progress-text" id="progress-text">Вопрос 0 из 0</div>
+      </div>
 
-    <!-- Подключение конфигурации теста -->
-    <script src="config.js"></script>
+      <div class="section">
+        <div class="question-container">
+          <div class="question-type" id="question-type"></div>
+          <div class="question-text" id="question-text"></div>
+          <div class="options-container" id="options-container"></div>
+          <button id="confirm-btn" disabled>
+            <i class="fas fa-check-circle"></i> Подтвердить ответ
+          </button>
+        </div>
+      </div>
+
+      <div id="results" style="display: none;">
+        <h2><i class="fas fa-chart-bar"></i> Результаты контрольной работы</h2>
+        <div class="score-display">Набрано баллов: <span id="score-value">0</span> из <span id="max-score">0</span></div>
+        <div class="points-breakdown" id="points-breakdown"></div>
+        <div class="grade-display">Оценка: <span id="grade-value">—</span></div>
+        <div id="telegram-status" style="margin-top: 20px; padding: 15px; border-radius: 10px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Полноэкранный результат -->
+  <div id="fullscreen-result">
+    <div class="fullscreen-content">
+      <h2><i class="fas fa-trophy"></i> Ваш результат</h2>
+      <div class="fullscreen-grade" id="fullscreen-grade">5</div>
+      <p style="margin: 15px 0; color: #666;">Набрано баллов: <span id="fullscreen-score">0</span> из <span id="fullscreen-max-score">0</span></p>
+      <div id="fullscreen-breakdown" style="margin: 15px 0; color: #555; font-size: 14px;"></div>
+      <button class="fullscreen-btn" id="finish-btn">
+        <i class="fas fa-check"></i> Завершить
+      </button>
+    </div>
+  </div>
+
+  <!-- Античит система -->
+  <div class="blocker-overlay" id="blockerOverlay"></div>
+  <div class="anticheat-modal" id="anticheatModal">
+    <div class="anticheat-title">🚨 АНТИЖУЛЬНИЧАТЕЛЬНЫЙ РЕЖИМ 🚨</div>
+    <div class="anticheat-message" id="cheatMessage"></div>
+    <div class="anticheat-timer" id="countdownTimer">03:00</div>
+    <div class="password-input-container">
+      <div class="password-label">Введите пароль для продолжения:</div>
+      <input type="text" class="password-input" id="passwordInput" 
+             maxlength="4" inputmode="numeric" placeholder="0000">
+    </div>
+    <button class="continue-btn" id="continueBtn" disabled>Продолжить тест</button>
+  </div>
+
+  <!-- Основной скрипт системы -->
+  <script src="script.js"></script>
+
+  <!-- Скрипт загрузки теста -->
+  <script>
+    // Получаем имя теста из URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const testName = urlParams.get('test');
     
-    <!-- Подключение банка вопросов -->
-    <script src="questions.js"></script>
-    
-    <!-- Подключение банка задач -->
-    <script src="problems.js"></script>
-    
-    <!-- Основной скрипт системы -->
-    <script src="script.js"></script>
-    
-    <script>
-        // Устанавливаем текущий год в футере
-        document.getElementById('current-year').textContent = new Date().getFullYear();
+    // Если тест не указан, показываем ошибку
+    if (!testName) {
+      document.getElementById('page-title').textContent = 'Ошибка: тест не указан';
+      document.getElementById('student-info-section').innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+          <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #f44336;"></i>
+          <h3 style="color: #f44336; margin: 20px 0;">Тест не найден</h3>
+          <p>Вернитесь на главную страницу и введите правильный код теста.</p>
+          <button onclick="window.location.href='index.html'" 
+                  style="background: #4b6cb7; color: white; border: none; padding: 12px 24px; 
+                         border-radius: 8px; margin-top: 20px; cursor: pointer;">
+            <i class="fas fa-arrow-left"></i> Вернуться на главную
+          </button>
+        </div>
+      `;
+    } else {
+      console.log(`🔄 Загружаем тест: ${testName}`);
+      
+      // Создаем элемент script для загрузки теста
+      const script = document.createElement('script');
+      script.src = `test/${testName}.js`;
+      
+      script.onload = function() {
+        console.log(`✅ Файл теста "${testName}.js" загружен успешно`);
         
-        // Тестовая функция для проверки Telegram (только для разработчиков)
-        window.debugTelegram = function() {
-            console.log('Тестирование Telegram...');
-            if (window.testTelegram) {
-                window.testTelegram();
-            } else {
-                alert('Функция testTelegram не доступна. Убедитесь, что script.js загружен.');
+        // Проверяем, что все необходимые переменные загружены
+        if (!window.TEST_CONFIG) {
+          showError('Файл теста не содержит конфигурации TEST_CONFIG');
+          return;
+        }
+        
+        if (!window.questionsBank || !Array.isArray(window.questionsBank)) {
+          showError('Файл теста не содержит вопросов (questionsBank)');
+          return;
+        }
+        
+        if (!window.problemsBank || !Array.isArray(window.problemsBank)) {
+          showError('Файл теста не содержит задач (problemsBank)');
+          return;
+        }
+        
+        // Устанавливаем заголовок страницы
+        document.getElementById('page-title').textContent = window.TEST_CONFIG.title;
+        document.title = window.TEST_CONFIG.title;
+        
+        // Устанавливаем максимальный балл
+        const maxScoreElements = document.querySelectorAll('#max-score, #fullscreen-max-score');
+        maxScoreElements.forEach(el => {
+          if (el) el.textContent = window.TEST_CONFIG.maxScore;
+        });
+        
+        console.log('🎯 Конфигурация теста загружена:', window.TEST_CONFIG);
+        console.log('📚 Вопросов:', window.questionsBank.length);
+        console.log('🧮 Задач:', window.problemsBank.length);
+        
+        // Если основной скрипт уже загружен, инициализируем тест
+        if (window.initTest) {
+          window.initTest();
+        } else {
+          console.warn('⚠️ Основной скрипт еще не загружен, ожидаем...');
+          // Добавляем обработчик на случай, если script.js загрузится позже
+          document.addEventListener('scriptLoaded', function() {
+            if (window.initTest) {
+              window.initTest();
             }
-        };
-    </script>
+          });
+        }
+      };
+      
+      script.onerror = function() {
+        console.error(`❌ Ошибка загрузки теста "${testName}"`);
+        showError(`Файл теста <strong>${testName}.js</strong> не найден в папке test/`);
+      };
+      
+      document.head.appendChild(script);
+    }
+    
+    // Функция показа ошибки
+    function showError(message) {
+      document.getElementById('page-title').textContent = 'Ошибка загрузки теста';
+      document.getElementById('student-info-section').innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+          <i class="fas fa-times-circle" style="font-size: 48px; color: #f44336;"></i>
+          <h3 style="color: #f44336; margin: 20px 0;">Ошибка загрузки теста</h3>
+          <p>${message}</p>
+          <button onclick="window.location.href='index.html'" 
+                  style="background: #4b6cb7; color: white; border: none; padding: 12px 24px; 
+                         border-radius: 8px; margin-top: 20px; cursor: pointer;">
+            <i class="fas fa-arrow-left"></i> Вернуться на главную
+          </button>
+        </div>
+      `;
+    }
+    
+    // Инициализируем тест после загрузки основного скрипта
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('📚 Система тестирования загружена, ожидаем тест...');
+    });
+  </script>
 </body>
 </html>
