@@ -77,6 +77,48 @@
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    
+    /* Дополнительные стили для индикаторов прогресса */
+    .progress-indicator i {
+      font-size: 14px;
+      color: white;
+    }
+    
+    .progress-indicator.unanswered i {
+      color: #999;
+    }
+    
+    .progress-indicator.current i {
+      color: white;
+    }
+    
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
+      }
+      50% {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(255, 152, 0, 0.5);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
+      }
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 768px) {
+      .button-group {
+        gap: 10px;
+      }
+
+      .refresh-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -113,10 +155,9 @@
 
     <div id="test-content" style="display: none;">
       <div class="section">
-        <div class="progress-container">
-          <div class="progress-bar" id="progress-bar"></div>
+        <div class="progress-indicators" id="progress-indicators">
+          <!-- Индикаторы будут добавлены через JavaScript -->
         </div>
-        <div class="progress-text" id="progress-text">Вопрос 0 из 0</div>
       </div>
 
       <div class="section">

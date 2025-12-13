@@ -1,6 +1,6 @@
 // ====================================================================
 // ОСНОВНОЙ СКРИПТ СИСТЕМЫ ТЕСТИРОВАНИЯ
-// Версия 7.1 - Античит при восстановлении теста
+// Версия 7.1 - С визуальными индикаторами прогресса
 // ====================================================================
 
 // Глобальные переменные системы
@@ -80,6 +80,7 @@ let studentNameInput, studentClassSelect, fullscreenResult, fullscreenGrade;
 let fullscreenScore, fullscreenBreakdown, finishBtn, startTestBtn, refreshBtn;
 let studentInfoSection, testContent, blockerOverlay, anticheatModal;
 let cheatMessageElement, countdownTimer, passwordInput, continueBtn;
+let progressIndicators; // Добавляем переменную для индикаторов
 
 // Константы античит системы
 const PASSWORD = "3265";
@@ -261,6 +262,7 @@ function initTest() {
 }
 
 function cacheDOMElements() {
+    progressIndicators = document.getElementById('progress-indicators'); // Добавляем
     progressBar = document.getElementById('progress-bar');
     progressText = document.getElementById('progress-text');
     questionText = document.getElementById('question-text');
@@ -289,6 +291,7 @@ function cacheDOMElements() {
     console.log('- finishBtn найден:', !!finishBtn);
     console.log('- refreshBtn найден:', !!refreshBtn);
     console.log('- fullscreenResult найден:', !!fullscreenResult);
+    console.log('- progressIndicators найден:', !!progressIndicators);
 }
 
 function showError(message) {
@@ -504,6 +507,13 @@ function initQuestions() {
     if (refreshBtn) refreshBtn.disabled = false;
     if (fullscreenResult) fullscreenResult.style.display = 'none';
     
+    // Инициализируем индикаторы прогресса
+    setTimeout(() => {
+        if (progressIndicators) {
+            updateProgress();
+        }
+    }, 100);
+    
     console.log(`✅ Выбрано ${selectedQuestions.length} вопросов и ${selectedProblems.length} задач`);
 }
 
@@ -525,17 +535,16 @@ function showQuestion(index) {
     
     if (questionText) questionText.textContent = item.text;
     
-    // Показываем тип задания
-    if (item.points === 3) {
-        if (questionType) {
-            questionType.textContent = "Задача (3 балла)";
-            questionType.className = "question-type problem-type";
-        }
-    } else {
-        if (questionType) {
-            questionType.textContent = "Теоретический вопрос (1 балл)";
-            questionType.className = "question-type";
-        }
+    // Показываем тип задания с иконкой
+    const isProblem = item.points === 3;
+    const icon = isProblem ? 'fas fa-calculator' : 'fas fa-lightbulb';
+    
+    if (questionType) {
+        questionType.innerHTML = `
+            <i class="${icon}"></i>
+            ${isProblem ? "Задача (3 балла)" : "Теоретический вопрос (1 балл)"}
+        `;
+        questionType.className = isProblem ? "question-type problem-type" : "question-type";
     }
     
     currentShuffledOptions = shuffleArray([...item.options]);
@@ -546,23 +555,9 @@ function showQuestion(index) {
     if (optionsContainer) {
         optionsContainer.innerHTML = '';
         
-        // ВАЖНО: При показе вопроса НИКОГДА не показываем подсветку ответов
-        // даже если есть сохраненный ответ в userAnswers
         currentShuffledOptions.forEach((option, i) => {
             const label = document.createElement('label');
             label.className = 'option-label';
-            
-            // Только если это НЕ пропущенный вопрос и пользователь уже отвечал на него
-            // и мы находимся в режиме показа ответа (isShowingAnswer = true)
-            if (userAnswers[index] === option.v && isShowingAnswer) {
-                // Это обрабатывается в highlightCorrectAnswer
-                // Здесь мы только отмечаем выбранный пользователем вариант
-                if (option.v === 'correct') {
-                    label.classList.add('correct');
-                } else {
-                    label.classList.add('incorrect');
-                }
-            }
             
             const radio = document.createElement('input');
             radio.type = 'radio';
@@ -607,7 +602,60 @@ function showQuestion(index) {
         }
     }
     
+    // Обновляем индикаторы прогресса
     updateProgress();
+}
+
+function updateProgress() {
+    if (!progressIndicators) return;
+    
+    const totalQuestions = shuffledQuestionsAndProblems.length;
+    progressIndicators.innerHTML = '';
+    
+    for (let i = 0; i < totalQuestions; i++) {
+        const indicator = document.createElement('div');
+        indicator.className = 'progress-indicator';
+        
+        // Добавляем номер вопроса
+        const number = document.createElement('span');
+        number.textContent = i + 1;
+        indicator.appendChild(number);
+        
+        // Определяем статус вопроса
+        if (i === currentQuestionIndex) {
+            indicator.classList.add('current');
+            indicator.title = `Текущий вопрос (${i + 1} из ${totalQuestions})`;
+        } else if (userAnswers[i] === 'correct') {
+            indicator.classList.add('answered');
+            indicator.title = `Отвечен правильно (${i + 1} из ${totalQuestions})`;
+            // Добавляем иконку галочки для правильных ответов
+            indicator.innerHTML = '<i class="fas fa-check"></i>';
+        } else if (userAnswers[i] === 'wrong') {
+            indicator.classList.add('answered');
+            indicator.title = `Отвечен с ошибкой (${i + 1} из ${totalQuestions})`;
+            // Добавляем иконку крестика для неправильных ответов
+            indicator.innerHTML = '<i class="fas fa-times"></i>';
+        } else if (skipQuestions.includes(i)) {
+            indicator.classList.add('skipped');
+            indicator.title = `Пропущенный вопрос (${i + 1} из ${totalQuestions})`;
+            // Добавляем иконку стрелки для пропущенных
+            indicator.innerHTML = '<i class="fas fa-redo"></i>';
+        } else {
+            indicator.classList.add('unanswered');
+            indicator.title = `Неотвеченный вопрос (${i + 1} из ${totalQuestions})`;
+        }
+        
+        // Добавляем обработчик клика для перехода к вопросу
+        indicator.addEventListener('click', () => {
+            if (i !== currentQuestionIndex) {
+                currentQuestionIndex = i;
+                showQuestion(currentQuestionIndex);
+                saveProgress(); // Сохраняем при переключении
+            }
+        });
+        
+        progressIndicators.appendChild(indicator);
+    }
 }
 
 function highlightCorrectAnswer() {
@@ -629,16 +677,6 @@ function highlightCorrectAnswer() {
         
         if (radio) radio.disabled = true;
     });
-}
-
-function updateProgress() {
-    if (!progressBar || !progressText) return;
-    
-    const totalQuestions = shuffledQuestionsAndProblems.length;
-    const answeredQuestions = userAnswers.filter(answer => answer !== null).length;
-    const percent = (answeredQuestions / totalQuestions) * 100;
-    progressBar.style.width = `${percent}%`;
-    progressText.textContent = `Вопрос ${currentQuestionIndex + 1} из ${totalQuestions} (отвечено: ${answeredQuestions})`;
 }
 
 function confirmAnswer() {
@@ -666,6 +704,9 @@ function confirmAnswer() {
         if (skipQuestions.includes(currentQuestionIndex)) {
             skipQuestions = skipQuestions.filter(idx => idx !== currentQuestionIndex);
         }
+        
+        // Обновляем индикаторы
+        updateProgress();
         
         // Определяем следующий вопрос
         let nextIndex = -1;
@@ -761,6 +802,9 @@ function skipQuestion() {
         currentQuestionIndex = nextIndex;
         showQuestion(currentQuestionIndex);
         
+        // Обновляем индикаторы
+        updateProgress();
+        
         console.log('✅ Вопрос пропущен, переходим к вопросу', currentQuestionIndex + 1);
         console.log('⏭️ Всего пропущенных вопросов:', skipQuestions.length);
     } else {
@@ -771,6 +815,10 @@ function skipQuestion() {
             skipQuestions = skipQuestions.filter(idx => idx !== nextIndex);
             currentQuestionIndex = nextIndex;
             showQuestion(currentQuestionIndex);
+            
+            // Обновляем индикаторы
+            updateProgress();
+            
             alert('Все вопросы просмотрены. Возвращаемся к пропущенным вопросам.');
         }
     }

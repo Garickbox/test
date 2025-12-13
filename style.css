@@ -102,28 +102,141 @@ h1 {
   font-weight: 600;
 }
 
-/* Прогресс-бар */
-.progress-container {
-  background-color: #e6e6e6;
-  border-radius: 10px;
-  height: 8px;
-  margin-bottom: 12px;
-  overflow: hidden;
+/* Индикаторы прогресса (заменяем прогресс-бар) */
+.progress-indicators {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
 }
 
-.progress-bar {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #1e93c4 0%, #38a1d6 100%);
-  transition: width 0.4s ease;
-  border-radius: 10px;
+.progress-indicator {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: #e0e0e0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.progress-indicator:hover {
+  transform: scale(1.1);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+}
+
+.progress-indicator.current {
+  background: linear-gradient(135deg, #1e93c4 0%, #38a1d6 100%);
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #1e93c4, 0 4px 8px rgba(30, 147, 196, 0.3);
+  transform: scale(1.1);
+}
+
+.progress-indicator.answered {
+  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+}
+
+.progress-indicator.skipped {
+  background: linear-gradient(135deg, #FF9800 0%, #FFB74D 100%);
+  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
+  animation: pulse 2s infinite;
+}
+
+.progress-indicator.unanswered {
+  background: #e0e0e0;
+  color: #999;
+}
+
+/* Удаляем старый прогресс-бар */
+.progress-container,
+.progress-bar,
 .progress-text {
-  text-align: center;
-  font-weight: 500;
+  display: none;
+}
+
+/* Стиль для типа вопроса с иконкой лампочки */
+.question-type {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #e1f2ff;
+  color: #1e93c4;
+  border-radius: 20px;
   font-size: 14px;
-  color: #666;
+  font-weight: 600;
+  margin-bottom: 16px;
+  width: fit-content;
+}
+
+.question-type i {
+  font-size: 16px;
+}
+
+.problem-type {
+  background: #e1f7e9;
+  color: #34b86e;
+}
+
+.problem-type i {
+  color: #34b86e;
+}
+
+/* Адаптивность для индикаторов */
+@media (max-width: 768px) {
+  body {
+    padding: 5px;
+  }
+  
+  .container {
+    margin: 10px auto;
+    border-radius: 12px;
+  }
+
+  h1 {
+    font-size: 20px;
+    padding: 18px;
+  }
+
+  .section {
+    padding: 16px;
+  }
+
+  .progress-indicator {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+  
+  .progress-indicators {
+    gap: 6px;
+    padding: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .progress-indicator {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+  
+  .progress-indicators {
+    gap: 4px;
+    padding: 6px;
+  }
 }
 
 /* Вопрос */
@@ -137,22 +250,6 @@ h1 {
   font-weight: 500;
   line-height: 1.4;
   color: #222;
-}
-
-.question-type {
-  display: inline-block;
-  padding: 4px 10px;
-  background: #e1f2ff;
-  color: #1e93c4;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.problem-type {
-  background: #e1f7e9;
-  color: #34b86e;
 }
 
 .options-container {
@@ -204,9 +301,18 @@ h1 {
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* Кнопки */
@@ -543,67 +649,6 @@ button:disabled {
   flex-wrap: wrap;
 }
 
-/* Адаптивность */
-@media (max-width: 768px) {
-  body {
-    padding: 5px;
-  }
-  
-  .container {
-    margin: 10px auto;
-    border-radius: 12px;
-  }
-
-  h1 {
-    font-size: 20px;
-    padding: 18px;
-  }
-
-  .section {
-    padding: 16px;
-  }
-
-  .question-text {
-    font-size: 17px;
-  }
-
-  .option-label {
-    padding: 14px;
-    font-size: 15px;
-  }
-
-  .fullscreen-grade {
-    font-size: 70px;
-  }
-  
-  .fullscreen-content {
-    width: 90%;
-    padding: 25px;
-  }
-  
-  .anticheat-modal {
-    padding: 30px 20px;
-  }
-  
-  .anticheat-title {
-    font-size: 22px;
-  }
-  
-  .anticheat-timer {
-    font-size: 36px;
-  }
-
-  .button-group {
-    gap: 10px;
-  }
-
-  .refresh-btn {
-    width: 45px;
-    height: 45px;
-    font-size: 16px;
-  }
-}
-
 /* Специфические стили для Telegram-like интерфейса */
 .telegram-header {
   background: linear-gradient(135deg, #1e93c4 0%, #38a1d6 100%);
@@ -619,4 +664,33 @@ button:disabled {
   padding: 16px;
   margin: 10px 0;
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* Дополнительные стили для индикаторов прогресса */
+.progress-indicator i {
+  font-size: 14px;
+  color: white;
+}
+
+.progress-indicator.unanswered i {
+  color: #999;
+}
+
+.progress-indicator.current i {
+  color: white;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(255, 152, 0, 0.5);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
+  }
 }
