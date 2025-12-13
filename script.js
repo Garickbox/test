@@ -1,6 +1,6 @@
 // ====================================================================
 // ОСНОВНОЙ СКРИПТ СИСТЕМЫ ТЕСТИРОВАНИЯ
-// Версия 7.0 - Правильная логика пропущенных вопросов
+// Версия 7.1 - Античит при восстановлении теста
 // ====================================================================
 
 // Глобальные переменные системы
@@ -178,11 +178,9 @@ function restoreTest() {
     if (studentInfoSection) studentInfoSection.style.display = 'none';
     if (testContent) testContent.style.display = 'block';
     
-    // Показываем вопрос
-    showQuestion(currentQuestionIndex);
-    
-    // Восстанавливаем античит мониторинг
-    startAnticheatMonitoring();
+    // ВАЖНО: При восстановлении теста сразу запускаем античит систему
+    // чтобы пользователь не мог обойти античит
+    triggerAnticheat();
     
     console.log('🔄 Тест восстановлен с вопроса', currentQuestionIndex + 1);
     console.log('📊 Сохраненные ответы:', userAnswers);
@@ -341,6 +339,11 @@ function setupEventListeners() {
         continueBtn.addEventListener('click', function() {
             if (!this.disabled) {
                 closeAntiCheat();
+                // После закрытия античит показываем вопрос
+                if (isTestRestored) {
+                    showQuestion(currentQuestionIndex);
+                    isTestRestored = false; // Сбрасываем флаг восстановления
+                }
             }
         });
     }
@@ -1071,6 +1074,11 @@ function closeAntiCheat() {
     if (blockerOverlay) blockerOverlay.style.display = 'none';
     if (anticheatModal) anticheatModal.style.display = 'none';
     if (passwordInput) passwordInput.value = '';
+    
+    // Восстанавливаем античит мониторинг после закрытия окна
+    if (testStarted && !testCompleted && !isTestRestored) {
+        startAnticheatMonitoring();
+    }
     
     console.log('✅ Античит система отключена');
 }
