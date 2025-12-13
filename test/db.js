@@ -1,1005 +1,1266 @@
 // ====================================================================
-// ДЕБАГ-ТЕСТ ДЛЯ СИСТЕМЫ ТЕСТИРОВАНИЯ ВЫСОКОВСКОЙ ШКОЛЫ №25
+// КОМПЛЕКСНЫЙ ОТЛАДОЧНЫЙ ТЕСТ ДЛЯ СИСТЕМЫ ТЕСТИРОВАНИЯ
 // Файл: test/debug.js
-// Назначение: Отладочный тест для проверки работы системы
-// Особенность: Интегрировано окно для тестирования Telegram
+// Версия: 8.0 (Полный функционал)
+// Назначение: Комплексная отладка всех компонентов системы
 // Для запуска: введите "debug" на главной странице
 // ====================================================================
 
-console.log('🔍 DEBUG MODE: Загрузка отладочного теста...');
+console.log('🔧 DEBUG MODE v8.0: Загрузка комплексного отладочного теста...');
 
-// ОБЩАЯ ИНФОРМАЦИЯ О ПРОЕКТЕ
+// ГЛОБАЛЬНАЯ ИНФОРМАЦИЯ О ПРОЕКТЕ
 window.PROJECT_INFO = {
     name: "Система тестирования Высоковской школы №25",
-    version: "7.2",
+    version: "8.0",
     author: "Школьный IT-отдел",
-    description: "Модульная система для проведения контрольных работ с античит-системой и Telegram-интеграцией",
+    created: "2023",
+    updated: "2024",
+    description: "Модульная система для проведения контрольных работ с полным набором функций",
+    
     features: [
-        "Модульная архитектура тестов",
-        "Антикопирование и античит защита",
-        "Telegram-уведомления о результатах",
-        "Автосохранение прогресса",
-        "Пропуск вопросов",
-        "Адаптивный дизайн",
-        "Полноэкранные результаты",
-        "Тестовое окно Telegram",
-        "Снежный фон на главной странице"
+        "🎯 Модульная архитектура тестов",
+        "🚨 Античит-система с таймером блокировки",
+        "📋 Антикопирование текста",
+        "📨 Telegram-интеграция с реальными данными",
+        "💾 Автосохранение прогресса",
+        "⏭️ Пропуск и возврат к вопросам",
+        "📊 Детальная статистика результатов",
+        "🎨 Адаптивный дизайн",
+        "❄️ Снежный фон на главной странице",
+        "🔧 Комплексная отладка и диагностика"
     ],
-    lastUpdated: "2024",
-    repository: "https://github.com/vysokovskaya-school/testing-system",
-    supportEmail: "it-support@vysokovskaya25.ru"
+    
+    contact: {
+        email: "it-support@vysokovskaya25.ru",
+        telegram: "@vysokovskaya_school",
+        website: "https://vysokovskaya25.ru"
+    },
+    
+    systemRequirements: {
+        browser: "Chrome 80+, Firefox 75+, Safari 14+",
+        javascript: "ES6+",
+        storage: "LocalStorage",
+        internet: "Требуется для Telegram"
+    }
 };
 
-// ОТЛАДОЧНАЯ КОНФИГУРАЦИЯ ТЕСТА
+// КОМПЛЕКСНАЯ КОНФИГУРАЦИЯ ТЕСТА
 window.TEST_CONFIG = {
-    title: "🔧 Отладочный тест системы (с Telegram)",
-    totalQuestions: 3,
-    totalProblems: 1,
-    maxScore: 6,
+    title: "🔧 Комплексный отладочный тест системы",
+    subtitle: "Проверка всех функций и компонентов",
+    totalQuestions: 5,
+    totalProblems: 2,
+    maxScore: 11, // 5×1 + 2×3 = 11 баллов
     
+    // РЕАЛЬНЫЕ ДАННЫЕ TELEGRAM ИЗ ПРОЕКТА
     telegram: {
-        // ПРИМЕР ДАННЫХ TELEGRAM (замените на свои)
         botToken: "8344281396:AAGZ9-M2XRyPMHiI2akBSSIN7QAtRGDmLOY",
         chatId: "1189539923",
         parseMode: "Markdown",
-        disableNotification: false
+        disableNotification: false,
+        webhook: false
     },
     
     gradingScale: {
-        5: 5,
-        4: 4,
-        3: 2,
-        2: 0
+        5: 10,    // 10-11 баллов = 5
+        4: 8,     // 8-9 баллов = 4
+        3: 5,     // 5-7 баллов = 3
+        2: 0      // 0-4 баллов = 2
     },
     
     anticheat: {
-        password: "0000",
-        blockTime: 30
+        password: "3265",     // Реальный пароль из конфига
+        blockTime: 60,        // Уменьшено для отладки (60 сек)
+        maxAttempts: 3,
+        enableCopyProtection: true,
+        enableTabProtection: true
     },
     
-    shuffleQuestions: false,
-    shuffleOptions: false,
-    showCorrectAnswer: true,
-    debugMode: true
+    system: {
+        shuffleQuestions: false,  // Для удобства отладки
+        shuffleOptions: false,
+        showCorrectAnswer: true,
+        allowSkip: true,
+        allowReview: true,
+        autoSave: true,
+        autoSaveInterval: 30,     // секунд
+        debugMode: true,
+        logLevel: "verbose"
+    },
+    
+    timings: {
+        questionTimeout: 0,       // без таймаута
+        answerShowTime: 2000,     // 2 секунды
+        resultShowTime: 8000      // 8 секунд
+    }
 };
 
-// ИНФОРМАЦИОННЫЕ ВОПРОСЫ
+// БАНК ТЕОРЕТИЧЕСКИХ ВОПРОСОВ ДЛЯ ОТЛАДКИ
 window.questionsBank = [
     {
-        text: "Это отладочный тест системы. Выберите 'Правильно' для продолжения.",
+        id: "debug_1",
+        text: "Данный отладочный тест проверяет работу всех систем. Выберите 'Верно' для продолжения.",
         options: [
-            {t: "Правильно", v: "correct"},
-            {t: "Неправильно", v: "wrong"},
-            {t: "Не знаю", v: "wrong"},
-            {t: "Пропустить", v: "wrong"}
+            {t: "Верно", v: "correct", hint: "Это правильный ответ для отладки"},
+            {t: "Неверно", v: "wrong", hint: "Неправильный вариант"},
+            {t: "Не уверен", v: "wrong", hint: "Попробуйте еще раз"},
+            {t: "Пропустить", v: "wrong", hint: "Можно будет вернуться позже"}
         ],
-        points: 1
+        points: 1,
+        category: "Система",
+        difficulty: "Легкий",
+        explanation: "Этот вопрос демонстрирует базовую работу системы тестирования."
     },
     {
-        text: "Система тестирования поддерживает отправку результатов в Telegram?",
+        id: "debug_2",
+        text: "Система тестирования поддерживает отправку результатов в Telegram с реальными данными бота?",
         options: [
-            {t: "Да, с полной статистикой", v: "correct"},
-            {t: "Нет, не поддерживает", v: "wrong"},
-            {t: "Только для администраторов", v: "wrong"},
-            {t: "Только по email", v: "wrong"}
+            {t: "Да, с токеном 8344281396:AAGZ9-M2XRyPMHiI2akBSSIN7QAtRGDmLOY", v: "correct", hint: "Токен указан верно"},
+            {t: "Нет, Telegram не подключен", v: "wrong", hint: "Telegram настроен"},
+            {t: "Только в платной версии", v: "wrong", hint: "Система бесплатна"},
+            {t: "Только для администраторов", v: "wrong", hint: "Для всех пользователей"}
         ],
-        points: 1
+        points: 1,
+        category: "Telegram",
+        difficulty: "Средний",
+        explanation: "В конфигурации указаны реальные данные Telegram бота для тестирования."
     },
     {
-        text: "Какой пароль используется в античит-системе для отладки?",
+        id: "debug_3",
+        text: "Какой пароль используется в античит-системе для разблокировки?",
         options: [
-            {t: "3265", v: "wrong"},
-            {t: "0000", v: "correct"},
-            {t: "1234", v: "wrong"},
-            {t: "admin", v: "wrong"}
+            {t: "3265", v: "correct", hint: "Пароль из конфигурации"},
+            {t: "0000", v: "wrong", hint: "Упрощенный пароль только для отладки"},
+            {t: "1234", v: "wrong", hint: "Стандартный пароль не используется"},
+            {t: "admin", v: "wrong", hint: "Неверный пароль"}
         ],
-        points: 1
+        points: 1,
+        category: "Безопасность",
+        difficulty: "Легкий",
+        explanation: "Пароль 3265 установлен в конфигурации античит-системы."
+    },
+    {
+        id: "debug_4",
+        text: "Система автоматически сохраняет прогресс тестирования?",
+        options: [
+            {t: "Да, каждые 30 секунд в localStorage", v: "correct", hint: "Автосохранение включено"},
+            {t: "Нет, только вручную", v: "wrong", hint: "Автосохранение работает"},
+            {t: "Только при завершении теста", v: "wrong", hint: "Чаще, чем только при завершении"},
+            {t: "Только в облачном хранилище", v: "wrong", hint: "Используется localStorage"}
+        ],
+        points: 1,
+        category: "Система",
+        difficulty: "Средний",
+        explanation: "Система использует автосохранение в localStorage каждые 30 секунд."
+    },
+    {
+        id: "debug_5",
+        text: "Можно ли пропустить вопрос и вернуться к нему позже?",
+        options: [
+            {t: "Да, с помощью кнопки ↻", v: "correct", hint: "Кнопка перезагрузки/пропуска"},
+            {t: "Нет, нельзя пропускать", v: "wrong", hint: "Пропуск разрешен"},
+            {t: "Только один раз за тест", v: "wrong", hint: "Неограниченное количество раз"},
+            {t: "Только с разрешения учителя", v: "wrong", hint: "Автоматически"}
+        ],
+        points: 1,
+        category: "Интерфейс",
+        difficulty: "Легкий",
+        explanation: "Система поддерживает пропуск вопросов с возможностью вернуться к ним позже."
     }
 ];
 
-// ДЕМОНСТРАЦИОННЫЕ ЗАДАЧИ
+// БАНК ЗАДАЧ ДЛЯ ОТЛАДКИ
 window.problemsBank = [
     {
-        text: "Сколько будет 2 + 2 × 2?",
+        id: "problem_1",
+        text: "Сколько будет (5 + 3) × 2 - 4?",
         options: [
-            {t: "6", v: "correct"},
-            {t: "8", v: "wrong"},
-            {t: "4", v: "wrong"},
-            {t: "10", v: "wrong"}
+            {t: "12", v: "correct", hint: "(5+3)=8, 8×2=16, 16-4=12"},
+            {t: "14", v: "wrong", hint: "Неверный порядок операций"},
+            {t: "18", v: "wrong", hint: "Сначала умножение, потом сложение"},
+            {t: "10", v: "wrong", hint: "Проверьте вычисления"}
         ],
-        points: 3
+        points: 3,
+        category: "Математика",
+        difficulty: "Легкий",
+        solution: "Сначала выполняем сложение в скобках: 5 + 3 = 8. Затем умножение: 8 × 2 = 16. И вычитание: 16 - 4 = 12.",
+        formula: "(5 + 3) × 2 - 4 = 8 × 2 - 4 = 16 - 4 = 12"
+    },
+    {
+        id: "problem_2",
+        text: "Если автосохранение происходит каждые 30 секунд, сколько раз оно сработает за 5 минут теста?",
+        options: [
+            {t: "10 раз", v: "correct", hint: "5 мин = 300 сек, 300/30 = 10"},
+            {t: "5 раз", v: "wrong", hint: "300/30 = 10, не 5"},
+            {t: "15 раз", v: "wrong", hint: "300/20 было бы 15"},
+            {t: "20 раз", v: "wrong", hint: "300/15 было бы 20"}
+        ],
+        points: 3,
+        category: "Система",
+        difficulty: "Средний",
+        solution: "5 минут = 300 секунд. 300 секунд ÷ 30 секунд = 10 раз.",
+        formula: "300 сек ÷ 30 сек/раз = 10 раз"
     }
 ];
 
 // ====================================================================
-// ТЕЛЕГРАМ ТЕСТОВОЕ ОКНО
+// ОСНОВНЫЕ ФУНКЦИИ ОТЛАДКИ
 // ====================================================================
 
 /**
- * Создает и показывает окно для тестирования Telegram
+ * Инициализация отладочного режима
  */
-window.showTelegramTestWindow = function() {
-    // Если окно уже существует, показываем его
-    if (document.getElementById('telegramTestWindow')) {
-        document.getElementById('telegramTestWindow').style.display = 'flex';
-        return;
-    }
+window.initDebugMode = function() {
+    console.log('🚀 Инициализация отладочного режима...');
     
-    // Создаем HTML для окна Telegram
-    const telegramWindowHTML = `
-    <div id="telegramTestWindow" class="telegram-modal-overlay">
-        <div class="telegram-modal">
-            <div class="telegram-modal-header">
-                <h3><i class="fab fa-telegram"></i> Тестирование Telegram</h3>
-                <button class="telegram-close-btn" onclick="document.getElementById('telegramTestWindow').style.display='none'">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="telegram-modal-content">
-                <div class="telegram-config-section">
-                    <h4><i class="fas fa-cog"></i> Конфигурация бота</h4>
-                    
-                    <div class="telegram-input-group">
-                        <label for="telegramToken">
-                            <i class="fas fa-key"></i> Токен бота:
-                        </label>
-                        <input type="password" id="telegramToken" 
-                               value="${window.TEST_CONFIG.telegram.botToken}"
-                               placeholder="Введите токен бота">
-                        <button class="telegram-toggle-password" onclick="toggleTelegramTokenVisibility()">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                    
-                    <div class="telegram-input-group">
-                        <label for="telegramChatId">
-                            <i class="fas fa-comment"></i> Chat ID:
-                        </label>
-                        <input type="text" id="telegramChatId" 
-                               value="${window.TEST_CONFIG.telegram.chatId}"
-                               placeholder="Введите Chat ID">
-                    </div>
-                    
-                    <div class="telegram-status">
-                        <div id="telegramConnectionStatus">
-                            <i class="fas fa-circle" style="color: #ccc;"></i> Статус: Не проверен
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="telegram-message-section">
-                    <h4><i class="fas fa-paper-plane"></i> Тестовое сообщение</h4>
-                    
-                    <div class="telegram-input-group">
-                        <label for="telegramMessage">
-                            <i class="fas fa-edit"></i> Текст сообщения:
-                        </label>
-                        <textarea id="telegramMessage" rows="4" placeholder="Введите текст сообщения...">
-🔧 *Тестовая отправка из системы тестирования*
-
-✅ Система работает корректно!
-🕐 Время: ${new Date().toLocaleString('ru-RU')}
-👤 Отправлено из: Отладочный тест
-📊 Версия системы: ${window.PROJECT_INFO.version}
-
-Тестовое сообщение проверяет интеграцию с Telegram API.
-                        </textarea>
-                    </div>
-                    
-                    <div class="telegram-test-buttons">
-                        <button class="telegram-btn telegram-test-btn" onclick="testTelegramConnection()">
-                            <i class="fas fa-plug"></i> Проверить подключение
-                        </button>
-                        <button class="telegram-btn telegram-send-btn" onclick="sendTestTelegramMessage()">
-                            <i class="fas fa-paper-plane"></i> Отправить сообщение
-                        </button>
-                    </div>
-                    
-                    <div class="telegram-result" id="telegramResult">
-                        <div class="telegram-result-title">
-                            <i class="fas fa-history"></i> Результаты отправки
-                        </div>
-                        <div class="telegram-result-content" id="telegramResultContent">
-                            Сообщений еще не отправлялось
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="telegram-modal-footer">
-                <button class="telegram-btn telegram-save-btn" onclick="saveTelegramConfig()">
-                    <i class="fas fa-save"></i> Сохранить настройки
-                </button>
-                <button class="telegram-btn telegram-help-btn" onclick="showTelegramHelp()">
-                    <i class="fas fa-question-circle"></i> Помощь
-                </button>
-            </div>
-        </div>
-    </div>
+    // Создаем глобальный объект для хранения отладочных данных
+    window.DEBUG_DATA = {
+        startTime: new Date(),
+        testStarted: false,
+        cheatAttempts: 0,
+        telegramTests: 0,
+        autoSaves: 0,
+        questionsAnswered: 0,
+        problemsAnswered: 0,
+        skipsUsed: 0,
+        history: []
+    };
     
-    <style>
-        .telegram-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-            backdrop-filter: blur(5px);
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .telegram-modal {
-            background: white;
-            border-radius: 16px;
-            width: 90%;
-            max-width: 700px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            border: 2px solid #0088cc;
-            animation: slideUp 0.4s ease;
-        }
-        
-        .telegram-modal-header {
-            background: linear-gradient(135deg, #0088cc 0%, #005a99 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 14px 14px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .telegram-modal-header h3 {
-            margin: 0;
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .telegram-close-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-        
-        .telegram-close-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: rotate(90deg);
-        }
-        
-        .telegram-modal-content {
-            padding: 25px;
-        }
-        
-        .telegram-config-section, .telegram-message-section {
-            margin-bottom: 25px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 12px;
-            border: 1px solid #e0e0e0;
-        }
-        
-        .telegram-config-section h4, .telegram-message-section h4 {
-            color: #0088cc;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 16px;
-        }
-        
-        .telegram-input-group {
-            margin-bottom: 15px;
-        }
-        
-        .telegram-input-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 500;
-            color: #555;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .telegram-input-group input, 
-        .telegram-input-group textarea {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
-            transition: all 0.3s;
-            background: white;
-        }
-        
-        .telegram-input-group input:focus, 
-        .telegram-input-group textarea:focus {
-            outline: none;
-            border-color: #0088cc;
-            box-shadow: 0 0 0 3px rgba(0, 136, 204, 0.1);
-        }
-        
-        .telegram-input-group {
-            position: relative;
-        }
-        
-        .telegram-toggle-password {
-            position: absolute;
-            right: 10px;
-            top: 35px;
-            background: none;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        
-        .telegram-status {
-            padding: 12px;
-            background: #e8f4ff;
-            border-radius: 8px;
-            margin-top: 10px;
-            border-left: 4px solid #0088cc;
-        }
-        
-        .telegram-test-buttons {
-            display: flex;
-            gap: 10px;
-            margin: 20px 0;
-            flex-wrap: wrap;
-        }
-        
-        .telegram-btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-size: 14px;
-        }
-        
-        .telegram-test-btn {
-            background: #34b86e;
-            color: white;
-        }
-        
-        .telegram-send-btn {
-            background: #0088cc;
-            color: white;
-        }
-        
-        .telegram-save-btn {
-            background: #9c27b0;
-            color: white;
-        }
-        
-        .telegram-help-btn {
-            background: #ff9800;
-            color: white;
-        }
-        
-        .telegram-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-        
-        .telegram-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        
-        .telegram-result {
-            margin-top: 20px;
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        
-        .telegram-result-title {
-            background: #f5f5f5;
-            padding: 12px 15px;
-            font-weight: 600;
-            color: #333;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .telegram-result-content {
-            padding: 15px;
-            max-height: 200px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 13px;
-            line-height: 1.5;
-            background: white;
-        }
-        
-        .telegram-modal-footer {
-            padding: 20px;
-            background: #f8f9fa;
-            border-top: 1px solid #e0e0e0;
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            border-radius: 0 0 14px 14px;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        @keyframes slideUp {
-            from { 
-                opacity: 0;
-                transform: translateY(30px) scale(0.95);
-            }
-            to { 
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .telegram-modal {
-                width: 95%;
-                margin: 10px;
-            }
-            
-            .telegram-test-buttons {
-                flex-direction: column;
-            }
-            
-            .telegram-modal-footer {
-                flex-direction: column;
-            }
-            
-            .telegram-btn {
-                width: 100%;
-            }
-        }
-    </style>
-    `;
+    // Добавляем стили для отладки
+    addDebugStyles();
     
-    // Добавляем окно в DOM
-    document.body.insertAdjacentHTML('beforeend', telegramWindowHTML);
-    console.log('✅ Окно тестирования Telegram создано');
+    // Запускаем автоматические тесты
+    setTimeout(() => {
+        runAutomaticTests();
+        addDebugInterface();
+    }, 1000);
+    
+    console.log('✅ Отладочный режим инициализирован');
 };
 
 /**
- * Переключает видимость токена Telegram
+ * Запуск автоматических тестов системы
  */
-window.toggleTelegramTokenVisibility = function() {
-    const tokenInput = document.getElementById('telegramToken');
-    const toggleButton = document.querySelector('.telegram-toggle-password');
+window.runAutomaticTests = async function() {
+    console.group('🤖 АВТОМАТИЧЕСКИЕ ТЕСТЫ СИСТЕМЫ');
     
-    if (tokenInput.type === 'password') {
-        tokenInput.type = 'text';
-        toggleButton.innerHTML = '<i class="fas fa-eye-slash"></i>';
+    const testResults = {
+        passed: 0,
+        failed: 0,
+        total: 0
+    };
+    
+    // Тест 1: Проверка конфигурации
+    testResults.total++;
+    if (await testConfiguration()) {
+        testResults.passed++;
+        logTestResult('Конфигурация', true);
     } else {
-        tokenInput.type = 'password';
-        toggleButton.innerHTML = '<i class="fas fa-eye"></i>';
+        testResults.failed++;
+        logTestResult('Конфигурация', false);
     }
+    
+    // Тест 2: Проверка Telegram
+    testResults.total++;
+    if (await testTelegramConnection()) {
+        testResults.passed++;
+        logTestResult('Telegram подключение', true);
+    } else {
+        testResults.failed++;
+        logTestResult('Telegram подключение', false);
+    }
+    
+    // Тест 3: Проверка localStorage
+    testResults.total++;
+    if (testLocalStorage()) {
+        testResults.passed++;
+        logTestResult('LocalStorage', true);
+    } else {
+        testResults.failed++;
+        logTestResult('LocalStorage', false);
+    }
+    
+    // Тест 4: Проверка вопросов
+    testResults.total++;
+    if (testQuestions()) {
+        testResults.passed++;
+        logTestResult('Банк вопросов', true);
+    } else {
+        testResults.failed++;
+        logTestResult('Банк вопросов', false);
+    }
+    
+    // Тест 5: Проверка системы оценки
+    testResults.total++;
+    if (testGradingSystem()) {
+        testResults.passed++;
+        logTestResult('Система оценки', true);
+    } else {
+        testResults.failed++;
+        logTestResult('Система оценки', false);
+    }
+    
+    console.log(`📊 ИТОГО: ${testResults.passed}/${testResults.total} тестов пройдено`);
+    console.groupEnd();
+    
+    // Сохраняем результаты
+    window.DEBUG_DATA.testResults = testResults;
+    window.DEBUG_DATA.lastTestRun = new Date();
+    
+    return testResults.passed === testResults.total;
 };
 
 /**
- * Проверяет подключение к Telegram API
+ * Тест конфигурации системы
  */
-window.testTelegramConnection = async function() {
-    const token = document.getElementById('telegramToken').value.trim();
-    const statusElement = document.getElementById('telegramConnectionStatus');
+async function testConfiguration() {
+    try {
+        if (!window.TEST_CONFIG) throw new Error('TEST_CONFIG не определен');
+        if (!window.TEST_CONFIG.title) throw new Error('Название теста не указано');
+        if (!window.TEST_CONFIG.telegram) throw new Error('Конфигурация Telegram не найдена');
+        if (!window.TEST_CONFIG.telegram.botToken) throw new Error('Токен бота не указан');
+        if (!window.TEST_CONFIG.telegram.chatId) throw new Error('Chat ID не указан');
+        if (!window.TEST_CONFIG.anticheat) throw new Error('Конфигурация античитов не найдена');
+        if (!window.TEST_CONFIG.anticheat.password) throw new Error('Пароль античитов не указан');
+        
+        console.log('✅ Конфигурация: Все необходимые поля присутствуют');
+        console.log('   • Название:', window.TEST_CONFIG.title);
+        console.log('   • Telegram токен:', window.TEST_CONFIG.telegram.botToken.substring(0, 10) + '...');
+        console.log('   • Chat ID:', window.TEST_CONFIG.telegram.chatId);
+        console.log('   • Пароль античитов:', window.TEST_CONFIG.anticheat.password);
+        
+        return true;
+    } catch (error) {
+        console.error('❌ Ошибка конфигурации:', error.message);
+        return false;
+    }
+}
+
+/**
+ * Тест подключения к Telegram
+ */
+async function testTelegramConnection() {
+    const token = window.TEST_CONFIG.telegram.botToken;
     
-    if (!token) {
-        statusElement.innerHTML = '<i class="fas fa-circle" style="color: #f44336;"></i> Статус: Токен не указан';
-        return;
+    if (!token || token === 'DEMO_TOKEN_DEBUG_ONLY') {
+        console.warn('⚠️ Telegram: Используется тестовый токен');
+        return false;
     }
     
-    statusElement.innerHTML = '<i class="fas fa-circle" style="color: #ff9800;"></i> Статус: Проверка подключения...';
+    const url = `https://api.telegram.org/bot${token}/getMe`;
     
+    try {
+        console.log('🔄 Telegram: Проверка подключения...');
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.ok) {
+            console.log('✅ Telegram: Бот доступен');
+            console.log('   • Имя бота:', data.result.first_name);
+            console.log('   • Username:', data.result.username);
+            console.log('   • ID бота:', data.result.id);
+            
+            // Проверяем права бота
+            const botInfo = await getBotInfo();
+            if (botInfo) {
+                console.log('   • Может присоединяться к группам:', botInfo.can_join_groups ? 'Да' : 'Нет');
+                console.log('   • Может читать сообщения:', botInfo.can_read_all_group_messages ? 'Да' : 'Нет');
+            }
+            
+            return true;
+        } else {
+            console.error('❌ Telegram: Ошибка API:', data.description);
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Telegram: Ошибка сети:', error.message);
+        return false;
+    }
+}
+
+/**
+ * Получение информации о боте
+ */
+async function getBotInfo() {
+    const token = window.TEST_CONFIG.telegram.botToken;
     const url = `https://api.telegram.org/bot${token}/getMe`;
     
     try {
         const response = await fetch(url);
         const data = await response.json();
+        return data.ok ? data.result : null;
+    } catch (error) {
+        console.error('Ошибка получения информации о боте:', error);
+        return null;
+    }
+}
+
+/**
+ * Тест localStorage
+ */
+function testLocalStorage() {
+    try {
+        // Пытаемся записать и прочитать тестовые данные
+        const testKey = 'debug_test_' + Date.now();
+        const testValue = 'test_value_' + Math.random();
         
-        if (data.ok) {
-            const botName = data.result.first_name;
-            const botUsername = data.result.username;
+        localStorage.setItem(testKey, testValue);
+        const retrievedValue = localStorage.getItem(testKey);
+        localStorage.removeItem(testKey);
+        
+        if (retrievedValue === testValue) {
+            console.log('✅ LocalStorage: Работает корректно');
             
-            statusElement.innerHTML = `
-                <i class="fas fa-circle" style="color: #4CAF50;"></i> 
-                Статус: ✅ Подключено
-                <div style="font-size: 12px; margin-top: 5px; color: #666;">
-                    Бот: <strong>${botName}</strong> (@${botUsername})
-                </div>
-            `;
-            console.log('✅ Telegram бот доступен:', data.result);
+            // Проверяем доступное пространство
+            let totalSpace = 0;
+            try {
+                for (let i = 0; i < 1000; i++) {
+                    const key = 'test_space_' + i;
+                    const value = 'x'.repeat(1024); // 1KB
+                    localStorage.setItem(key, value);
+                    totalSpace += 1024;
+                }
+            } catch (e) {
+                // Достигнут лимит
+            }
+            
+            // Очищаем тестовые данные
+            for (let i = 0; i < 1000; i++) {
+                localStorage.removeItem('test_space_' + i);
+            }
+            
+            console.log(`   • Доступное пространство: ${Math.round(totalSpace / 1024)}KB`);
             return true;
         } else {
-            statusElement.innerHTML = `
-                <i class="fas fa-circle" style="color: #f44336;"></i> 
-                Статус: ❌ Ошибка подключения
-                <div style="font-size: 12px; margin-top: 5px; color: #666;">
-                    ${data.description || 'Неизвестная ошибка'}
-                </div>
-            `;
-            console.error('❌ Ошибка Telegram:', data);
+            console.error('❌ LocalStorage: Данные не совпадают');
             return false;
         }
     } catch (error) {
-        statusElement.innerHTML = `
-            <i class="fas fa-circle" style="color: #f44336;"></i> 
-            Статус: ❌ Ошибка сети
-            <div style="font-size: 12px; margin-top: 5px; color: #666;">
-                ${error.message}
-            </div>
-        `;
-        console.error('❌ Ошибка сети:', error);
+        console.error('❌ LocalStorage: Ошибка доступа:', error.message);
         return false;
     }
+}
+
+/**
+ * Тест банка вопросов
+ */
+function testQuestions() {
+    try {
+        if (!window.questionsBank || !Array.isArray(window.questionsBank)) {
+            throw new Error('Банк вопросов не найден');
+        }
+        
+        if (!window.problemsBank || !Array.isArray(window.problemsBank)) {
+            throw new Error('Банк задач не найден');
+        }
+        
+        const totalNeeded = window.TEST_CONFIG.totalQuestions + window.TEST_CONFIG.totalProblems;
+        const totalAvailable = window.questionsBank.length + window.problemsBank.length;
+        
+        if (totalAvailable < totalNeeded) {
+            throw new Error(`Недостаточно вопросов: нужно ${totalNeeded}, доступно ${totalAvailable}`);
+        }
+        
+        // Проверяем структуру вопросов
+        let validQuestions = 0;
+        window.questionsBank.forEach((q, i) => {
+            if (q.text && q.options && q.points) {
+                validQuestions++;
+            } else {
+                console.warn(`⚠️ Вопрос ${i} имеет неполную структуру`);
+            }
+        });
+        
+        // Проверяем структуру задач
+        let validProblems = 0;
+        window.problemsBank.forEach((p, i) => {
+            if (p.text && p.options && p.points === 3) {
+                validProblems++;
+            } else {
+                console.warn(`⚠️ Задача ${i} имеет неполную структуру`);
+            }
+        });
+        
+        console.log('✅ Банки вопросов: Проверены');
+        console.log(`   • Вопросов: ${validQuestions}/${window.questionsBank.length} валидных`);
+        console.log(`   • Задач: ${validProblems}/${window.problemsBank.length} валидных`);
+        console.log(`   • Нужно для теста: ${window.TEST_CONFIG.totalQuestions} вопросов + ${window.TEST_CONFIG.totalProblems} задач`);
+        
+        return validQuestions >= window.TEST_CONFIG.totalQuestions && 
+               validProblems >= window.TEST_CONFIG.totalProblems;
+    } catch (error) {
+        console.error('❌ Банки вопросов: Ошибка:', error.message);
+        return false;
+    }
+}
+
+/**
+ * Тест системы оценки
+ */
+function testGradingSystem() {
+    try {
+        const scale = window.TEST_CONFIG.gradingScale;
+        const maxScore = window.TEST_CONFIG.maxScore;
+        
+        if (!scale || typeof scale !== 'object') {
+            throw new Error('Шкала оценок не определена');
+        }
+        
+        // Проверяем границы оценок
+        const testScores = [
+            {score: maxScore, expected: 5},
+            {score: scale[5], expected: 5},
+            {score: scale[5] - 1, expected: 4},
+            {score: scale[4], expected: 4},
+            {score: scale[4] - 1, expected: 3},
+            {score: scale[3], expected: 3},
+            {score: scale[3] - 1, expected: 2},
+            {score: 0, expected: 2}
+        ];
+        
+        let allCorrect = true;
+        
+        testScores.forEach(test => {
+            const grade = calculateGrade(test.score);
+            if (grade !== test.expected) {
+                console.error(`❌ Ошибка оценки: ${test.score} баллов -> ${grade} (ожидалось ${test.expected})`);
+                allCorrect = false;
+            }
+        });
+        
+        if (allCorrect) {
+            console.log('✅ Система оценки: Работает корректно');
+            console.log(`   • Макс. балл: ${maxScore}`);
+            console.log(`   • На 5: от ${scale[5]} баллов`);
+            console.log(`   • На 4: от ${scale[4]} до ${scale[5] - 1}`);
+            console.log(`   • На 3: от ${scale[3]} до ${scale[4] - 1}`);
+            console.log(`   • На 2: до ${scale[3] - 1}`);
+        }
+        
+        return allCorrect;
+    } catch (error) {
+        console.error('❌ Система оценки: Ошибка:', error.message);
+        return false;
+    }
+}
+
+/**
+ * Вспомогательная функция для расчета оценки
+ */
+function calculateGrade(score) {
+    const scale = window.TEST_CONFIG.gradingScale;
+    if (score >= scale[5]) return 5;
+    if (score >= scale[4]) return 4;
+    if (score >= scale[3]) return 3;
+    return 2;
+}
+
+/**
+ * Логирование результата теста
+ */
+function logTestResult(name, passed) {
+    const status = passed ? '✅' : '❌';
+    const message = passed ? 'Пройден' : 'Не пройден';
+    console.log(`${status} ${name}: ${message}`);
+}
+
+// ====================================================================
+// ТЕСТИРОВАНИЕ АНТИЧИТ-СИСТЕМЫ
+// ====================================================================
+
+/**
+ * Тестирование античит-системы
+ */
+window.testAnticheatSystem = function() {
+    console.group('🛡️ ТЕСТИРОВАНИЕ АНТИЧИТ-СИСТЕМЫ');
+    
+    // Тест 1: Проверка пароля
+    const password = window.TEST_CONFIG.anticheat.password;
+    console.log(`1. Пароль античитов: "${password}"`);
+    console.log(`   • Длина: ${password.length} символов`);
+    console.log(`   • Только цифры: ${/^\d+$/.test(password) ? 'Да' : 'Нет'}`);
+    
+    // Тест 2: Имитация срабатывания античитов
+    console.log('2. Имитация срабатывания системы:');
+    
+    // Проверяем наличие необходимых функций
+    const functionsToCheck = [
+        'triggerAnticheat',
+        'startBlockTimer',
+        'closeAntiCheat'
+    ];
+    
+    let functionsFound = 0;
+    functionsToCheck.forEach(func => {
+        if (typeof window[func] === 'function') {
+            console.log(`   • ${func}(): ✅ Найдена`);
+            functionsFound++;
+        } else {
+            console.log(`   • ${func}(): ❌ Не найдена`);
+        }
+    });
+    
+    // Тест 3: Проверка защиты от копирования
+    console.log('3. Защита от копирования:');
+    const copyProtection = window.TEST_CONFIG.anticheat.enableCopyProtection;
+    console.log(`   • Включена: ${copyProtection ? 'Да' : 'Нет'}`);
+    
+    if (copyProtection) {
+        // Проверяем обработчики событий
+        document.addEventListener('copy', function(e) {
+            console.log('   • Обработчик copy: ✅ Активен');
+        });
+        
+        console.log('   • Попробуйте скопировать текст со страницы для теста');
+    }
+    
+    // Тест 4: Защита от переключения вкладок
+    console.log('4. Защита от переключения вкладок:');
+    const tabProtection = window.TEST_CONFIG.anticheat.enableTabProtection;
+    console.log(`   • Включена: ${tabProtection ? 'Да' : 'Нет'}`);
+    
+    if (tabProtection) {
+        console.log('   • При переключении вкладок должен сработать античит');
+    }
+    
+    console.log(`📊 ИТОГО: ${functionsFound}/${functionsToCheck.length} функций найдено`);
+    console.groupEnd();
+    
+    return functionsFound === functionsToCheck.length;
 };
 
 /**
- * Отправляет тестовое сообщение в Telegram
+ * Запустить тест античит-системы с визуальным подтверждением
  */
-window.sendTestTelegramMessage = async function() {
-    const token = document.getElementById('telegramToken').value.trim();
-    const chatId = document.getElementById('telegramChatId').value.trim();
-    const message = document.getElementById('telegramMessage').value;
-    const resultElement = document.getElementById('telegramResultContent');
-    
-    if (!token || !chatId || !message) {
-        resultElement.innerHTML = `
-            <div style="color: #f44336;">
-                <i class="fas fa-times-circle"></i> 
-                Заполните все поля: токен, chat ID и сообщение
-            </div>
-        `;
+window.runAnticheatTest = function() {
+    if (!confirm('Запустить тест античит-системы? Будет имитировано срабатывание защиты.')) {
         return;
     }
     
-    resultElement.innerHTML = `
-        <div style="color: #ff9800;">
-            <i class="fas fa-spinner fa-spin"></i> 
-            Отправка сообщения...
-        </div>
-    `;
+    console.log('🚨 Запуск теста античит-системы...');
     
-    const url = `https://api.telegram.org/bot${token}/sendMessage`;
-    const timestamp = new Date().toISOString();
+    // Имитируем срабатывание античитов
+    if (typeof window.triggerAnticheat === 'function') {
+        window.triggerAnticheat();
+        console.log('✅ Античит-система активирована');
+        
+        // Показываем уведомление
+        showDebugNotification('Античит-система активирована', 'Проверьте работу блокировки', 'warning');
+        
+        // Записываем в историю
+        window.DEBUG_DATA.cheatAttempts++;
+        addToDebugHistory('Античит-тест', 'Система активирована вручную');
+    } else {
+        console.error('❌ Функция triggerAnticheat не найдена');
+        showDebugNotification('Ошибка', 'Функция античит не найдена', 'error');
+    }
+};
+
+// ====================================================================
+// ТЕСТИРОВАНИЕ TELEGRAM
+// ====================================================================
+
+/**
+ * Комплексное тестирование Telegram
+ */
+window.testTelegramComprehensive = async function() {
+    console.group('📨 КОМПЛЕКСНОЕ ТЕСТИРОВАНИЕ TELEGRAM');
+    
+    const token = window.TEST_CONFIG.telegram.botToken;
+    const chatId = window.TEST_CONFIG.telegram.chatId;
+    
+    if (!token || token === 'DEMO_TOKEN_DEBUG_ONLY') {
+        console.error('❌ Telegram: Не указан реальный токен');
+        showDebugNotification('Ошибка', 'Укажите реальный токен Telegram', 'error');
+        console.groupEnd();
+        return false;
+    }
+    
+    // Тест 1: Проверка доступности бота
+    console.log('1. Проверка доступности бота...');
+    const botAvailable = await testTelegramConnection();
+    
+    if (!botAvailable) {
+        console.error('❌ Telegram: Бот недоступен');
+        console.groupEnd();
+        return false;
+    }
+    
+    // Тест 2: Отправка тестового сообщения
+    console.log('2. Отправка тестового сообщения...');
+    
+    const testMessage = `🔧 *Тестовое сообщение из отладочного режима*
+
+✅ Система тестирования: ${window.PROJECT_INFO.name}
+🚀 Версия: ${window.PROJECT_INFO.version}
+🕐 Время отправки: ${new Date().toLocaleString('ru-RU')}
+🔍 Режим: Комплексная отладка
+
+*Проверка функций:*
+✓ Подключение к Telegram API
+✓ Отправка сообщений
+✓ Форматирование Markdown
+✓ Обработка ошибок
+
+📊 *Статистика отладки:*
+• Запущено: ${window.DEBUG_DATA ? window.DEBUG_DATA.startTime.toLocaleString() : 'Неизвестно'}
+• Тестов Telegram: ${window.DEBUG_DATA ? window.DEBUG_DATA.telegramTests + 1 : 1}
+• Попыток античитов: ${window.DEBUG_DATA ? window.DEBUG_DATA.cheatAttempts : 0}
+
+_Это тестовое сообщение, проверяющее работу интеграции._`;
     
     try {
+        const url = `https://api.telegram.org/bot${token}/sendMessage`;
         const response = await fetch(url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 chat_id: chatId,
-                text: message,
-                parse_mode: 'Markdown'
+                text: testMessage,
+                parse_mode: 'Markdown',
+                disable_notification: false
             })
         });
         
         const data = await response.json();
         
         if (data.ok) {
-            const messageId = data.result.message_id;
-            const chatTitle = data.result.chat.title || 'Личный чат';
+            console.log('✅ Telegram: Сообщение отправлено успешно');
+            console.log(`   • ID сообщения: ${data.result.message_id}`);
+            console.log(`   • Чат: ${data.result.chat.title || 'Личный чат'}`);
+            console.log(`   • Дата: ${new Date(data.result.date * 1000).toLocaleString()}`);
             
-            resultElement.innerHTML = `
-                <div style="color: #4CAF50; margin-bottom: 10px;">
-                    <i class="fas fa-check-circle"></i> 
-                    <strong>✅ Сообщение успешно отправлено!</strong>
-                </div>
-                <div style="font-size: 12px; color: #666;">
-                    <div><strong>Время:</strong> ${new Date().toLocaleString('ru-RU')}</div>
-                    <div><strong>ID сообщения:</strong> ${messageId}</div>
-                    <div><strong>Чат:</strong> ${chatTitle}</div>
-                    <div><strong>Статус:</strong> Доставлено</div>
-                    <div style="margin-top: 10px; padding: 8px; background: #f8f9fa; border-radius: 5px;">
-                        <strong>Отправленный текст:</strong><br>
-                        ${message.substring(0, 200)}${message.length > 200 ? '...' : ''}
-                    </div>
-                </div>
-            `;
+            // Обновляем статистику
+            if (window.DEBUG_DATA) {
+                window.DEBUG_DATA.telegramTests++;
+                window.DEBUG_DATA.lastTelegramTest = new Date();
+                addToDebugHistory('Telegram-тест', `Сообщение #${data.result.message_id} отправлено`);
+            }
             
-            console.log('✅ Тестовое сообщение отправлено:', data.result);
+            // Тест 3: Проверка webhook (если настроен)
+            if (window.TEST_CONFIG.telegram.webhook) {
+                console.log('3. Проверка webhook...');
+                await testTelegramWebhook();
+            }
             
-            // Добавляем в историю отправок
-            addToSendHistory({
-                timestamp: timestamp,
-                success: true,
-                messageId: messageId,
-                chatId: chatId
-            });
-            
+            showDebugNotification('Telegram', 'Тестовое сообщение отправлено', 'success');
+            console.groupEnd();
+            return true;
         } else {
-            resultElement.innerHTML = `
-                <div style="color: #f44336; margin-bottom: 10px;">
-                    <i class="fas fa-times-circle"></i> 
-                    <strong>❌ Ошибка отправки</strong>
-                </div>
-                <div style="font-size: 12px; color: #666;">
-                    <div><strong>Код ошибки:</strong> ${data.error_code || 'Неизвестно'}</div>
-                    <div><strong>Описание:</strong> ${data.description || 'Неизвестная ошибка'}</div>
-                    <div style="margin-top: 10px; padding: 8px; background: #ffebee; border-radius: 5px;">
-                        <strong>Возможные причины:</strong><br>
-                        1. Неверный токен бота<br>
-                        2. Неверный Chat ID<br>
-                        3. Бот не добавлен в чат<br>
-                        4. Проблемы с интернет-соединением
-                    </div>
-                </div>
-            `;
-            
-            console.error('❌ Ошибка отправки Telegram:', data);
-            
-            // Добавляем в историю ошибок
-            addToSendHistory({
-                timestamp: timestamp,
-                success: false,
-                error: data.description || 'Unknown error',
-                errorCode: data.error_code
-            });
+            console.error('❌ Telegram: Ошибка отправки:', data.description);
+            showDebugNotification('Ошибка Telegram', data.description, 'error');
+            console.groupEnd();
+            return false;
         }
     } catch (error) {
-        resultElement.innerHTML = `
-            <div style="color: #f44336; margin-bottom: 10px;">
-                <i class="fas fa-times-circle"></i> 
-                <strong>❌ Ошибка сети</strong>
-            </div>
-            <div style="font-size: 12px; color: #666;">
-                <div><strong>Ошибка:</strong> ${error.message}</div>
-                <div style="margin-top: 10px; padding: 8px; background: #ffebee; border-radius: 5px;">
-                    <strong>Проверьте:</strong><br>
-                    1. Интернет-соединение<br>
-                    2. Доступность Telegram API<br>
-                    3. Настройки CORS (если запущено локально)
-                </div>
-            </div>
-        `;
-        
-        console.error('❌ Ошибка сети при отправке:', error);
-        
-        addToSendHistory({
-            timestamp: timestamp,
-            success: false,
-            error: 'Network error: ' + error.message
-        });
+        console.error('❌ Telegram: Ошибка сети:', error.message);
+        showDebugNotification('Ошибка сети', error.message, 'error');
+        console.groupEnd();
+        return false;
     }
 };
 
 /**
- * Сохраняет настройки Telegram в конфигурацию
+ * Тестирование webhook Telegram
  */
-window.saveTelegramConfig = function() {
-    const token = document.getElementById('telegramToken').value.trim();
-    const chatId = document.getElementById('telegramChatId').value.trim();
+async function testTelegramWebhook() {
+    const token = window.TEST_CONFIG.telegram.botToken;
     
-    if (!token || !chatId) {
-        alert('Пожалуйста, заполните токен и Chat ID');
+    try {
+        // Получаем информацию о webhook
+        const url = `https://api.telegram.org/bot${token}/getWebhookInfo`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.ok) {
+            const webhookInfo = data.result;
+            console.log('   • Webhook URL:', webhookInfo.url || 'Не настроен');
+            console.log('   • Ожидающих обновлений:', webhookInfo.pending_update_count);
+            console.log('   • Последняя ошибка:', webhookInfo.last_error_date ? 
+                new Date(webhookInfo.last_error_date * 1000).toLocaleString() : 'Нет');
+            
+            return webhookInfo.url && webhookInfo.url.length > 0;
+        }
+    } catch (error) {
+        console.error('   • Ошибка проверки webhook:', error.message);
+        return false;
+    }
+}
+
+// ====================================================================
+// ИНТЕРФЕЙС ОТЛАДКИ
+// ====================================================================
+
+/**
+ * Добавление интерфейса отладки
+ */
+window.addDebugInterface = function() {
+    console.log('🎨 Добавление интерфейса отладки...');
+    
+    // Создаем контейнер для отладочной панели
+    const debugPanel = document.createElement('div');
+    debugPanel.id = 'debug-panel';
+    debugPanel.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #2c3e50, #34495e);
+        color: white;
+        border-radius: 12px;
+        padding: 15px;
+        z-index: 9999;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        max-width: 300px;
+        border: 2px solid #3498db;
+        display: none;
+        animation: slideInRight 0.5s ease;
+    `;
+    
+    debugPanel.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-bug"></i> Панель отладки
+            </h3>
+            <button id="debug-close" style="background: none; border: none; color: white; cursor: pointer; font-size: 18px;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px;">
+                <div class="debug-stat">
+                    <div style="font-size: 12px; opacity: 0.8;">Версия</div>
+                    <div style="font-weight: bold;">${window.PROJECT_INFO.version}</div>
+                </div>
+                <div class="debug-stat">
+                    <div style="font-size: 12px; opacity: 0.8;">Telegram</div>
+                    <div id="telegram-status" style="font-weight: bold; color: #2ecc71;">✅</div>
+                </div>
+                <div class="debug-stat">
+                    <div style="font-size: 12px; opacity: 0.8;">Античит</div>
+                    <div style="font-weight: bold; color: #e74c3c;">${window.TEST_CONFIG.anticheat.password}</div>
+                </div>
+                <div class="debug-stat">
+                    <div style="font-size: 12px; opacity: 0.8;">Вопросы</div>
+                    <div style="font-weight: bold;">${window.questionsBank.length}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;">
+            <button class="debug-btn" onclick="window.showSystemInfo()" style="background: #3498db;">
+                <i class="fas fa-info-circle"></i> Информация
+            </button>
+            <button class="debug-btn" onclick="window.runAutomaticTests()" style="background: #2ecc71;">
+                <i class="fas fa-play"></i> Тесты системы
+            </button>
+            <button class="debug-btn" onclick="window.testTelegramComprehensive()" style="background: #9b59b6;">
+                <i class="fab fa-telegram"></i> Тест Telegram
+            </button>
+            <button class="debug-btn" onclick="window.runAnticheatTest()" style="background: #e74c3c;">
+                <i class="fas fa-shield-alt"></i> Тест античитов
+            </button>
+        </div>
+        
+        <div style="font-size: 12px; opacity: 0.7; text-align: center; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <i class="fas fa-clock"></i> Загружено: ${new Date().toLocaleTimeString()}
+        </div>
+    `;
+    
+    document.body.appendChild(debugPanel);
+    
+    // Создаем кнопку для показа/скрытия панели
+    const toggleButton = document.createElement('button');
+    toggleButton.id = 'debug-toggle';
+    toggleButton.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        z-index: 9998;
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+    `;
+    toggleButton.innerHTML = '<i class="fas fa-bug"></i>';
+    toggleButton.title = 'Показать панель отладки';
+    
+    toggleButton.addEventListener('click', function() {
+        const panel = document.getElementById('debug-panel');
+        if (panel.style.display === 'block') {
+            panel.style.display = 'none';
+            this.innerHTML = '<i class="fas fa-bug"></i>';
+            this.title = 'Показать панель отладки';
+        } else {
+            panel.style.display = 'block';
+            this.innerHTML = '<i class="fas fa-times"></i>';
+            this.title = 'Скрыть панель отладки';
+        }
+    });
+    
+    document.body.appendChild(toggleButton);
+    
+    // Закрытие панели
+    document.getElementById('debug-close').addEventListener('click', function() {
+        document.getElementById('debug-panel').style.display = 'none';
+        toggleButton.innerHTML = '<i class="fas fa-bug"></i>';
+        toggleButton.title = 'Показать панель отладки';
+    });
+    
+    // Стили для кнопок и статистики
+    const style = document.createElement('style');
+    style.textContent = `
+        .debug-btn {
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        
+        .debug-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            opacity: 0.9;
+        }
+        
+        .debug-stat {
+            background: rgba(255,255,255,0.1);
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        #debug-toggle:hover {
+            animation: pulse 1s infinite;
+        }
+    `;
+    
+    document.head.appendChild(style);
+    
+    // Проверяем статус Telegram
+    updateTelegramStatus();
+    
+    console.log('✅ Интерфейс отладки добавлен');
+};
+
+/**
+ * Обновление статуса Telegram в интерфейсе
+ */
+async function updateTelegramStatus() {
+    const statusElement = document.getElementById('telegram-status');
+    if (!statusElement) return;
+    
+    const token = window.TEST_CONFIG.telegram.botToken;
+    
+    if (!token || token === 'DEMO_TOKEN_DEBUG_ONLY') {
+        statusElement.innerHTML = '❌';
+        statusElement.title = 'Токен не настроен';
         return;
     }
     
-    window.TEST_CONFIG.telegram.botToken = token;
-    window.TEST_CONFIG.telegram.chatId = chatId;
-    
-    // Обновляем глобальную конфигурацию
-    if (window.electricityTestConfig) {
-        window.electricityTestConfig.telegram.botToken = token;
-        window.electricityTestConfig.telegram.chatId = chatId;
-    }
-    
-    // Показываем уведомление
-    const resultElement = document.getElementById('telegramResultContent');
-    resultElement.innerHTML = `
-        <div style="color: #4CAF50;">
-            <i class="fas fa-save"></i> 
-            <strong>Настройки сохранены!</strong>
-            <div style="font-size: 12px; margin-top: 5px;">
-                Токен и Chat ID обновлены в конфигурации теста.
-                <br>Для применения в реальном тесте потребуется перезагрузка.
-            </div>
-        </div>
-    `;
-    
-    console.log('💾 Настройки Telegram сохранены:', { token: token.substring(0, 10) + '...', chatId });
-};
-
-/**
- * Показывает справку по настройке Telegram
- */
-window.showTelegramHelp = function() {
-    const resultElement = document.getElementById('telegramResultContent');
-    resultElement.innerHTML = `
-        <div style="color: #2196F3;">
-            <i class="fas fa-question-circle"></i> 
-            <strong>Помощь по настройке Telegram</strong>
-        </div>
-        <div style="font-size: 12px; margin-top: 10px; line-height: 1.6;">
-            <strong>1. Как создать бота:</strong><br>
-            • Откройте @BotFather в Telegram<br>
-            • Отправьте команду /newbot<br>
-            • Укажите имя и username бота<br>
-            • Сохраните полученный токен<br><br>
-            
-            <strong>2. Как получить Chat ID:</strong><br>
-            • Добавьте бота в нужный чат<br>
-            • Отправьте любое сообщение боту<br>
-            • Перейдите по ссылке: https://api.telegram.org/botВАШ_ТОКЕН/getUpdates<br>
-            • Найдите "chat":{"id":ЧИСЛО} в ответе<br><br>
-            
-            <strong>3. Возможные проблемы:</strong><br>
-            • Бот должен быть администратором в чате<br>
-            • В личных сообщениях бота нужно начать диалог<br>
-            • Токен должен начинаться с "bot"<br><br>
-            
-            <strong>Пример токена:</strong> bot123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11<br>
-            <strong>Пример Chat ID:</strong> -1001234567890 (для групп) или 123456789 (для личных)
-        </div>
-    `;
-};
-
-/**
- * Добавляет запись в историю отправок
- */
-function addToSendHistory(entry) {
-    if (!window.telegramSendHistory) {
-        window.telegramSendHistory = [];
-    }
-    
-    window.telegramSendHistory.unshift(entry);
-    
-    // Ограничиваем историю 10 записями
-    if (window.telegramSendHistory.length > 10) {
-        window.telegramSendHistory.pop();
-    }
-    
-    console.log('📨 Запись добавлена в историю отправок:', entry);
-}
-
-// ====================================================================
-// ФУНКЦИИ ДЛЯ ОТЛАДКИ И ДИАГНОСТИКИ
-// ====================================================================
-
-/**
- * Выводит полную информацию о системе в консоль
- */
-window.showSystemInfo = function() {
-    console.group('🎓 ИНФОРМАЦИЯ О СИСТЕМЕ ТЕСТИРОВАНИЯ');
-    console.log('📋 Название:', window.PROJECT_INFO.name);
-    console.log('🚀 Версия:', window.PROJECT_INFO.version);
-    console.log('👨‍💻 Автор:', window.PROJECT_INFO.author);
-    console.log('📝 Описание:', window.PROJECT_INFO.description);
-    console.log('⭐ Особенности:', window.PROJECT_INFO.features);
-    console.log('🔄 Последнее обновление:', window.PROJECT_INFO.lastUpdated);
-    console.log('🤖 Telegram настроен:', window.TEST_CONFIG.telegram.botToken ? '✅ Да' : '❌ Нет');
-    console.groupEnd();
-    
-    console.group('⚙️ КОНФИГУРАЦИЯ ТЕСТА');
-    console.log('📚 Тест:', window.TEST_CONFIG.title);
-    console.log('❓ Вопросы:', window.questionsBank.length, 'из', window.TEST_CONFIG.totalQuestions, 'будут выбраны');
-    console.log('🧮 Задачи:', window.problemsBank.length, 'из', window.TEST_CONFIG.totalProblems, 'будут выбраны');
-    console.log('🎯 Макс. балл:', window.TEST_CONFIG.maxScore);
-    console.log('🤖 Telegram бот:', window.TEST_CONFIG.telegram.botToken ? '✅ Настроен' : '❌ Не настроен');
-    console.log('💬 Chat ID:', window.TEST_CONFIG.telegram.chatId || 'Не указан');
-    console.log('🔒 Античит пароль:', window.TEST_CONFIG.anticheat.password);
-    console.groupEnd();
-};
-
-/**
- * Тестирует все основные функции системы
- */
-window.runSystemTests = async function() {
-    console.group('🧪 ЗАПУСК СИСТЕМНЫХ ТЕСТОВ');
-    
-    const tests = [
-        { name: 'Конфигурация', test: () => !!window.TEST_CONFIG },
-        { name: 'Банк вопросов', test: () => window.questionsBank && Array.isArray(window.questionsBank) },
-        { name: 'Банк задач', test: () => window.problemsBank && Array.isArray(window.problemsBank) },
-        { name: 'Telegram конфиг', test: () => window.TEST_CONFIG.telegram && window.TEST_CONFIG.telegram.botToken }
-    ];
-    
-    let allPassed = true;
-    
-    for (const test of tests) {
-        try {
-            const result = test.test();
-            console.log(`${result ? '✅' : '❌'} ${test.name}: ${result ? 'Пройден' : 'Не пройден'}`);
-            if (!result) allPassed = false;
-        } catch (error) {
-            console.error(`❌ ${test.name}: Ошибка - ${error.message}`);
-            allPassed = false;
-        }
-    }
-    
-    // Тест Telegram
-    console.log('🔗 Тестирование Telegram API...');
     try {
-        const connected = await testTelegramConnection();
-        console.log(`${connected ? '✅' : '❌'} Telegram API: ${connected ? 'Доступен' : 'Недоступен'}`);
-    } catch (error) {
-        console.error('❌ Telegram API: Ошибка тестирования');
-    }
-    
-    console.groupEnd();
-    return allPassed;
-};
-
-/**
- * Создает тестового студента и начинает тест
- */
-window.startDebugTest = function() {
-    console.log('🚀 Запуск отладочного теста...');
-    
-    if (window.studentNameInput && window.studentClassSelect) {
-        window.studentNameInput.value = 'Тестовый Студент';
-        window.studentClassSelect.value = '8';
+        const url = `https://api.telegram.org/bot${token}/getMe`;
+        const response = await fetch(url);
+        const data = await response.json();
         
-        if (window.startTestBtn) {
-            console.log('👤 Создан тестовый студент');
-            window.startTestBtn.click();
+        if (data.ok) {
+            statusElement.innerHTML = '✅';
+            statusElement.title = `Бот: ${data.result.first_name} (@${data.result.username})`;
+            statusElement.style.color = '#2ecc71';
+        } else {
+            statusElement.innerHTML = '❌';
+            statusElement.title = `Ошибка: ${data.description}`;
+            statusElement.style.color = '#e74c3c';
         }
+    } catch (error) {
+        statusElement.innerHTML = '⚠️';
+        statusElement.title = `Ошибка сети: ${error.message}`;
+        statusElement.style.color = '#f39c12';
     }
-};
+}
 
 /**
- * Показывает все доступные тесты в системе
+ * Добавление стилей для отладки
  */
-window.showAvailableTests = function() {
-    console.group('📂 ДОСТУПНЫЕ ТЕСТЫ В СИСТЕМЕ');
-    console.log('1. electricity.js - Контрольная по электричеству');
-    console.log('2. debug.js - Отладочный тест (этот файл)');
-    console.log('3. trew.js - Пример другого теста');
-    console.log('');
-    console.log('💡 Для открытия теста введите его имя на главной странице');
-    console.groupEnd();
-};
-
-// ====================================================================
-// АВТОМАТИЧЕСКИЕ ДЕЙСТВИЯ ПРИ ЗАГРУЗКЕ
-// ====================================================================
-
-console.log('=========================================');
-console.log('🔧 ОТЛАДОЧНЫЙ РЕЖИМ СИСТЕМЫ ТЕСТИРОВАНИЯ');
-console.log('=========================================');
-
-// Автоматически показываем информацию о системе
-setTimeout(() => {
-    window.showSystemInfo();
+function addDebugStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .debug-notification {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            z-index: 10000;
+            max-width: 300px;
+            animation: slideDown 0.3s ease;
+            border-left: 4px solid #3498db;
+        }
+        
+        .debug-notification.success {
+            border-left-color: #2ecc71;
+        }
+        
+        .debug-notification.warning {
+            border-left-color: #f39c12;
+        }
+        
+        .debug-notification.error {
+            border-left-color: #e74c3c;
+        }
+        
+        .debug-notification h4 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .debug-notification p {
+            margin: 0;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    `;
     
-    // Добавляем кнопки отладки в интерфейс
-    if (window.location.pathname.includes('test.html')) {
+    document.head.appendChild(style);
+}
+
+/**
+ * Показать отладочное уведомление
+ */
+function showDebugNotification(title, message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `debug-notification ${type}`;
+    
+    const icon = type === 'success' ? '✅' : 
+                 type === 'warning' ? '⚠️' : 
+                 type === 'error' ? '❌' : 'ℹ️';
+    
+    notification.innerHTML = `
+        <h4>${icon} ${title}</h4>
+        <p>${message}</p>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Автоматическое скрытие
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(-20px)';
         setTimeout(() => {
-            addDebugButtons();
-        }, 1000);
-    }
-}, 500);
+            document.body.removeChild(notification);
+        }, 300);
+    }, 5000);
+}
 
 /**
- * Добавляет кнопки отладки в интерфейс
+ * Добавить запись в историю отладки
  */
-function addDebugButtons() {
-    const buttonContainer = document.querySelector('.button-container') || 
-                           document.querySelector('.button-group') ||
-                           document.querySelector('.section');
+function addToDebugHistory(action, details) {
+    if (!window.DEBUG_DATA) return;
     
-    if (!buttonContainer) return;
-    
-    const debugContainer = document.createElement('div');
-    debugContainer.style.cssText = `
-        margin: 20px 0;
-        padding: 15px;
-        background: linear-gradient(135deg, #f0f7ff 0%, #e3f2fd 100%);
-        border: 2px dashed #4b6cb7;
-        border-radius: 10px;
-        text-align: center;
-        box-shadow: 0 4px 12px rgba(75, 108, 183, 0.1);
-    `;
-    
-    debugContainer.innerHTML = `
-        <div style="font-weight: bold; color: #4b6cb7; margin-bottom: 15px; font-size: 16px;">
-            <i class="fas fa-bug"></i> Панель отладки системы
-        </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 15px;">
-            <button id="debugInfoBtn" style="background: #4b6cb7; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer;">
-                <i class="fas fa-info-circle"></i> Инфо
-            </button>
-            <button id="debugTestBtn" style="background: #34b86e; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer;">
-                <i class="fas fa-play"></i> Тест системы
-            </button>
-            <button id="debugListBtn" style="background: #9c27b0; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer;">
-                <i class="fas fa-list"></i> Список тестов
-            </button>
-            <button id="debugTelegramBtn" style="background: #0088cc; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer;">
-                <i class="fab fa-telegram"></i> Тест Telegram
-            </button>
-            <button id="debugStartBtn" style="background: linear-gradient(135deg, #ff9800, #ff5722); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer;">
-                <i class="fas fa-rocket"></i> Быстрый старт
-            </button>
-        </div>
-        <div id="debugOutput" style="margin-top: 15px; padding: 12px; background: white; 
-              border-radius: 8px; font-family: 'Courier New', monospace; font-size: 12px; 
-              text-align: left; max-height: 200px; overflow-y: auto; display: none;
-              border: 1px solid #e0e0e0;"></div>
-    `;
-    
-    buttonContainer.parentNode.insertBefore(debugContainer, buttonContainer.nextSibling);
-    
-    // Назначаем обработчики
-    document.getElementById('debugInfoBtn').onclick = () => {
-        window.showSystemInfo();
-        showDebugOutput('✅ Информация о системе выведена в консоль браузера (F12)');
+    const entry = {
+        timestamp: new Date().toISOString(),
+        action: action,
+        details: details,
+        page: window.location.pathname
     };
     
-    document.getElementById('debugTestBtn').onclick = async () => {
-        showDebugOutput('🔄 Запуск системных тестов...');
-        const result = await window.runSystemTests();
-        showDebugOutput(result ? '✅ Все тесты пройдены успешно' : '❌ Обнаружены ошибки в тестах');
-    };
+    window.DEBUG_DATA.history.push(entry);
     
-    document.getElementById('debugListBtn').onclick = () => {
-        window.showAvailableTests();
-        showDebugOutput('📋 Список тестов выведен в консоль браузера');
-    };
-    
-    document.getElementById('debugTelegramBtn').onclick = () => {
-        window.showTelegramTestWindow();
-        showDebugOutput('📨 Открыто окно тестирования Telegram');
-    };
-    
-    document.getElementById('debugStartBtn').onclick = () => {
-        window.startDebugTest();
-        showDebugOutput('🚀 Запущен быстрый старт теста с тестовым студентом');
-    };
-    
-    function showDebugOutput(message) {
-        const output = document.getElementById('debugOutput');
-        output.style.display = 'block';
-        const time = new Date().toLocaleTimeString();
-        output.innerHTML = `<div style="color: #666; margin-bottom: 5px;"><strong>[${time}]</strong> ${message}</div>` + output.innerHTML;
+    // Ограничиваем историю 50 записями
+    if (window.DEBUG_DATA.history.length > 50) {
+        window.DEBUG_DATA.history.shift();
     }
     
-    console.log('✅ Панель отладки добавлена в интерфейс');
+    console.log(`📝 История: ${action} - ${details}`);
 }
 
 // ====================================================================
-// ЭКСПОРТ ДЛЯ ГЛОБАЛЬНОГО ИСПОЛЬЗОВАНИЯ
+// ПРОВЕРКА СИСТЕМНЫХ ВОЗМОЖНОСТЕЙ
 // ====================================================================
 
+/**
+ * Проверка всех системных возможностей
+ */
+window.checkSystemCapabilities = function() {
+    console.group('🔍 ПРОВЕРКА СИСТЕМНЫХ ВОЗМОЖНОСТЕЙ');
+    
+    const capabilities = {
+        // Браузерные API
+        localStorage: 'localStorage' in window,
+        sessionStorage: 'sessionStorage' in window,
+        geolocation: 'geolocation' in navigator,
+        vibration: 'vibrate' in navigator,
+        clipboard: 'clipboard' in navigator,
+        offline: 'onLine' in navigator,
+        
+        // JavaScript возможности
+        es6: {
+            arrowFunctions: () => { return true; },
+            promises: 'Promise' in window,
+            asyncAwait: 'async' in window,
+            templateLiterals: true,
+            destructuring: true
+        },
+        
+        // Веб API
+        fetch: 'fetch' in window,
+        webSockets: 'WebSocket' in window,
+        webWorkers: 'Worker' in window,
+        serviceWorkers: 'serviceWorker' in navigator,
+        
+        // CSS возможности
+        flexbox: 'flexBasis' in document.documentElement.style,
+        grid: 'grid' in document.documentElement.style,
+        transforms: 'transform' in document.documentElement.style,
+        transitions: 'transition' in document.documentElement.style,
+        
+        // Размер экрана
+        screen: {
+            width: window.screen.width,
+            height: window.screen.height,
+            orientation: window.screen.orientation ? window.screen.orientation.type : 'unknown',
+            pixelRatio: window.devicePixelRatio
+        },
+        
+        // Производительность
+        performance: 'performance' in window,
+        memory: 'memory' in performance,
+        hardwareConcurrency: 'hardwareConcurrency' in navigator
+    };
+    
+    // Выводим результаты
+    console.log('🌐 Браузерные API:');
+    Object.entries(capabilities).forEach(([key, value]) => {
+        if (typeof value === 'boolean') {
+            console.log(`   • ${key}: ${value ? '✅' : '❌'}`);
+        }
+    });
+    
+    console.log('📱 Размер экрана:');
+    console.log(`   • Ширина: ${capabilities.screen.width}px`);
+    console.log(`   • Высота: ${capabilities.screen.height}px`);
+    console.log(`   • Плотность пикселей: ${capabilities.screen.pixelRatio}`);
+    console.log(`   • Ориентация: ${capabilities.screen.orientation}`);
+    
+    if (capabilities.performance) {
+        console.log('⚡ Производительность:');
+        const timing = performance.timing;
+        const loadTime = timing.loadEventEnd - timing.navigationStart;
+        console.log(`   • Время загрузки: ${loadTime}ms`);
+        
+        if (capabilities.memory) {
+            const memory = performance.memory;
+            console.log(`   • Использовано памяти: ${Math.round(memory.usedJSHeapSize / 1024 / 1024)}MB`);
+            console.log(`   • Всего памяти: ${Math.round(memory.totalJSHeapSize / 1024 / 1024)}MB`);
+        }
+    }
+    
+    if (capabilities.hardwareConcurrency) {
+        console.log(`   • Ядер процессора: ${navigator.hardwareConcurrency}`);
+    }
+    
+    console.groupEnd();
+    
+    return capabilities;
+};
+
+// ====================================================================
+// АВТОМАТИЧЕСКАЯ ЗАГРУЗКА И ИНИЦИАЛИЗАЦИЯ
+// ====================================================================
+
+// Вывод информации при загрузке
+console.log('===============================================');
+console.log('🔧 КОМПЛЕКСНЫЙ ОТЛАДОЧНЫЙ ТЕСТ v8.0');
+console.log('===============================================');
+console.log('📋 Система:', window.PROJECT_INFO.name);
+console.log('🚀 Версия:', window.PROJECT_INFO.version);
+console.log('📅 Дата:', new Date().toLocaleString());
+console.log('🌐 URL:', window.location.href);
+console.log('===============================================');
+
+// Автоматическая инициализация отладочного режима
+setTimeout(() => {
+    window.initDebugMode();
+    
+    // Добавляем информацию в консоль для разработчика
+    console.log('💡 Доступные команды отладки:');
+    console.log('   • window.showSystemInfo() - полная информация');
+    console.log('   • window.runAutomaticTests() - автоматические тесты');
+    console.log('   • window.testTelegramComprehensive() - тест Telegram');
+    console.log('   • window.testAnticheatSystem() - проверка античитов');
+    console.log('   • window.runAnticheatTest() - запуск теста античитов');
+    console.log('   • window.checkSystemCapabilities() - возможности системы');
+    console.log('   • window.addDebugInterface() - показать интерфейс отладки');
+    console.log('');
+    console.log('🎮 Для быстрого доступа используйте кнопку 🐛 в правом верхнем углу');
+}, 1000);
+
+// Обработка ошибок для отладки
+window.addEventListener('error', function(event) {
+    console.error('🚨 Необработанная ошибка:', event.error);
+    
+    if (window.DEBUG_DATA) {
+        addToDebugHistory('Ошибка', `${event.error.name}: ${event.error.message}`);
+    }
+});
+
+// Экспорт для глобального использования
 window.debugTestConfig = window.TEST_CONFIG;
 window.debugQuestions = window.questionsBank;
 window.debugProblems = window.problemsBank;
 
 console.log('✅ Отладочный тест загружен и готов к использованию!');
 console.log('👉 Введите "debug" на главной странице для запуска.');
-console.log('👉 Доступные функции:');
-console.log('   • window.showSystemInfo() - информация о системе');
-console.log('   • window.runSystemTests() - проверка системы');
-console.log('   • window.showTelegramTestWindow() - окно тестирования Telegram');
-console.log('   • window.testTelegramConnection() - проверка подключения к Telegram');
-console.log('   • window.sendTestTelegramMessage() - отправка тестового сообщения');
+console.log('👉 Используйте панель отладки (кнопка 🐛) для тестирования.');
