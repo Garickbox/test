@@ -1,6 +1,6 @@
 // ====================================================================
 // ОСНОВНОЙ СКРИПТ СИСТЕМЫ ТЕСТИРОВАНИЯ
-// Версия 7.1 - С визуальными индикаторами прогресса
+// Версия 7.1 - Античит при восстановлении и индикаторы прогресса
 // ====================================================================
 
 // Глобальные переменные системы
@@ -75,12 +75,11 @@ const cheatMessages = [
 ];
 
 // DOM элементы
-let progressBar, progressText, questionText, questionType, optionsContainer, confirmBtn;
+let progressIndicators, questionText, questionType, optionsContainer, confirmBtn;
 let studentNameInput, studentClassSelect, fullscreenResult, fullscreenGrade;
 let fullscreenScore, fullscreenBreakdown, finishBtn, startTestBtn, refreshBtn;
 let studentInfoSection, testContent, blockerOverlay, anticheatModal;
 let cheatMessageElement, countdownTimer, passwordInput, continueBtn;
-let progressIndicators; // Добавляем переменную для индикаторов
 
 // Константы античит системы
 const PASSWORD = "3265";
@@ -180,7 +179,6 @@ function restoreTest() {
     if (testContent) testContent.style.display = 'block';
     
     // ВАЖНО: При восстановлении теста сразу запускаем античит систему
-    // чтобы пользователь не мог обойти античит
     triggerAnticheat();
     
     console.log('🔄 Тест восстановлен с вопроса', currentQuestionIndex + 1);
@@ -200,7 +198,7 @@ function startAutoSave() {
         if (testStarted && !testCompleted) {
             saveProgress();
         }
-    }, 30000); // Сохраняем каждые 30 секунд
+    }, 30000);
     
     console.log('🔄 Автосохранение запущено');
 }
@@ -251,10 +249,8 @@ function initTest() {
     // Пробуем восстановить тест
     if (!restoreTest()) {
         console.log('🆕 Начинаем новый тест');
-        // Показываем форму для ввода данных
         if (studentInfoSection) studentInfoSection.style.display = 'block';
     } else {
-        // Если тест восстановлен, запускаем автосохранение
         startAutoSave();
     }
     
@@ -262,9 +258,7 @@ function initTest() {
 }
 
 function cacheDOMElements() {
-    progressIndicators = document.getElementById('progress-indicators'); // Добавляем
-    progressBar = document.getElementById('progress-bar');
-    progressText = document.getElementById('progress-text');
+    progressIndicators = document.getElementById('progress-indicators');
     questionText = document.getElementById('question-text');
     questionType = document.getElementById('question-type');
     optionsContainer = document.getElementById('options-container');
@@ -288,10 +282,9 @@ function cacheDOMElements() {
     continueBtn = document.getElementById('continueBtn');
     
     console.log('🔍 Кэширование DOM элементов:');
+    console.log('- progressIndicators найден:', !!progressIndicators);
     console.log('- finishBtn найден:', !!finishBtn);
     console.log('- refreshBtn найден:', !!refreshBtn);
-    console.log('- fullscreenResult найден:', !!fullscreenResult);
-    console.log('- progressIndicators найден:', !!progressIndicators);
 }
 
 function showError(message) {
@@ -315,37 +308,18 @@ function showError(message) {
 // ==================== НАСТРОЙКА СИСТЕМЫ ====================
 
 function setupEventListeners() {
-    if (startTestBtn) {
-        startTestBtn.addEventListener('click', startTest);
-        console.log('✅ Обработчик для startTestBtn установлен');
-    }
-    
-    if (confirmBtn) {
-        confirmBtn.addEventListener('click', confirmAnswer);
-        console.log('✅ Обработчик для confirmBtn установлен');
-    }
-    
-    if (finishBtn) {
-        console.log('🎯 Назначаем обработчик для finishBtn');
-        finishBtn.addEventListener('click', finishFullScreen);
-        console.log('✅ Обработчик для finishBtn установлен');
-    } else {
-        console.error('❌ finishBtn не найден в DOM!');
-    }
-    
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', skipQuestion);
-        console.log('✅ Обработчик для refreshBtn установлен');
-    }
+    if (startTestBtn) startTestBtn.addEventListener('click', startTest);
+    if (confirmBtn) confirmBtn.addEventListener('click', confirmAnswer);
+    if (finishBtn) finishBtn.addEventListener('click', finishFullScreen);
+    if (refreshBtn) refreshBtn.addEventListener('click', skipQuestion);
     
     if (continueBtn) {
         continueBtn.addEventListener('click', function() {
             if (!this.disabled) {
                 closeAntiCheat();
-                // После закрытия античит показываем вопрос
                 if (isTestRestored) {
                     showQuestion(currentQuestionIndex);
-                    isTestRestored = false; // Сбрасываем флаг восстановления
+                    isTestRestored = false;
                 }
             }
         });
@@ -354,35 +328,28 @@ function setupEventListeners() {
     if (passwordInput) {
         passwordInput.addEventListener('input', function(e) {
             this.value = this.value.replace(/\D/g, '');
-            
-            if (this.value.length === 4) {
-                if (this.value === PASSWORD) {
-                    continueBtn.disabled = false;
-                    setTimeout(() => {
-                        if (continueBtn) continueBtn.click();
-                    }, 500);
-                }
+            if (this.value.length === 4 && this.value === PASSWORD) {
+                continueBtn.disabled = false;
+                setTimeout(() => {
+                    if (continueBtn) continueBtn.click();
+                }, 500);
             }
         });
     }
     
-    // Предотвращаем случайное обновление
     window.addEventListener('beforeunload', function(e) {
         if (testStarted && !testCompleted) {
             e.preventDefault();
             e.returnValue = 'Вы уверены, что хотите покинуть страницу? Весь прогресс теста будет сохранен.';
-            saveProgress(); // Сохраняем перед выходом
+            saveProgress();
             return 'Вы уверены, что хотите покинуть страницу? Весь прогресс теста будет сохранен.';
         }
     });
-    
-    console.log('✅ Все обработчики событий установлены');
 }
 
 function setupAnticopySystem() {
     function isInsideInput(element) {
         if (!element) return false;
-        
         let currentElement = element;
         while (currentElement) {
             if (currentElement.tagName === 'INPUT' || 
@@ -398,18 +365,13 @@ function setupAnticopySystem() {
     document.addEventListener('copy', function(e) {
         const selection = window.getSelection();
         const selectedText = selection.toString();
-        
         if (selectedText.length > 0 && !isInsideInput(document.activeElement)) {
             const randomIndex = Math.floor(Math.random() * clipboardMessages.length);
             const randomMessage = clipboardMessages[randomIndex];
-            
             e.clipboardData.setData('text/plain', randomMessage);
             e.preventDefault();
-            
             clipboardAttempts++;
             clipboardBlocked = true;
-            
-            console.log(`Попытка копирования заблокирована (${clipboardAttempts} раз)`);
         }
     });
 
@@ -419,7 +381,6 @@ function setupAnticopySystem() {
                 e.preventDefault();
                 clipboardAttempts++;
                 clipboardBlocked = true;
-                console.log(`Попытка выделения всего текста заблокирована (${clipboardAttempts} раз)`);
             }
         }
     });
@@ -429,7 +390,6 @@ function setupAnticopySystem() {
             e.preventDefault();
             clipboardAttempts++;
             clipboardBlocked = true;
-            console.log(`Попытка перетаскивания текста заблокирована (${clipboardAttempts} раз)`);
         }
     });
 }
@@ -459,25 +419,21 @@ function startTest() {
     testStartTimestamp = Date.now();
     
     startAnticheatMonitoring();
-    startAutoSave(); // Запускаем автосохранение
+    startAutoSave();
     
     initQuestions();
-    
     showQuestion(0);
     
     console.log('✅ Тест начат для ученика:', name, studentClass);
-    console.log('🚀 Античит мониторинг активирован');
 }
 
 function initQuestions() {
     if (!window.questionsBank || window.questionsBank.length < window.TEST_CONFIG.totalQuestions) {
-        console.error('❌ Недостаточно теоретических вопросов');
         showError(`Недостаточно теоретических вопросов. Нужно: ${window.TEST_CONFIG.totalQuestions}, доступно: ${window.questionsBank ? window.questionsBank.length : 0}`);
         return;
     }
     
     if (!window.problemsBank || window.problemsBank.length < window.TEST_CONFIG.totalProblems) {
-        console.error('❌ Недостаточно задач');
         showError(`Недостаточно задач. Нужно: ${window.TEST_CONFIG.totalProblems}, доступно: ${window.problemsBank ? window.problemsBank.length : 0}`);
         return;
     }
@@ -486,7 +442,6 @@ function initQuestions() {
     const selectedProblems = shuffleArray([...window.problemsBank]).slice(0, window.TEST_CONFIG.totalProblems);
     
     shuffledQuestionsAndProblems = [...selectedQuestions, ...selectedProblems];
-    
     shuffledQuestionsAndProblems = shuffleArray(shuffledQuestionsAndProblems);
     
     currentQuestionIndex = 0;
@@ -507,11 +462,8 @@ function initQuestions() {
     if (refreshBtn) refreshBtn.disabled = false;
     if (fullscreenResult) fullscreenResult.style.display = 'none';
     
-    // Инициализируем индикаторы прогресса
     setTimeout(() => {
-        if (progressIndicators) {
-            updateProgress();
-        }
+        if (progressIndicators) updateProgress();
     }, 100);
     
     console.log(`✅ Выбрано ${selectedQuestions.length} вопросов и ${selectedProblems.length} задач`);
@@ -525,6 +477,88 @@ function shuffleArray(array) {
     return array;
 }
 
+function updateProgress() {
+    if (!progressIndicators) return;
+    
+    const totalQuestions = shuffledQuestionsAndProblems.length;
+    progressIndicators.innerHTML = '';
+    
+    for (let i = 0; i < totalQuestions; i++) {
+        const indicator = document.createElement('div');
+        indicator.className = 'progress-indicator';
+        
+        const hasAnswer = userAnswers[i] !== null;
+        const isSkipped = skipQuestions.includes(i);
+        const isCurrent = i === currentQuestionIndex;
+        
+        if (isCurrent) {
+            indicator.classList.add('current');
+            indicator.title = `Текущий вопрос (${i + 1} из ${totalQuestions})`;
+        } else if (hasAnswer && userAnswers[i] === 'correct') {
+            indicator.classList.add('answered');
+            indicator.title = `Отвечен правильно (${i + 1} из ${totalQuestions})`;
+            indicator.innerHTML = '<i class="fas fa-check"></i>';
+        } else if (hasAnswer && userAnswers[i] === 'wrong') {
+            indicator.classList.add('answered');
+            indicator.title = `Отвечен с ошибкой (${i + 1} из ${totalQuestions})`;
+            indicator.innerHTML = '<i class="fas fa-times"></i>';
+        } else if (isSkipped) {
+            indicator.classList.add('skipped');
+            indicator.title = `Пропущенный вопрос (${i + 1} из ${totalQuestions})`;
+            indicator.innerHTML = '<i class="fas fa-redo"></i>';
+        } else {
+            indicator.classList.add('unanswered');
+            indicator.title = `Неотвеченный вопрос (${i + 1} из ${totalQuestions})`;
+            const number = document.createElement('span');
+            number.textContent = i + 1;
+            indicator.appendChild(number);
+        }
+        
+        if (isCurrent || isSkipped || (!hasAnswer && !isSkipped)) {
+            indicator.style.cursor = 'pointer';
+            indicator.addEventListener('click', () => {
+                if (i !== currentQuestionIndex) {
+                    const canNavigate = !hasAnswer || isSkipped || isCurrent;
+                    if (canNavigate) {
+                        currentQuestionIndex = i;
+                        showQuestion(currentQuestionIndex);
+                        saveProgress();
+                    } else {
+                        alert('Вы уже ответили на этот вопрос. Возврат невозможен.');
+                    }
+                }
+            });
+        } else {
+            indicator.style.cursor = 'not-allowed';
+            indicator.addEventListener('click', () => {
+                alert('Вы уже ответили на этот вопрос. Возврат невозможен.');
+            });
+        }
+        
+        progressIndicators.appendChild(indicator);
+    }
+    
+    if (questionType && shuffledQuestionsAndProblems.length > 0) {
+        const currentNumber = currentQuestionIndex + 1;
+        const total = shuffledQuestionsAndProblems.length;
+        const answeredCount = userAnswers.filter(answer => answer !== null).length;
+        
+        const item = shuffledQuestionsAndProblems[currentQuestionIndex];
+        const isProblem = item.points === 3;
+        const icon = isProblem ? 'fas fa-calculator' : 'fas fa-lightbulb';
+        
+        questionType.innerHTML = `
+            <i class="${icon}"></i>
+            ${isProblem ? 'Задача' : 'Вопрос'} ${currentNumber} из ${total}
+            <span style="font-size: 12px; margin-left: 8px; color: #666;">
+                (Отвечено: ${answeredCount}/${total})
+            </span>
+        `;
+        
+        questionType.className = isProblem ? "question-type problem-type" : "question-type";
+    }
+}
+
 function showQuestion(index) {
     if (!shuffledQuestionsAndProblems || index >= shuffledQuestionsAndProblems.length) {
         console.error('Нет вопросов для отображения');
@@ -532,24 +566,9 @@ function showQuestion(index) {
     }
     
     const item = shuffledQuestionsAndProblems[index];
-    
     if (questionText) questionText.textContent = item.text;
     
-    // Показываем тип задания с иконкой
-    const isProblem = item.points === 3;
-    const icon = isProblem ? 'fas fa-calculator' : 'fas fa-lightbulb';
-    
-    if (questionType) {
-        questionType.innerHTML = `
-            <i class="${icon}"></i>
-            ${isProblem ? "Задача (3 балла)" : "Теоретический вопрос (1 балл)"}
-        `;
-        questionType.className = isProblem ? "question-type problem-type" : "question-type";
-    }
-    
     currentShuffledOptions = shuffleArray([...item.options]);
-    
-    // Сбрасываем флаг показа ответа при показе нового вопроса
     isShowingAnswer = false;
     
     if (optionsContainer) {
@@ -573,7 +592,6 @@ function showQuestion(index) {
                     document.querySelectorAll('.option-label').forEach(l => l.classList.remove('selected'));
                     label.classList.add('selected');
                     radio.checked = true;
-                    
                     if (confirmBtn) confirmBtn.disabled = false;
                 });
             }
@@ -582,12 +600,8 @@ function showQuestion(index) {
         });
     }
     
-    // Управляем кнопками
     if (confirmBtn) confirmBtn.disabled = true;
     
-    // Кнопка пропуска активна всегда, кроме:
-    // 1. Когда мы показываем ответ (isShowingAnswer = true)
-    // 2. Когда это последний непропущенный вопрос
     if (refreshBtn) {
         const totalQuestions = shuffledQuestionsAndProblems.length;
         const answeredQuestions = userAnswers.filter(answer => answer !== null).length;
@@ -602,60 +616,7 @@ function showQuestion(index) {
         }
     }
     
-    // Обновляем индикаторы прогресса
     updateProgress();
-}
-
-function updateProgress() {
-    if (!progressIndicators) return;
-    
-    const totalQuestions = shuffledQuestionsAndProblems.length;
-    progressIndicators.innerHTML = '';
-    
-    for (let i = 0; i < totalQuestions; i++) {
-        const indicator = document.createElement('div');
-        indicator.className = 'progress-indicator';
-        
-        // Добавляем номер вопроса
-        const number = document.createElement('span');
-        number.textContent = i + 1;
-        indicator.appendChild(number);
-        
-        // Определяем статус вопроса
-        if (i === currentQuestionIndex) {
-            indicator.classList.add('current');
-            indicator.title = `Текущий вопрос (${i + 1} из ${totalQuestions})`;
-        } else if (userAnswers[i] === 'correct') {
-            indicator.classList.add('answered');
-            indicator.title = `Отвечен правильно (${i + 1} из ${totalQuestions})`;
-            // Добавляем иконку галочки для правильных ответов
-            indicator.innerHTML = '<i class="fas fa-check"></i>';
-        } else if (userAnswers[i] === 'wrong') {
-            indicator.classList.add('answered');
-            indicator.title = `Отвечен с ошибкой (${i + 1} из ${totalQuestions})`;
-            // Добавляем иконку крестика для неправильных ответов
-            indicator.innerHTML = '<i class="fas fa-times"></i>';
-        } else if (skipQuestions.includes(i)) {
-            indicator.classList.add('skipped');
-            indicator.title = `Пропущенный вопрос (${i + 1} из ${totalQuestions})`;
-            // Добавляем иконку стрелки для пропущенных
-            indicator.innerHTML = '<i class="fas fa-redo"></i>';
-        } else {
-            indicator.classList.add('unanswered');
-            indicator.title = `Неотвеченный вопрос (${i + 1} из ${totalQuestions})`;
-        }
-        
-        // Добавляем обработчик клика для перехода к вопросу
-        indicator.addEventListener('click', () => {
-            if (i !== currentQuestionIndex) {
-                currentQuestionIndex = i;
-                showQuestion(currentQuestionIndex);
-                saveProgress(); // Сохраняем при переключении
-            }
-        });
-        
-        progressIndicators.appendChild(indicator);
-    }
 }
 
 function highlightCorrectAnswer() {
@@ -665,12 +626,10 @@ function highlightCorrectAnswer() {
         const radio = option.querySelector('input');
         const optionValue = currentShuffledOptions[index].v;
         
-        // Находим правильный ответ
         if (optionValue === 'correct') {
             option.classList.add('correct');
         }
         
-        // Если пользователь выбрал неправильный вариант, отмечаем его
         if (radio && radio.checked && optionValue === 'wrong') {
             option.classList.add('incorrect');
         }
@@ -696,22 +655,15 @@ function confirmAnswer() {
     
     setTimeout(() => {
         isShowingAnswer = false;
-        
-        // Сохраняем прогресс
         saveProgress();
         
-        // Удаляем текущий вопрос из списка пропущенных, если он там был
         if (skipQuestions.includes(currentQuestionIndex)) {
             skipQuestions = skipQuestions.filter(idx => idx !== currentQuestionIndex);
         }
         
-        // Обновляем индикаторы
         updateProgress();
         
-        // Определяем следующий вопрос
         let nextIndex = -1;
-        
-        // 1. Ищем следующий вопрос, на который еще не отвечали
         for (let i = currentQuestionIndex + 1; i < shuffledQuestionsAndProblems.length; i++) {
             if (userAnswers[i] === null && !skipQuestions.includes(i)) {
                 nextIndex = i;
@@ -719,7 +671,6 @@ function confirmAnswer() {
             }
         }
         
-        // 2. Если не нашли, ищем с начала теста
         if (nextIndex === -1) {
             for (let i = 0; i < currentQuestionIndex; i++) {
                 if (userAnswers[i] === null && !skipQuestions.includes(i)) {
@@ -729,7 +680,6 @@ function confirmAnswer() {
             }
         }
         
-        // 3. Если все равно не нашли, проверяем пропущенные вопросы
         if (nextIndex === -1 && skipQuestions.length > 0) {
             nextIndex = skipQuestions[0];
             skipQuestions = skipQuestions.filter(idx => idx !== nextIndex);
@@ -739,7 +689,6 @@ function confirmAnswer() {
             currentQuestionIndex = nextIndex;
             showQuestion(currentQuestionIndex);
         } else {
-            // Все вопросы отвечены
             localStorage.removeItem('testProgress');
             stopAutoSave();
             showResults();
@@ -747,16 +696,12 @@ function confirmAnswer() {
     }, 2000);
 }
 
-/**
- * Пропустить вопрос
- */
 function skipQuestion() {
     if (!shuffledQuestionsAndProblems || currentQuestionIndex >= shuffledQuestionsAndProblems.length) {
         console.log('❌ Нельзя пропустить вопрос');
         return;
     }
     
-    // Проверяем, не последний ли это непропущенный вопрос
     const totalQuestions = shuffledQuestionsAndProblems.length;
     const answeredQuestions = userAnswers.filter(answer => answer !== null).length;
     const remainingQuestions = totalQuestions - answeredQuestions - skipQuestions.length;
@@ -768,18 +713,13 @@ function skipQuestion() {
     
     console.log('⏭️ Пропускаем вопрос', currentQuestionIndex + 1);
     
-    // Добавляем текущий вопрос в список пропущенных
     if (!skipQuestions.includes(currentQuestionIndex)) {
         skipQuestions.push(currentQuestionIndex);
     }
     
-    // Сбрасываем ответ для этого вопроса
     userAnswers[currentQuestionIndex] = null;
-    
-    // Сохраняем прогресс
     saveProgress();
     
-    // Ищем следующий непропущенный вопрос
     let nextIndex = -1;
     for (let i = currentQuestionIndex + 1; i < shuffledQuestionsAndProblems.length; i++) {
         if (userAnswers[i] === null && !skipQuestions.includes(i)) {
@@ -788,7 +728,6 @@ function skipQuestion() {
         }
     }
     
-    // Если не нашли, ищем с начала
     if (nextIndex === -1) {
         for (let i = 0; i < currentQuestionIndex; i++) {
             if (userAnswers[i] === null && !skipQuestions.includes(i)) {
@@ -801,24 +740,15 @@ function skipQuestion() {
     if (nextIndex !== -1) {
         currentQuestionIndex = nextIndex;
         showQuestion(currentQuestionIndex);
-        
-        // Обновляем индикаторы
         updateProgress();
-        
         console.log('✅ Вопрос пропущен, переходим к вопросу', currentQuestionIndex + 1);
-        console.log('⏭️ Всего пропущенных вопросов:', skipQuestions.length);
     } else {
-        // Все вопросы либо отвечены, либо пропущены
-        // Возвращаемся к первому пропущенному
         if (skipQuestions.length > 0) {
             nextIndex = skipQuestions[0];
             skipQuestions = skipQuestions.filter(idx => idx !== nextIndex);
             currentQuestionIndex = nextIndex;
             showQuestion(currentQuestionIndex);
-            
-            // Обновляем индикаторы
             updateProgress();
-            
             alert('Все вопросы просмотрены. Возвращаемся к пропущенным вопросам.');
         }
     }
@@ -828,7 +758,6 @@ function skipQuestion() {
 
 function showResults() {
     testCompleted = true;
-    
     stopAnticheatMonitoring();
     stopAutoSave();
     
@@ -854,7 +783,6 @@ function showResults() {
         }
     }
     
-    // Сохраняем для использования в других функциях
     window.TEST_CONFIG.correctQuestions = correctQuestions;
     window.TEST_CONFIG.correctProblems = correctProblems;
     
@@ -862,19 +790,10 @@ function showResults() {
     const maxScore = window.TEST_CONFIG.maxScore;
     
     showFullscreenResult(grade, totalScore, maxScore, correctQuestions, correctProblems, questionScore, problemScore);
-    
-    console.log('📊 Тест завершен. Результаты:', {
-        score: totalScore,
-        grade: grade,
-        correctAnswers: correctQuestions + correctProblems,
-        totalQuestions: shuffledQuestionsAndProblems.length,
-        skippedQuestions: skipQuestions.length
-    });
 }
 
 function calculateGrade(score) {
     const scale = window.TEST_CONFIG.gradingScale;
-    
     if (score >= scale[5]) return 5;
     if (score >= scale[4]) return 4;
     if (score >= scale[3]) return 3;
@@ -892,8 +811,6 @@ function getGradeColor(grade) {
 }
 
 function showFullscreenResult(grade, score, maxScore, correctQuestions, correctProblems, questionScore, problemScore) {
-    console.log('📱 Показываем полноэкранный результат...');
-    
     if (!fullscreenResult || !fullscreenGrade || !fullscreenScore || !fullscreenBreakdown) {
         console.error('❌ Не найдены элементы полноэкранного результата');
         return;
@@ -901,7 +818,6 @@ function showFullscreenResult(grade, score, maxScore, correctQuestions, correctP
     
     fullscreenResult.style.display = 'flex';
     
-    // Убедимся, что показывается правильный экран (с оценкой)
     const gradeScreen = document.getElementById('grade-screen');
     const acceptedScreen = document.getElementById('accepted-screen');
     
@@ -914,7 +830,6 @@ function showFullscreenResult(grade, score, maxScore, correctQuestions, correctP
     fullscreenGrade.style.color = getGradeColor(grade);
     fullscreenScore.textContent = `${score} из ${maxScore}`;
     
-    // Обновляем также элемент с максимальным баллом
     const fullscreenMaxScore = document.getElementById('fullscreen-max-score');
     if (fullscreenMaxScore) {
         fullscreenMaxScore.textContent = maxScore;
@@ -925,26 +840,16 @@ function showFullscreenResult(grade, score, maxScore, correctQuestions, correctP
         <div>Правильных задач: ${correctProblems} из ${window.TEST_CONFIG.totalProblems} (${problemScore} баллов)</div>
         <div>Всего баллов: ${score} из ${maxScore}</div>
     `;
-    
-    console.log('✅ Полноэкранный результат показан');
 }
 
-/**
- * Завершить полноэкранный режим (новая логика)
- */
 function finishFullScreen() {
-    console.log('🔄 Нажата кнопка "Завершить"');
-    
     if (!fullscreenResult || !fullscreenGrade || !fullscreenScore || !fullscreenBreakdown) {
         console.error('❌ Не найдены элементы для завершения');
         return;
     }
     
-    // Получаем данные для передачи на следующий экран
     const grade = fullscreenGrade.textContent;
     const scoreText = fullscreenScore.textContent;
-    
-    // Извлекаем баллы из текста (например: "15 из 20")
     const scoreMatch = scoreText.match(/(\d+)\s*из\s*(\d+)/);
     let score = 0;
     let maxScore = window.TEST_CONFIG.maxScore;
@@ -952,20 +857,14 @@ function finishFullScreen() {
     if (scoreMatch) {
         score = scoreMatch[1];
         maxScore = scoreMatch[2];
-    } else {
-        console.warn('Не удалось извлечь баллы из текста:', scoreText);
     }
     
-    // Формируем детализацию для экрана "Работа принята"
     const breakdown = `
         <div style="margin-bottom: 8px;">Правильных вопросов: ${window.TEST_CONFIG.correctQuestions || 0} из ${window.TEST_CONFIG.totalQuestions}</div>
         <div style="margin-bottom: 8px;">Правильных задач: ${window.TEST_CONFIG.correctProblems || 0} из ${window.TEST_CONFIG.totalProblems}</div>
         <div>Всего баллов: ${score} из ${maxScore}</div>
     `;
     
-    console.log('📤 Отправляем результаты в Telegram...');
-    
-    // Отправляем результаты в Telegram
     sendResultsToTelegram(
         parseInt(grade),
         window.TEST_CONFIG.correctQuestions || 0,
@@ -974,9 +873,6 @@ function finishFullScreen() {
         (window.TEST_CONFIG.correctProblems || 0) * 3
     );
     
-    console.log('🔄 Переключаем на экран "Работа принята"');
-    
-    // Переключаем на экран "Работа принята"
     const gradeScreen = document.getElementById('grade-screen');
     const acceptedScreen = document.getElementById('accepted-screen');
     
@@ -984,7 +880,6 @@ function finishFullScreen() {
         gradeScreen.style.display = 'none';
         acceptedScreen.style.display = 'block';
         
-        // Заполняем данные на втором экране
         const acceptedGrade = document.getElementById('accepted-grade');
         const acceptedScore = document.getElementById('accepted-score');
         const acceptedMaxScore = document.getElementById('accepted-max-score');
@@ -996,9 +891,6 @@ function finishFullScreen() {
         if (acceptedMaxScore) acceptedMaxScore.textContent = maxScore;
         if (acceptedBreakdown) acceptedBreakdown.innerHTML = breakdown;
         
-        console.log('⏱️ Запускаем таймер обратного отсчета...');
-        
-        // Запускаем таймер обратного отсчета
         let seconds = 8;
         if (timerMessage) {
             timerMessage.textContent = `Через ${seconds} секунд вы будете перенаправлены на главную страницу...`;
@@ -1012,30 +904,21 @@ function finishFullScreen() {
             
             if (seconds <= 0) {
                 clearInterval(timerInterval);
-                console.log('🔄 Перенаправляем на главную страницу...');
                 window.location.href = "index.html";
             }
         }, 1000);
-    } else {
-        console.error('❌ Не найдены элементы экранов');
-        console.log('- gradeScreen:', gradeScreen);
-        console.log('- acceptedScreen:', acceptedScreen);
     }
 }
 
 // ==================== АНТИЧИТ СИСТЕМА ====================
 
 function startAnticheatMonitoring() {
-    console.log('🔍 Запуск мониторинга античит системы');
-    
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', handleWindowBlur);
     window.addEventListener('focus', handleWindowFocus);
 }
 
 function stopAnticheatMonitoring() {
-    console.log('🛑 Остановка мониторинга античит системы');
-    
     document.removeEventListener('visibilitychange', handleVisibilityChange);
     window.removeEventListener('blur', handleWindowBlur);
     window.removeEventListener('focus', handleWindowFocus);
@@ -1043,33 +926,18 @@ function stopAnticheatMonitoring() {
 
 function handleVisibilityChange() {
     if (document.hidden && testStarted && !testCompleted) {
-        console.log('👀 Страница скрыта - срабатывает античит');
         triggerAnticheat();
     }
 }
 
 function handleWindowBlur() {
     if (testStarted && !testCompleted) {
-        console.log('💨 Окно потеряло фокус - срабатывает античит');
         triggerAnticheat();
     }
 }
 
-function handleWindowFocus() {
-    console.log('🎯 Окно получило фокус');
-}
-
-function formatTime(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
-
 function triggerAnticheat() {
-    if (!testStarted || testCompleted) {
-        console.log('⚠️ Античит не сработал: тест не начат или завершен');
-        return;
-    }
+    if (!testStarted || testCompleted) return;
     
     cheatAttempts++;
     tabSwitchAttempts++;
@@ -1092,8 +960,12 @@ function triggerAnticheat() {
     }
     
     startBlockTimer();
-    
-    console.log(`🚨 Античит сработал! Попыток переключения вкладок: ${tabSwitchAttempts}`);
+}
+
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
 function startBlockTimer() {
@@ -1111,7 +983,6 @@ function startBlockTimer() {
             clearInterval(blockTimer);
             if (continueBtn) continueBtn.disabled = false;
             cheatBlockTimeouts++;
-            console.log(`⏱️ Таймер античит системы истек (${cheatBlockTimeouts} раз)`);
         }
     }, 1000);
 }
@@ -1123,24 +994,17 @@ function closeAntiCheat() {
     if (anticheatModal) anticheatModal.style.display = 'none';
     if (passwordInput) passwordInput.value = '';
     
-    // Восстанавливаем античит мониторинг после закрытия окна
     if (testStarted && !testCompleted && !isTestRestored) {
         startAnticheatMonitoring();
     }
-    
-    console.log('✅ Античит система отключена');
 }
 
 // ==================== TELEGRAM ИНТЕГРАЦИЯ ====================
 
 async function sendResultsToTelegram(grade, correctQuestions, correctProblems, questionScore, problemScore) {
-    if (isSubmitted) {
-        console.log('📤 Результаты уже отправлены');
-        return;
-    }
+    if (isSubmitted) return;
     
     const config = window.TEST_CONFIG.telegram;
-    
     if (!config || !config.botToken || !config.chatId) {
         console.warn('Telegram не настроен');
         return;
@@ -1195,9 +1059,7 @@ async function sendResultsToTelegram(grade, correctQuestions, correctProblems, q
     }
 
     if (clipboardBlocked || antiCheatTriggered || skipQuestions.length > 0) {
-        msg += `
-🚨 **Статистика:**
-`;
+        msg += `🚨 **Статистика:**\n`;
         easterEggsStats.forEach(stat => {
             msg += `• ${stat}\n`;
         });
@@ -1205,8 +1067,7 @@ async function sendResultsToTelegram(grade, correctQuestions, correctProblems, q
         msg += `✅ **Честность:** Все системы защиты не срабатывали (чистая работа)\n`;
     }
     
-    msg += `
-📅 Дата: ${new Date().toLocaleString('ru-RU')}`;
+    msg += `\n📅 Дата: ${new Date().toLocaleString('ru-RU')}`;
     
     try {
         console.log('📨 Отправка сообщения в Telegram...');
@@ -1230,7 +1091,7 @@ async function sendResultsToTelegram(grade, correctQuestions, correctProblems, q
         if (data.ok) {
             console.log('✅ Результаты отправлены в Telegram');
         } else {
-            throw new Error(data.description || 'Неизвестная ошибка Telegram');
+            console.error('❌ Ошибка Telegram:', data.description);
         }
     } catch (error) {
         console.error('❌ Ошибка отправки в Telegram:', error);
