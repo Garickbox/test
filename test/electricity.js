@@ -1,6 +1,9 @@
-// ⚠️ ВНИМАНИЕ: НЕ ПУБЛИКУЙТЕ ЭТОТ ФАЙЛ В ОТКРЫТЫЙ ДОСТУП!
-// Ваш Telegram токен виден всем, кто может посмотреть исходный код страницы.
-// В реальном проекте используйте серверную часть для хранения токенов.
+// ====================================================================
+// ФАЙЛ ТЕСТА ПО ЭЛЕКТРИЧЕСТВУ ДЛЯ МОДУЛЬНОЙ СИСТЕМЫ ТЕСТИРОВАНИЯ
+// ====================================================================
+
+// ВНИМАНИЕ: Этот файл должен находиться в папке test/
+// Для запуска: введите "electricity" на главной странице
 
 // ОБЯЗАТЕЛЬНО: используйте window. для глобальных переменных!
 window.TEST_CONFIG = {
@@ -10,11 +13,14 @@ window.TEST_CONFIG = {
     maxScore: 30,             // Максимальный балл (21×1 + 3×3)
     
     telegram: {
-        // ТОКЕН ВАШЕГО TELEGRAM БОТА
+        // ТОКЕН ВАШЕГО TELEGRAM БОТА (получите у @BotFather)
         botToken: "8344281396:AAGZ9-M2XRyPMHiI2akBSSIN7QAtRGDmLOY",
         
-        // ID ЧАТА ДЛЯ ОТПРАВКИ РЕЗУЛЬТАТОВ
-        chatId: "1189539923"
+        // ID ЧАТА ДЛЯ ОТПРАВКИ (получите у @userinfobot)
+        chatId: "1189539923",
+        
+        parseMode: "Markdown",  // Форматирование сообщений
+        disableNotification: false  // Включить/выключить уведомления
     },
     
     gradingScale: {           // Шкала оценок (баллы → оценка)
@@ -27,12 +33,25 @@ window.TEST_CONFIG = {
     anticheat: {
         password: "3265",     // Пароль для разблокировки античита
         blockTime: 180        // Время блокировки в секундах
-    }
+    },
+    
+    // Настройки теста
+    shuffleQuestions: true,   // Перемешивать вопросы
+    shuffleOptions: true,     // Перемешивать варианты ответов
+    showCorrectAnswer: true   // Показывать правильный ответ после ошибки
 };
 
-// Проверка настроек Telegram
-console.log('🔧 Конфигурация Telegram:', window.TEST_CONFIG.telegram);
-console.log('⚠️ Внимание: Telegram токен виден в исходном коде!');
+// Проверка корректности настроек Telegram
+console.log('🔧 Проверка конфигурации Telegram...');
+console.log('🤖 Токен бота:', window.TEST_CONFIG.telegram.botToken ? '✅ Установлен' : '❌ Отсутствует');
+console.log('📱 Chat ID:', window.TEST_CONFIG.telegram.chatId ? '✅ Установлен' : '❌ Отсутствует');
+
+// Предупреждение о безопасности
+if (window.TEST_CONFIG.telegram.botToken === "ВАШ_BOT_TOKEN" || 
+    window.TEST_CONFIG.telegram.botToken === "DEMO_TOKEN") {
+    console.warn('⚠️ ВНИМАНИЕ: Используется тестовый токен Telegram!');
+    console.warn('⚠️ Замените botToken и chatId на реальные значения!');
+}
 
 // БАНК ТЕОРЕТИЧЕСКИХ ВОПРОСОВ (50 вопросов)
 window.questionsBank = [
@@ -280,7 +299,7 @@ window.questionsBank = [
         text: "Что такое параллельное соединение проводников?",
         options: [
             {t: "Соединение, при котором проводники соединены друг за другом", v: "wrong"},
-            {t: "Соединение, при котором все проводники подключены к одним точками", v: "correct"},
+            {t: "Соединение, при котором все проводники подключены к одним точкам", v: "correct"},
             {t: "Соединение через сопротивление", v: "wrong"},
             {t: "Соединение через источник тока", v: "wrong"}
         ],
@@ -952,19 +971,21 @@ window.problemsBank = [
     }
 ];
 
-// Отладочное сообщение
-console.log('✅ Файл теста electricity.js загружен успешно!');
-console.log(`📊 Теоретических вопросов: ${window.questionsBank.length}`);
-console.log(`📊 Задач: ${window.problemsBank.length}`);
-console.log(`🎯 Максимальный балл: ${window.TEST_CONFIG.maxScore}`);
-console.log(`🤖 Telegram настроен: ${window.TEST_CONFIG.telegram.botToken !== "ВАШ_BOT_TOKEN" ? '✅ Да' : '❌ Нет'}`);
+// ====================================================================
+// ФУНКЦИИ ДЛЯ ТЕСТИРОВАНИЯ ТЕЛЕГРАМ
+// ====================================================================
 
-// Функция для тестирования Telegram отправки
+/**
+ * Функция для тестирования отправки в Telegram
+ * Вызовите testTelegram() из консоли браузера для проверки
+ */
 window.testTelegram = async function() {
     const config = window.TEST_CONFIG.telegram;
     const url = `https://api.telegram.org/bot${config.botToken}/sendMessage`;
     
     console.log('🔄 Тестируем отправку в Telegram...');
+    console.log('URL:', url);
+    console.log('Chat ID:', config.chatId);
     
     try {
         const response = await fetch(url, {
@@ -980,38 +1001,94 @@ window.testTelegram = async function() {
         const data = await response.json();
         
         if (data.ok) {
-            console.log('✅ Телеграм работает корректно!');
+            console.log('✅ Telegram работает корректно!');
             alert('✅ Тестовая отправка в Telegram прошла успешно!');
+            return true;
         } else {
-            console.error('❌ Ошибка Telegram:', data.description);
-            alert('❌ Ошибка: ' + data.description);
+            console.error('❌ Ошибка Telegram:', data);
+            alert('❌ Ошибка Telegram: ' + (data.description || 'Неизвестная ошибка'));
+            return false;
         }
     } catch (error) {
         console.error('❌ Ошибка сети:', error);
         alert('❌ Ошибка сети: ' + error.message);
+        return false;
     }
 };
 
-// Добавляем кнопку для тестирования Telegram (только для разработки)
-if (window.location.href.includes('localhost') || window.location.href.includes('127.0.0.1')) {
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(() => {
-            const testBtn = document.createElement('button');
-            testBtn.textContent = '🔄 Тест Telegram';
-            testBtn.style.cssText = `
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                background: #0088cc;
-                color: white;
-                border: none;
-                padding: 10px 15px;
-                border-radius: 5px;
-                cursor: pointer;
-                z-index: 9999;
-            `;
-            testBtn.onclick = window.testTelegram;
-            document.body.appendChild(testBtn);
-        }, 1000);
-    });
+/**
+ * Проверка доступности Telegram API
+ */
+window.checkTelegramConnection = async function() {
+    const config = window.TEST_CONFIG.telegram;
+    const url = `https://api.telegram.org/bot${config.botToken}/getMe`;
+    
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.ok) {
+            console.log('✅ Бот доступен:', data.result);
+            return true;
+        } else {
+            console.error('❌ Бот недоступен:', data);
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Ошибка проверки бота:', error);
+        return false;
+    }
+};
+
+// ====================================================================
+// ИНИЦИАЛИЗАЦИЯ И ПРОВЕРКИ
+// ====================================================================
+
+// Проверка загрузки файла
+console.log('✅ Файл electricity.js загружен успешно!');
+console.log(`📊 Теоретических вопросов: ${window.questionsBank.length}`);
+console.log(`📊 Задач: ${window.problemsBank.length}`);
+console.log(`🎯 Максимальный балл: ${window.TEST_CONFIG.maxScore}`);
+console.log(`📚 Название теста: "${window.TEST_CONFIG.title}"`);
+
+// Автоматическая проверка Telegram при загрузке (только в режиме разработки)
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    setTimeout(() => {
+        console.log('🔍 Проверяем подключение к Telegram...');
+        window.checkTelegramConnection().then(isConnected => {
+            if (isConnected) {
+                console.log('✅ Telegram подключен успешно!');
+                
+                // Добавляем кнопку тестирования в интерфейс
+                const testBtn = document.createElement('button');
+                testBtn.textContent = '🔄 Тест Telegram';
+                testBtn.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    background: #0088cc;
+                    color: white;
+                    border: none;
+                    padding: 10px 15px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    z-index: 9999;
+                    font-size: 14px;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                `;
+                testBtn.onclick = window.testTelegram;
+                document.body.appendChild(testBtn);
+            } else {
+                console.warn('⚠️ Telegram не подключен. Проверьте токен и chat_id.');
+            }
+        });
+    }, 2000);
 }
+
+// Экспорт для глобального использования
+window.electricityTestConfig = window.TEST_CONFIG;
+window.electricityQuestions = window.questionsBank;
+window.electricityProblems = window.problemsBank;
+
+console.log('🚀 Тест "electricity" готов к использованию!');
+console.log('👉 Введите "electricity" на главной странице для запуска.');
