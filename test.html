@@ -73,51 +73,9 @@
       flex-wrap: wrap;
     }
     
-    /* Дополнительные стили для индикаторов прогресса */
-    .progress-indicator i {
-      font-size: 14px;
-      color: white;
-    }
-    
-    .progress-indicator.unanswered i {
-      color: #999;
-    }
-    
-    .progress-indicator.current i {
-      color: white;
-    }
-    
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
-    }
-    
-    @keyframes pulse {
-      0% {
-        transform: scale(1);
-        box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
-      }
-      50% {
-        transform: scale(1.05);
-        box-shadow: 0 4px 8px rgba(255, 152, 0, 0.5);
-      }
-      100% {
-        transform: scale(1);
-        box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
-      }
-    }
-    
-    /* Адаптивность */
-    @media (max-width: 768px) {
-      .progress-indicator i {
-        font-size: 12px;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      .progress-indicator i {
-        font-size: 10px;
-      }
     }
   </style>
 </head>
@@ -155,9 +113,10 @@
 
     <div id="test-content" style="display: none;">
       <div class="section">
-        <div class="progress-indicators" id="progress-indicators">
-          <!-- Индикаторы будут добавлены через JavaScript -->
+        <div class="progress-container">
+          <div class="progress-bar" id="progress-bar"></div>
         </div>
+        <div class="progress-text" id="progress-text">Вопрос 0 из 0</div>
       </div>
 
       <div class="section">
@@ -307,7 +266,7 @@
       
       script.onerror = function() {
         console.error(`❌ Ошибка загрузки теста "${testName}"`);
-        showError(`Код <strong>${testName}</strong> не обнаружен.`);
+        showError(`Файл теста <strong>${testName}.js</strong> не найден в папке test/`);
       };
       
       document.head.appendChild(script);
@@ -315,11 +274,11 @@
     
     // Функция показа ошибки
     function showError(message) {
-      document.getElementById('page-title').textContent = 'Тест не найден';
+      document.getElementById('page-title').textContent = 'Ошибка загрузки теста';
       document.getElementById('student-info-section').innerHTML = `
         <div style="text-align: center; padding: 40px;">
           <i class="fas fa-times-circle" style="font-size: 48px; color: #f44336;"></i>
-          <h3 style="color: #f44336; margin: 20px 0;">Тест не найден</h3>
+          <h3 style="color: #f44336; margin: 20px 0;">Ошибка загрузки теста</h3>
           <p>${message}</p>
           <button onclick="window.location.href='index.html'" 
                   style="background: #4b6cb7; color: white; border: none; padding: 12px 24px; 
