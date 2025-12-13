@@ -13,16 +13,29 @@
         }
         
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a1f35 0%, #2d3748 100%);
             min-height: 100vh;
             color: #333;
             padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
+            position: relative;
+            overflow: hidden;
         }
         
-        /* Снежинки */
+        /* Canvas для снега */
+        #snowCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        /* Снежинки в шапке */
         .snowflakes {
             position: fixed;
             top: 0;
@@ -59,12 +72,21 @@
         .container {
             max-width: 500px;
             width: 100%;
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.2),
+                0 0 60px rgba(59, 130, 246, 0.1);
             overflow: hidden;
             position: relative;
-            z-index: 1;
+            z-index: 2;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: transform 0.3s ease;
+        }
+        
+        .container:hover {
+            transform: translateY(-5px);
         }
         
         .header {
@@ -74,6 +96,28 @@
             text-align: center;
             position: relative;
             overflow: hidden;
+        }
+        
+        /* Анимированный градиент в шапке */
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0.1) 0%,
+                rgba(255, 255, 255, 0) 50%,
+                rgba(255, 255, 255, 0.1) 100%
+            );
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
         }
         
         /* Фигуры в шапке */
@@ -88,7 +132,7 @@
         
         .float-item {
             position: absolute;
-            color: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.3);
             font-size: 28px;
             animation: float 6s ease-in-out infinite;
             filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
@@ -134,11 +178,24 @@
             font-size: 24px;
             font-weight: 600;
             margin-bottom: 5px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .school-name::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
         }
         
         .school-subtitle {
             font-size: 16px;
             opacity: 0.9;
+            margin-top: 10px;
         }
         
         .content {
@@ -155,13 +212,57 @@
             font-weight: 600;
             color: #4b6cb7;
             margin-bottom: 20px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .welcome-title::before,
+        .welcome-title::after {
+            content: '❄';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.5;
+            animation: sparkle 2s infinite;
+        }
+        
+        .welcome-title::before {
+            left: -40px;
+        }
+        
+        .welcome-title::after {
+            right: -40px;
+            animation-delay: 1s;
+        }
+        
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.3; transform: translateY(-50%) rotate(0deg); }
+            50% { opacity: 1; transform: translateY(-50%) rotate(180deg) scale(1.2); }
         }
         
         .test-section {
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             border-radius: 15px;
             padding: 25px;
-            border: 2px solid #4b6cb7;
+            border: 2px solid rgba(76, 108, 183, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .test-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #4b6cb7, #667eea, #4b6cb7);
+            animation: borderFlow 3s infinite linear;
+        }
+        
+        @keyframes borderFlow {
+            0% { background-position: -200px 0; }
+            100% { background-position: 200px 0; }
         }
         
         .test-title {
@@ -181,25 +282,22 @@
             border-radius: 10px;
             font-size: 16px;
             margin-bottom: 15px;
-            transition: border-color 0.3s;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.9);
         }
         
         .test-input:focus {
             outline: none;
             border-color: #4b6cb7;
+            box-shadow: 0 0 0 3px rgba(76, 108, 183, 0.1);
+            transform: translateY(-2px);
         }
         
         /* 3D Градиентная кнопка */
         .open-button {
             width: 100%;
             padding: 15px;
-            background: linear-gradient(135deg, 
-                #2c3e50 0%, 
-                #3498db 25%, 
-                #4a6fa5 50%, 
-                #3498db 75%, 
-                #2c3e50 100%);
-            background-size: 300% 300%;
+            background: linear-gradient(135deg, #4b6cb7 0%, #667eea 100%);
             color: white;
             border: none;
             border-radius: 10px;
@@ -215,48 +313,41 @@
             justify-content: center;
             gap: 10px;
             box-shadow: 
-                0 8px 0 #1a252f,
-                0 12px 25px rgba(52, 152, 219, 0.3);
-            animation: gradientMove 4s ease infinite;
+                0 8px 0 #3a4f8c,
+                0 12px 25px rgba(76, 108, 183, 0.3);
         }
         
-        /* 3D эффект кнопки */
         .open-button::before {
             content: '';
             position: absolute;
             top: 0;
-            left: 0;
-            right: 0;
-            height: 8px;
-            background: linear-gradient(to bottom, 
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
                 rgba(255, 255, 255, 0.3), 
-                rgba(255, 255, 255, 0.1));
-            border-radius: 10px 10px 0 0;
-            z-index: 2;
+                transparent);
+            transition: left 0.5s;
+            z-index: -1;
         }
         
-        /* Эффект свечения при наведении */
         .open-button:hover {
             transform: translateY(-3px);
             box-shadow: 
-                0 10px 0 #1a252f,
-                0 15px 30px rgba(52, 152, 219, 0.4);
-            animation: gradientMove 2s ease infinite;
+                0 10px 0 #3a4f8c,
+                0 15px 30px rgba(76, 108, 183, 0.4);
         }
         
-        /* Эффект нажатия */
+        .open-button:hover::before {
+            left: 100%;
+        }
+        
         .open-button:active {
             transform: translateY(-1px);
             box-shadow: 
-                0 4px 0 #1a252f,
-                0 6px 15px rgba(52, 152, 219, 0.3);
-            transition: all 0.1s;
-        }
-        
-        @keyframes gradientMove {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+                0 4px 0 #3a4f8c,
+                0 6px 15px rgba(76, 108, 183, 0.3);
         }
         
         .kumir-note {
@@ -264,10 +355,43 @@
             font-size: 14px;
             color: #666;
             text-align: center;
-            padding: 10px;
-            background: #e8f4ff;
+            padding: 12px;
+            background: linear-gradient(135deg, #e8f4ff 0%, #d4e7ff 100%);
             border-radius: 8px;
             border-left: 4px solid #4b6cb7;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .kumir-note::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #4b6cb7, transparent);
+        }
+        
+        /* Снежный эффект на краях контейнера */
+        .snow-edges {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, 
+                transparent, 
+                white, 
+                white, 
+                transparent);
+            opacity: 0.3;
+            filter: blur(2px);
+        }
+        
+        .snow-edges.bottom {
+            top: auto;
+            bottom: 0;
         }
         
         @media (max-width: 480px) {
@@ -290,22 +414,34 @@
             .welcome-title {
                 font-size: 24px;
             }
+            
+            .welcome-title::before,
+            .welcome-title::after {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- 70 снежинок -->
+    <!-- Canvas для снега -->
+    <canvas id="snowCanvas"></canvas>
+    
+    <!-- Снежинки на заднем фоне -->
     <div class="snowflakes" id="snowflakes"></div>
+    
+    <!-- Снежные края контейнера -->
+    <div class="snow-edges"></div>
+    <div class="snow-edges bottom"></div>
     
     <div class="container">
         <!-- Шапка -->
         <div class="header">
             <!-- Фигуры в шапке -->
             <div class="floating-elements">
-                <div class="float-item"><i class="fas fa-snowflake"></i></div>
-                <div class="float-item"><i class="fas fa-star"></i></div>
-                <div class="float-item"><i class="fas fa-circle"></i></div>
-                <div class="float-item"><i class="fas fa-gem"></i></div>
+                <div class="float-item">❄</div>
+                <div class="float-item">⭐</div>
+                <div class="float-item">❅</div>
+                <div class="float-item">✦</div>
             </div>
             
             <div class="school-name">ВЫСОКОВСКАЯ ШКОЛА №25</div>
@@ -322,18 +458,18 @@
             <!-- Форма теста -->
             <div class="test-section">
                 <div class="test-title">
-                    <i class="fas fa-rocket"></i> Введите код теста:
+                    <span style="animation: sparkle 2s infinite">❄</span> Введите код теста:
                 </div>
                 
                 <input type="text" class="test-input" id="testName" 
                        placeholder="Например: test">
                 
                 <button class="open-button" onclick="openTest()">
-                    <i class="fas fa-external-link-alt"></i> Открыть тест
+                    <span style="animation: sparkle 2s infinite">📖</span> Открыть тест
                 </button>
                 
                 <div class="kumir-note">
-                    <i class="fas fa-info-circle"></i> 
+                    <strong>❄ Зимняя версия</strong><br>
                     Код для прохождения теста будет сообщен учителем на уроке.<br>
                     Для демо-теста используйте: <strong>test</strong>
                 </div>
@@ -342,95 +478,153 @@
     </div>
 
     <script>
-        // Автоматическое приведение к нижнему регистру и разрешение только букв и цифр
-        document.getElementById('testName').addEventListener('input', function(e) {
-            this.value = this.value.toLowerCase().replace(/[^a-z0-9]/g, '');
-        });
-
-        // Функция открытия теста
+        // ============ Canvas снег ============
+        const canvas = document.getElementById('snowCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let snowflakes = [];
+        const snowflakeCount = 300; // Удвоено с 150 до 300
+        
+        class Snowflake {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * -100;
+                this.size = Math.random() * 3 + 1;
+                this.speed = Math.random() * 1.5 + 0.5;
+                this.wind = Math.random() * 0.5 - 0.25;
+                this.opacity = Math.random() * 0.6 + 0.4;
+                this.wobble = Math.random() * Math.PI * 2;
+                this.wobbleSpeed = Math.random() * 0.05;
+                this.wobbleAmount = Math.random() * 2;
+            }
+            
+            update() {
+                this.y += this.speed;
+                this.x += this.wind + Math.sin(this.wobble) * this.wobbleAmount * 0.1;
+                this.wobble += this.wobbleSpeed;
+                
+                if (this.y > canvas.height) {
+                    this.y = -10;
+                    this.x = Math.random() * canvas.width;
+                }
+                
+                if (this.x > canvas.width + 10) this.x = -10;
+                if (this.x < -10) this.x = canvas.width + 10;
+            }
+            
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                
+                const gradient = ctx.createRadialGradient(
+                    this.x, this.y, 0,
+                    this.x, this.y, this.size * 2
+                );
+                gradient.addColorStop(0, `rgba(255, 255, 255, ${this.opacity})`);
+                gradient.addColorStop(1, `rgba(255, 255, 255, 0)`);
+                
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                
+                // Легкое свечение
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * 1.5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity * 0.2})`;
+                ctx.fill();
+            }
+        }
+        
+        function initSnow() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            snowflakes = [];
+            for (let i = 0; i < snowflakeCount; i++) {
+                snowflakes.push(new Snowflake());
+            }
+        }
+        
+        function animateSnow() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Легкая заливка фона
+            ctx.fillStyle = 'rgba(26, 31, 53, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            snowflakes.forEach(flake => {
+                flake.update();
+                flake.draw();
+            });
+            
+            requestAnimationFrame(animateSnow);
+        }
+        
+        // ============ Оригинальные функции ============
         function openTest() {
             let testName = document.getElementById('testName').value.trim();
             
-            // Если поле пустое - открываем тест test
             if (!testName) {
                 testName = 'test';
                 document.getElementById('testName').value = 'test';
             }
             
-            // Формируем путь к универсальной странице теста
             const testPath = `test.html?test=${testName}`;
-            
-            // Открываем тест в той же вкладке
             window.location.href = testPath;
         }
         
-        // Обработка нажатия Enter
-        document.getElementById('testName').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                openTest();
-            }
-        });
-        
-        // Фокус на поле ввода при загрузке
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('testName').focus();
-            createSnowflakes();
-        });
-        
-        // Создание снежинок
-        function createSnowflakes() {
+        // ============ Снежинки CSS ============
+        function createSnowflakesCSS() {
             const snowflakesContainer = document.getElementById('snowflakes');
-            const snowflakeCount = 70;
+            const snowflakeCount = 140; // Удвоено с 70 до 140
             
             for (let i = 0; i < snowflakeCount; i++) {
                 const snowflake = document.createElement('div');
                 snowflake.classList.add('snowflake');
                 
-                // Случайные параметры
-                const size = Math.random() * 8 + 2;
+                const size = Math.random() * 6 + 2;
                 const left = Math.random() * 100;
-                const opacity = Math.random() * 0.8 + 0.2;
+                const opacity = Math.random() * 0.7 + 0.3;
                 const duration = Math.random() * 20 + 10;
                 const delay = Math.random() * 10;
-                const blur = Math.random() * 2;
-                const startX = Math.random() * 100 - 50;
                 
                 snowflake.style.width = `${size}px`;
                 snowflake.style.height = `${size}px`;
                 snowflake.style.left = `${left}vw`;
                 snowflake.style.opacity = opacity;
-                snowflake.style.filter = `blur(${blur}px)`;
                 snowflake.style.animationDuration = `${duration}s`;
                 snowflake.style.animationDelay = `${delay}s`;
-                
-                // Добавляем индивидуальную траекторию
-                const animationName = `fall${i}`;
-                const styleSheet = document.styleSheets[0];
-                
-                const keyframes = `
-                @keyframes ${animationName} {
-                    0% {
-                        transform: translateY(-100px) translateX(${startX}px) rotate(0deg);
-                        opacity: ${opacity};
-                    }
-                    70% {
-                        opacity: ${opacity};
-                    }
-                    100% {
-                        transform: translateY(100vh) translateX(${startX + Math.random() * 100 - 50}px) rotate(${Math.random() * 360}deg);
-                        opacity: 0;
-                    }
-                }`;
-                
-                styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
-                snowflake.style.animationName = animationName;
                 
                 snowflakesContainer.appendChild(snowflake);
             }
         }
+        
+        // ============ Инициализация ============
+        document.addEventListener('DOMContentLoaded', function() {
+            // Фокус на поле ввода
+            document.getElementById('testName').focus();
+            
+            // Создаем снежинки CSS
+            createSnowflakesCSS();
+            
+            // Инициализируем Canvas снег
+            initSnow();
+            animateSnow();
+            
+            // Обработчик ресайза
+            window.addEventListener('resize', initSnow);
+            
+            // Обработка ввода
+            document.getElementById('testName').addEventListener('input', function(e) {
+                this.value = this.value.toLowerCase().replace(/[^a-z0-9]/g, '');
+            });
+            
+            // Enter для отправки
+            document.getElementById('testName').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    openTest();
+                }
+            });
+        });
     </script>
-    
-    <!-- Font Awesome для иконок -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 </body>
 </html>
