@@ -1,6 +1,6 @@
 // ====================================================================
 // ОСНОВНОЙ СКРИПТ СИСТЕМЫ ТЕСТИРОВАНИЯ
-// Версия 5.0 - С автосохранением и кнопкой "Пропустить"
+// Версия 6.0 - Исправленная логика пропущенных вопросов
 // ====================================================================
 
 // Глобальные переменные системы
@@ -77,7 +77,7 @@ const cheatMessages = [
 // DOM элементы
 let progressBar, progressText, questionText, questionType, optionsContainer, confirmBtn;
 let studentNameInput, studentClassSelect, fullscreenResult, fullscreenGrade;
-let fullscreenScore, fullscreenBreakdown, finishBtn, startTestBtn, skipBtn;
+let fullscreenScore, fullscreenBreakdown, finishBtn, startTestBtn, refreshBtn;
 let studentInfoSection, testContent, blockerOverlay, anticheatModal;
 let cheatMessageElement, countdownTimer, passwordInput, continueBtn;
 
@@ -114,9 +114,6 @@ function saveProgress() {
     try {
         localStorage.setItem('testProgress', JSON.stringify(progress));
         console.log('💾 Прогресс сохранен');
-        
-        // Показываем уведомление
-        showSaveNotification();
     } catch (e) {
         console.error('Ошибка сохранения:', e);
     }
@@ -186,20 +183,6 @@ function restoreTest() {
     console.log('📊 Сохраненные ответы:', userAnswers);
     
     return true;
-}
-
-/**
- * Показать уведомление о сохранении
- */
-function showSaveNotification() {
-    const notification = document.getElementById('save-notification');
-    if (!notification) return;
-    
-    notification.style.display = 'block';
-    
-    setTimeout(() => {
-        notification.style.display = 'none';
-    }, 2000);
 }
 
 /**
@@ -280,7 +263,7 @@ function cacheDOMElements() {
     questionType = document.getElementById('question-type');
     optionsContainer = document.getElementById('options-container');
     confirmBtn = document.getElementById('confirm-btn');
-    skipBtn = document.getElementById('skip-btn');
+    refreshBtn = document.getElementById('refresh-btn');
     studentNameInput = document.getElementById('student-name');
     studentClassSelect = document.getElementById('student-class');
     fullscreenResult = document.getElementById('fullscreen-result');
@@ -300,7 +283,7 @@ function cacheDOMElements() {
     
     console.log('🔍 Кэширование DOM элементов:');
     console.log('- finishBtn найден:', !!finishBtn);
-    console.log('- skipBtn найден:', !!skipBtn);
+    console.log('- refreshBtn найден:', !!refreshBtn);
     console.log('- fullscreenResult найден:', !!fullscreenResult);
 }
 
@@ -343,9 +326,9 @@ function setupEventListeners() {
         console.error('❌ finishBtn не найден в DOM!');
     }
     
-    if (skipBtn) {
-        skipBtn.addEventListener('click', skipQuestion);
-        console.log('✅ Обработчик для skipBtn установлен');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', skipQuestion);
+        console.log('✅ Обработчик для refreshBtn установлен');
     }
     
     if (continueBtn) {
@@ -509,7 +492,7 @@ function initQuestions() {
     antiCheatTriggered = false;
     
     if (confirmBtn) confirmBtn.disabled = false;
-    if (skipBtn) skipBtn.disabled = false;
+    if (refreshBtn) refreshBtn.disabled = false;
     if (fullscreenResult) fullscreenResult.style.display = 'none';
     
     console.log(`✅ Выбрано ${selectedQuestions.length} вопросов и ${selectedProblems.length} задач`);
@@ -546,23 +529,26 @@ function showQuestion(index) {
         }
     }
     
-    // Показываем информацию о пропущенных вопросах
-    const skippedCount = skipQuestions.length;
-    if (skippedCount > 0 && questionType) {
-        const span = document.createElement('span');
-        span.className = 'question-counter';
-        span.textContent = `Пропущено: ${skippedCount}`;
-        questionType.appendChild(span);
-    }
+    // Если вопрос пропущенный, сбрасываем его состояние
+    const isSkippedQuestion = skipQuestions.includes(index);
     
     currentShuffledOptions = shuffleArray([...item.options]);
     
     if (optionsContainer) {
         optionsContainer.innerHTML = '';
+        
+        // Если это пропущенный вопрос и у нас уже есть ответ на него,
+        // мы должны сбросить выбор пользователя, чтобы он мог выбрать заново
+        if (isSkippedQuestion) {
+            userAnswers[index] = null;
+        }
+        
         currentShuffledOptions.forEach((option, i) => {
             const label = document.createElement('label');
             label.className = 'option-label';
-            if (userAnswers[index] === option.v) {
+            
+            // Показываем выбранный вариант только если вопрос не пропущен
+            if (!isSkippedQuestion && userAnswers[index] === option.v) {
                 label.classList.add('selected');
             }
             
@@ -577,9 +563,19 @@ function showQuestion(index) {
             
             if (!isShowingAnswer) {
                 label.addEventListener('click', () => {
-                    document.querySelectorAll('.option-label').forEach(l => l.classList.remove('selected'));
-                    label.classList.add('selected');
-                    radio.checked = true;
+                    // Если это пропущенный вопрос, не снимаем выделение с других
+                    // пока пользователь не выбрал ответ
+                    if (isSkippedQuestion) {
+                        // Просто выбираем этот вариант
+                        document.querySelectorAll('.option-label').forEach(l => l.classList.remove('selected'));
+                        label.classList.add('selected');
+                        radio.checked = true;
+                    } else {
+                        document.querySelectorAll('.option-label').forEach(l => l.classList.remove('selected'));
+                        label.classList.add('selected');
+                        radio.checked = true;
+                    }
+                    
                     if (confirmBtn) confirmBtn.disabled = false;
                 });
             }
@@ -590,15 +586,15 @@ function showQuestion(index) {
     
     // Управляем кнопками
     if (confirmBtn) confirmBtn.disabled = true;
-    if (skipBtn) {
+    if (refreshBtn) {
         // Нельзя пропустить последний непропущенный вопрос
         const remainingQuestions = shuffledQuestionsAndProblems.length - index - skipQuestions.length;
         if (remainingQuestions <= 1) {
-            skipBtn.disabled = true;
-            skipBtn.title = "Это последний непропущенный вопрос";
+            refreshBtn.disabled = true;
+            refreshBtn.title = "Это последний непропущенный вопрос";
         } else {
-            skipBtn.disabled = false;
-            skipBtn.title = "Пропустить вопрос и вернуться к нему позже";
+            refreshBtn.disabled = false;
+            refreshBtn.title = "Вернуться к этому вопросу позже";
         }
     }
     
@@ -639,7 +635,7 @@ function confirmAnswer() {
     userAnswers[currentQuestionIndex] = selectedOption.value;
     
     if (confirmBtn) confirmBtn.disabled = true;
-    if (skipBtn) skipBtn.disabled = true;
+    if (refreshBtn) refreshBtn.disabled = true;
     isShowingAnswer = true;
     
     highlightCorrectAnswer();
@@ -669,6 +665,8 @@ function confirmAnswer() {
             if (unansweredSkipped.length > 0) {
                 // Переходим к первому непропущенному вопросу
                 currentQuestionIndex = unansweredSkipped[0];
+                // Удаляем его из списка пропущенных, так как сейчас будем на него отвечать
+                skipQuestions = skipQuestions.filter(idx => idx !== currentQuestionIndex);
                 showQuestion(currentQuestionIndex);
                 alert(`Осталось ответить на ${unansweredSkipped.length} пропущенных вопросов`);
             } else {
@@ -702,6 +700,8 @@ function skipQuestion() {
     // Добавляем текущий вопрос в список пропущенных
     if (!skipQuestions.includes(currentQuestionIndex)) {
         skipQuestions.push(currentQuestionIndex);
+        // Сбрасываем ответ для этого вопроса
+        userAnswers[currentQuestionIndex] = null;
     }
     
     // Ищем следующий непропущенный вопрос
@@ -820,19 +820,10 @@ function showFullscreenResult(grade, score, maxScore, correctQuestions, correctP
         fullscreenMaxScore.textContent = maxScore;
     }
     
-    let skippedInfo = '';
-    if (skipQuestions.length > 0) {
-        skippedInfo = `<div style="color: #ff9800; margin-top: 10px;">
-            <i class="fas fa-exclamation-circle"></i>
-            Пропущенных вопросов: ${skipQuestions.length}
-        </div>`;
-    }
-    
     fullscreenBreakdown.innerHTML = `
         <div>Правильных вопросов: ${correctQuestions} из ${window.TEST_CONFIG.totalQuestions} (${questionScore} баллов)</div>
         <div>Правильных задач: ${correctProblems} из ${window.TEST_CONFIG.totalProblems} (${problemScore} баллов)</div>
         <div>Всего баллов: ${score} из ${maxScore}</div>
-        ${skippedInfo}
     `;
     
     console.log('✅ Полноэкранный результат показан');
@@ -866,19 +857,10 @@ function finishFullScreen() {
     }
     
     // Формируем детализацию для экрана "Работа принята"
-    let skippedInfo = '';
-    if (skipQuestions.length > 0) {
-        skippedInfo = `<div style="color: #ff9800; margin-top: 8px;">
-            <i class="fas fa-exclamation-circle"></i>
-            Пропущенных вопросов: ${skipQuestions.length}
-        </div>`;
-    }
-    
     const breakdown = `
         <div style="margin-bottom: 8px;">Правильных вопросов: ${window.TEST_CONFIG.correctQuestions || 0} из ${window.TEST_CONFIG.totalQuestions}</div>
         <div style="margin-bottom: 8px;">Правильных задач: ${window.TEST_CONFIG.correctProblems || 0} из ${window.TEST_CONFIG.totalProblems}</div>
         <div>Всего баллов: ${score} из ${maxScore}</div>
-        ${skippedInfo}
     `;
     
     console.log('📤 Отправляем результаты в Telegram...');
