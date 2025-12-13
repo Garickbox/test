@@ -1,3 +1,7 @@
+// ⚠️ ВНИМАНИЕ: НЕ ПУБЛИКУЙТЕ ЭТОТ ФАЙЛ В ОТКРЫТЫЙ ДОСТУП!
+// Ваш Telegram токен виден всем, кто может посмотреть исходный код страницы.
+// В реальном проекте используйте серверную часть для хранения токенов.
+
 // ОБЯЗАТЕЛЬНО: используйте window. для глобальных переменных!
 window.TEST_CONFIG = {
     title: "Контрольная: Электризация тел. Электрический ток",
@@ -6,8 +10,11 @@ window.TEST_CONFIG = {
     maxScore: 30,             // Максимальный балл (21×1 + 3×3)
     
     telegram: {
-        botToken: "ВАШ_BOT_TOKEN",    // Токен Telegram-бота
-        chatId: "ВАШ_CHAT_ID"         // ID чата для отправки
+        // ТОКЕН ВАШЕГО TELEGRAM БОТА
+        botToken: "8344281396:AAGZ9-M2XRyPMHiI2akBSSIN7QAtRGDmLOY",
+        
+        // ID ЧАТА ДЛЯ ОТПРАВКИ РЕЗУЛЬТАТОВ
+        chatId: "1189539923"
     },
     
     gradingScale: {           // Шкала оценок (баллы → оценка)
@@ -22,6 +29,10 @@ window.TEST_CONFIG = {
         blockTime: 180        // Время блокировки в секундах
     }
 };
+
+// Проверка настроек Telegram
+console.log('🔧 Конфигурация Telegram:', window.TEST_CONFIG.telegram);
+console.log('⚠️ Внимание: Telegram токен виден в исходном коде!');
 
 // БАНК ТЕОРЕТИЧЕСКИХ ВОПРОСОВ (50 вопросов)
 window.questionsBank = [
@@ -269,7 +280,7 @@ window.questionsBank = [
         text: "Что такое параллельное соединение проводников?",
         options: [
             {t: "Соединение, при котором проводники соединены друг за другом", v: "wrong"},
-            {t: "Соединение, при котором все проводники подключены к одним точкам", v: "correct"},
+            {t: "Соединение, при котором все проводники подключены к одним точками", v: "correct"},
             {t: "Соединение через сопротивление", v: "wrong"},
             {t: "Соединение через источник тока", v: "wrong"}
         ],
@@ -946,3 +957,61 @@ console.log('✅ Файл теста electricity.js загружен успеш�
 console.log(`📊 Теоретических вопросов: ${window.questionsBank.length}`);
 console.log(`📊 Задач: ${window.problemsBank.length}`);
 console.log(`🎯 Максимальный балл: ${window.TEST_CONFIG.maxScore}`);
+console.log(`🤖 Telegram настроен: ${window.TEST_CONFIG.telegram.botToken !== "ВАШ_BOT_TOKEN" ? '✅ Да' : '❌ Нет'}`);
+
+// Функция для тестирования Telegram отправки
+window.testTelegram = async function() {
+    const config = window.TEST_CONFIG.telegram;
+    const url = `https://api.telegram.org/bot${config.botToken}/sendMessage`;
+    
+    console.log('🔄 Тестируем отправку в Telegram...');
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: config.chatId,
+                text: '🔧 *Тестовая отправка из системы тестирования*\n\n✅ Система работает корректно!\n📅 Время: ' + new Date().toLocaleString('ru-RU'),
+                parse_mode: 'Markdown'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.ok) {
+            console.log('✅ Телеграм работает корректно!');
+            alert('✅ Тестовая отправка в Telegram прошла успешно!');
+        } else {
+            console.error('❌ Ошибка Telegram:', data.description);
+            alert('❌ Ошибка: ' + data.description);
+        }
+    } catch (error) {
+        console.error('❌ Ошибка сети:', error);
+        alert('❌ Ошибка сети: ' + error.message);
+    }
+};
+
+// Добавляем кнопку для тестирования Telegram (только для разработки)
+if (window.location.href.includes('localhost') || window.location.href.includes('127.0.0.1')) {
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            const testBtn = document.createElement('button');
+            testBtn.textContent = '🔄 Тест Telegram';
+            testBtn.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: #0088cc;
+                color: white;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+                z-index: 9999;
+            `;
+            testBtn.onclick = window.testTelegram;
+            document.body.appendChild(testBtn);
+        }, 1000);
+    });
+}
