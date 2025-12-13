@@ -1,6 +1,6 @@
 // ====================================================================
 // ОСНОВНОЙ СКРИПТ СИСТЕМЫ ТЕСТИРОВАНИЯ
-// Версия 6.2 - Исправленная логика пропущенных вопросов
+// Версия 7.0 - Правильная логика пропущенных вопросов
 // ====================================================================
 
 // Глобальные переменные системы
@@ -164,6 +164,11 @@ function restoreTest() {
     skipQuestions = progress.skipQuestions || [];
     window.STUDENT_INFO = progress.student;
     
+    // ВАЖНО: При восстановлении сбрасываем ответы на пропущенные вопросы
+    skipQuestions.forEach(index => {
+        userAnswers[index] = null;
+    });
+    
     // Восстанавливаем состояние
     testStarted = true;
     isTestRestored = true;
@@ -181,6 +186,7 @@ function restoreTest() {
     
     console.log('🔄 Тест восстановлен с вопроса', currentQuestionIndex + 1);
     console.log('📊 Сохраненные ответы:', userAnswers);
+    console.log('⏭️ Пропущенные вопросы:', skipQuestions);
     
     return true;
 }
@@ -529,27 +535,30 @@ function showQuestion(index) {
         }
     }
     
-    // ВАЖНО: при показе вопроса мы должны учитывать, пропущен он или нет
-    // Если вопрос пропущен - сбрасываем ответ и показываем чистый вопрос
-    const isSkippedQuestion = skipQuestions.includes(index);
-    
     currentShuffledOptions = shuffleArray([...item.options]);
+    
+    // Сбрасываем флаг показа ответа при показе нового вопроса
+    isShowingAnswer = false;
     
     if (optionsContainer) {
         optionsContainer.innerHTML = '';
         
-        // Если вопрос пропущен - сбрасываем ответ
-        if (isSkippedQuestion) {
-            userAnswers[index] = null;
-        }
-        
+        // ВАЖНО: При показе вопроса НИКОГДА не показываем подсветку ответов
+        // даже если есть сохраненный ответ в userAnswers
         currentShuffledOptions.forEach((option, i) => {
             const label = document.createElement('label');
             label.className = 'option-label';
             
-            // Показываем выбранный вариант только если вопрос не пропущен и у нас есть ответ
-            if (!isSkippedQuestion && userAnswers[index] === option.v) {
-                label.classList.add('selected');
+            // Только если это НЕ пропущенный вопрос и пользователь уже отвечал на него
+            // и мы находимся в режиме показа ответа (isShowingAnswer = true)
+            if (userAnswers[index] === option.v && isShowingAnswer) {
+                // Это обрабатывается в highlightCorrectAnswer
+                // Здесь мы только отмечаем выбранный пользователем вариант
+                if (option.v === 'correct') {
+                    label.classList.add('correct');
+                } else {
+                    label.classList.add('incorrect');
+                }
             }
             
             const radio = document.createElement('input');
@@ -578,16 +587,17 @@ function showQuestion(index) {
     // Управляем кнопками
     if (confirmBtn) confirmBtn.disabled = true;
     
-    // Кнопка пропуска должна быть активна всегда, кроме:
-    // 1. Последний вопрос в тесте
-    // 2. Когда мы на пропущенном вопросе (его нельзя пропускать повторно)
+    // Кнопка пропуска активна всегда, кроме:
+    // 1. Когда мы показываем ответ (isShowingAnswer = true)
+    // 2. Когда это последний непропущенный вопрос
     if (refreshBtn) {
-        const isLastQuestion = currentQuestionIndex === shuffledQuestionsAndProblems.length - 1;
-        const isSkippedQuestion = skipQuestions.includes(currentQuestionIndex);
+        const totalQuestions = shuffledQuestionsAndProblems.length;
+        const answeredQuestions = userAnswers.filter(answer => answer !== null).length;
+        const remainingQuestions = totalQuestions - answeredQuestions - skipQuestions.length;
         
-        if (isLastQuestion || isSkippedQuestion) {
+        if (isShowingAnswer || remainingQuestions <= 1) {
             refreshBtn.disabled = true;
-            refreshBtn.title = isSkippedQuestion ? "Этот вопрос уже пропущен" : "Это последний вопрос";
+            refreshBtn.title = isShowingAnswer ? "Дождитесь окончания показа ответа" : "Это последний непропущенный вопрос";
         } else {
             refreshBtn.disabled = false;
             refreshBtn.title = "Вернуться к этому вопросу позже";
@@ -602,9 +612,15 @@ function highlightCorrectAnswer() {
     
     options.forEach((option, index) => {
         const radio = option.querySelector('input');
-        if (currentShuffledOptions[index].v === 'correct') {
+        const optionValue = currentShuffledOptions[index].v;
+        
+        // Находим правильный ответ
+        if (optionValue === 'correct') {
             option.classList.add('correct');
-        } else if (radio && radio.checked && currentShuffledOptions[index].v === 'wrong') {
+        }
+        
+        // Если пользователь выбрал неправильный вариант, отмечаем его
+        if (radio && radio.checked && optionValue === 'wrong') {
             option.classList.add('incorrect');
         }
         
@@ -616,9 +632,10 @@ function updateProgress() {
     if (!progressBar || !progressText) return;
     
     const totalQuestions = shuffledQuestionsAndProblems.length;
-    const percent = ((currentQuestionIndex) / totalQuestions) * 100;
+    const answeredQuestions = userAnswers.filter(answer => answer !== null).length;
+    const percent = (answeredQuestions / totalQuestions) * 100;
     progressBar.style.width = `${percent}%`;
-    progressText.textContent = `Задание ${currentQuestionIndex + 1} из ${totalQuestions}`;
+    progressText.textContent = `Вопрос ${currentQuestionIndex + 1} из ${totalQuestions} (отвечено: ${answeredQuestions})`;
 }
 
 function confirmAnswer() {
@@ -647,31 +664,41 @@ function confirmAnswer() {
             skipQuestions = skipQuestions.filter(idx => idx !== currentQuestionIndex);
         }
         
-        // Ищем следующий непропущенный вопрос
-        let nextIndex = currentQuestionIndex + 1;
+        // Определяем следующий вопрос
+        let nextIndex = -1;
         
-        // Пропускаем вопросы из skipQuestions
-        while (skipQuestions.includes(nextIndex) && nextIndex < shuffledQuestionsAndProblems.length) {
-            nextIndex++;
+        // 1. Ищем следующий вопрос, на который еще не отвечали
+        for (let i = currentQuestionIndex + 1; i < shuffledQuestionsAndProblems.length; i++) {
+            if (userAnswers[i] === null && !skipQuestions.includes(i)) {
+                nextIndex = i;
+                break;
+            }
         }
         
-        if (nextIndex < shuffledQuestionsAndProblems.length) {
+        // 2. Если не нашли, ищем с начала теста
+        if (nextIndex === -1) {
+            for (let i = 0; i < currentQuestionIndex; i++) {
+                if (userAnswers[i] === null && !skipQuestions.includes(i)) {
+                    nextIndex = i;
+                    break;
+                }
+            }
+        }
+        
+        // 3. Если все равно не нашли, проверяем пропущенные вопросы
+        if (nextIndex === -1 && skipQuestions.length > 0) {
+            nextIndex = skipQuestions[0];
+            skipQuestions = skipQuestions.filter(idx => idx !== nextIndex);
+        }
+        
+        if (nextIndex !== -1) {
             currentQuestionIndex = nextIndex;
             showQuestion(currentQuestionIndex);
-            if (confirmBtn) confirmBtn.disabled = true;
         } else {
-            // Проверяем, есть ли еще пропущенные вопросы
-            if (skipQuestions.length > 0) {
-                // Переходим к первому пропущенному вопросу
-                currentQuestionIndex = skipQuestions[0];
-                showQuestion(currentQuestionIndex);
-                alert(`Осталось ответить на ${skipQuestions.length} пропущенных вопросов`);
-            } else {
-                // Все вопросы отвечены
-                localStorage.removeItem('testProgress');
-                stopAutoSave();
-                showResults();
-            }
+            // Все вопросы отвечены
+            localStorage.removeItem('testProgress');
+            stopAutoSave();
+            showResults();
         }
     }, 2000);
 }
@@ -685,47 +712,63 @@ function skipQuestion() {
         return;
     }
     
-    // Проверяем, не последний ли это вопрос
-    if (currentQuestionIndex >= shuffledQuestionsAndProblems.length - 1) {
-        alert('Это последний вопрос. Пропустить нельзя.');
-        return;
-    }
+    // Проверяем, не последний ли это непропущенный вопрос
+    const totalQuestions = shuffledQuestionsAndProblems.length;
+    const answeredQuestions = userAnswers.filter(answer => answer !== null).length;
+    const remainingQuestions = totalQuestions - answeredQuestions - skipQuestions.length;
     
-    // Проверяем, не пропущен ли уже этот вопрос
-    if (skipQuestions.includes(currentQuestionIndex)) {
-        alert('Этот вопрос уже пропущен');
+    if (remainingQuestions <= 1) {
+        alert('Это последний непропущенный вопрос. Пропустить нельзя.');
         return;
     }
     
     console.log('⏭️ Пропускаем вопрос', currentQuestionIndex + 1);
     
     // Добавляем текущий вопрос в список пропущенных
-    skipQuestions.push(currentQuestionIndex);
+    if (!skipQuestions.includes(currentQuestionIndex)) {
+        skipQuestions.push(currentQuestionIndex);
+    }
+    
     // Сбрасываем ответ для этого вопроса
     userAnswers[currentQuestionIndex] = null;
     
     // Сохраняем прогресс
     saveProgress();
     
-    // Переходим к следующему вопросу
-    let nextIndex = currentQuestionIndex + 1;
-    
-    // Пропускаем уже пропущенные вопросы
-    while (skipQuestions.includes(nextIndex) && nextIndex < shuffledQuestionsAndProblems.length) {
-        nextIndex++;
+    // Ищем следующий непропущенный вопрос
+    let nextIndex = -1;
+    for (let i = currentQuestionIndex + 1; i < shuffledQuestionsAndProblems.length; i++) {
+        if (userAnswers[i] === null && !skipQuestions.includes(i)) {
+            nextIndex = i;
+            break;
+        }
     }
     
-    if (nextIndex < shuffledQuestionsAndProblems.length) {
+    // Если не нашли, ищем с начала
+    if (nextIndex === -1) {
+        for (let i = 0; i < currentQuestionIndex; i++) {
+            if (userAnswers[i] === null && !skipQuestions.includes(i)) {
+                nextIndex = i;
+                break;
+            }
+        }
+    }
+    
+    if (nextIndex !== -1) {
         currentQuestionIndex = nextIndex;
         showQuestion(currentQuestionIndex);
         
         console.log('✅ Вопрос пропущен, переходим к вопросу', currentQuestionIndex + 1);
+        console.log('⏭️ Всего пропущенных вопросов:', skipQuestions.length);
     } else {
-        // Все оставшиеся вопросы пропущены - возвращаемся к первому пропущенному
+        // Все вопросы либо отвечены, либо пропущены
+        // Возвращаемся к первому пропущенному
         if (skipQuestions.length > 0) {
-            currentQuestionIndex = skipQuestions[0];
+            nextIndex = skipQuestions[0];
+            skipQuestions = skipQuestions.filter(idx => idx !== nextIndex);
+            currentQuestionIndex = nextIndex;
             showQuestion(currentQuestionIndex);
-            alert('Все оставшиеся вопросы пропущены. Возвращаемся к первому пропущенному вопросу.');
+            alert('Все вопросы просмотрены. Возвращаемся к пропущенным вопросам.');
         }
     }
 }
