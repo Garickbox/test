@@ -326,7 +326,7 @@
                 </div>
                 
                 <input type="text" class="test-input" id="testName" 
-                       placeholder="Например: electricity или trew">
+                       placeholder="Например: test">
                 
                 <button class="open-button" onclick="openTest()">
                     <i class="fas fa-external-link-alt"></i> Открыть тест
@@ -335,7 +335,7 @@
                 <div class="kumir-note">
                     <i class="fas fa-info-circle"></i> 
                     Код для прохождения теста будет сообщен учителем на уроке.<br>
-                    Для демо-теста используйте: <strong>electricity</strong>
+                    Для демо-теста используйте: <strong>test</strong>
                 </div>
             </div>
         </div>
@@ -351,10 +351,10 @@
         function openTest() {
             let testName = document.getElementById('testName').value.trim();
             
-            // Если поле пустое - открываем тест electricity
+            // Если поле пустое - открываем тест test
             if (!testName) {
-                testName = 'electricity';
-                document.getElementById('testName').value = 'electricity';
+                testName = 'test';
+                document.getElementById('testName').value = 'test';
             }
             
             // Формируем путь к универсальной странице теста
