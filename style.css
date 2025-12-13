@@ -255,7 +255,6 @@ body {
     border-left: 4px solid #4b6cb7;
 }
 
-/* Полноэкранный результат */
 #fullscreen-result {
     display: none;
     position: fixed;
@@ -316,7 +315,6 @@ body {
     transform: translateY(-2px);
 }
 
-/* Античит система */
 .blocker-overlay {
     display: none;
     position: fixed;
@@ -413,7 +411,6 @@ body {
     background: #ff3838;
 }
 
-/* Адаптивность */
 @media (max-width: 768px) {
     .student-info {
         grid-template-columns: 1fr;

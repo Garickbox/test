@@ -22,7 +22,6 @@
             align-items: center;
         }
         
-        /* Снежинки */
         .snowflakes {
             position: fixed;
             top: 0;
@@ -76,7 +75,6 @@
             overflow: hidden;
         }
         
-        /* Фигуры в шапке */
         .floating-elements {
             position: absolute;
             width: 100%;
@@ -189,7 +187,6 @@
             border-color: #4b6cb7;
         }
         
-        /* 3D Градиентная кнопка */
         .open-button {
             width: 100%;
             padding: 15px;
@@ -220,7 +217,6 @@
             animation: gradientMove 4s ease infinite;
         }
         
-        /* 3D эффект кнопки */
         .open-button::before {
             content: '';
             position: absolute;
@@ -235,7 +231,6 @@
             z-index: 2;
         }
         
-        /* Эффект свечения при наведении */
         .open-button:hover {
             transform: translateY(-3px);
             box-shadow: 
@@ -244,7 +239,6 @@
             animation: gradientMove 2s ease infinite;
         }
         
-        /* Эффект нажатия */
         .open-button:active {
             transform: translateY(-1px);
             box-shadow: 
@@ -294,13 +288,10 @@
     </style>
 </head>
 <body>
-    <!-- 70 снежинок -->
     <div class="snowflakes" id="snowflakes"></div>
     
     <div class="container">
-        <!-- Шапка -->
         <div class="header">
-            <!-- Фигуры в шапке -->
             <div class="floating-elements">
                 <div class="float-item"><i class="fas fa-snowflake"></i></div>
                 <div class="float-item"><i class="fas fa-star"></i></div>
@@ -312,14 +303,11 @@
             <div class="school-subtitle">Платформа для тестирования учеников</div>
         </div>
         
-        <!-- Контент -->
         <div class="content">
-            <!-- Приветствие -->
             <div class="welcome-section">
                 <div class="welcome-title">Добро пожаловать!</div>
             </div>
             
-            <!-- Форма теста -->
             <div class="test-section">
                 <div class="test-title">
                     <i class="fas fa-rocket"></i> Введите код теста:
@@ -342,42 +330,33 @@
     </div>
 
     <script>
-        // Автоматическое приведение к нижнему регистру и разрешение только букв и цифр
         document.getElementById('testName').addEventListener('input', function(e) {
             this.value = this.value.toLowerCase().replace(/[^a-z0-9]/g, '');
         });
 
-        // Функция открытия теста
         function openTest() {
             let testName = document.getElementById('testName').value.trim();
             
-            // Если поле пустое - открываем демо-тест trew
             if (!testName) {
                 testName = 'trew';
                 document.getElementById('testName').value = 'trew';
             }
             
-            // Формируем путь к универсальной странице теста
             const testPath = `test.html?test=${testName}`;
-            
-            // Открываем тест в той же вкладке
             window.location.href = testPath;
         }
         
-        // Обработка нажатия Enter
         document.getElementById('testName').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 openTest();
             }
         });
         
-        // Фокус на поле ввода при загрузке
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('testName').focus();
             createSnowflakes();
         });
         
-        // Создание снежинок
         function createSnowflakes() {
             const snowflakesContainer = document.getElementById('snowflakes');
             const snowflakeCount = 70;
@@ -386,7 +365,6 @@
                 const snowflake = document.createElement('div');
                 snowflake.classList.add('snowflake');
                 
-                // Случайные параметры
                 const size = Math.random() * 8 + 2;
                 const left = Math.random() * 100;
                 const opacity = Math.random() * 0.8 + 0.2;
@@ -403,7 +381,6 @@
                 snowflake.style.animationDuration = `${duration}s`;
                 snowflake.style.animationDelay = `${delay}s`;
                 
-                // Добавляем индивидуальную траекторию
                 const animationName = `fall${i}`;
                 const styleSheet = document.styleSheets[0];
                 
@@ -430,7 +407,6 @@
         }
     </script>
     
-    <!-- Font Awesome для иконок -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 </body>
 </html>

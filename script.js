@@ -3,7 +3,6 @@
 // Версия 3.0 - Модульная система
 // ====================================================================
 
-// Глобальные переменные системы
 let currentQuestionIndex = 0;
 let selectedQuestions = [];
 let selectedProblems = [];
@@ -14,7 +13,6 @@ let testCompleted = false;
 let timer = null;
 let isInitialized = false;
 
-// DOM элементы
 const elements = {
     startBtn: document.getElementById('start-test-btn'),
     testContent: document.getElementById('test-content'),
@@ -44,12 +42,6 @@ const elements = {
     continueBtn: document.getElementById('continueBtn')
 };
 
-// ==================== ИНИЦИАЛИЗАЦИЯ ТЕСТА ====================
-
-/**
- * Основная функция инициализации теста
- * Вызывается после загрузки конфигурации теста
- */
 function initTest() {
     if (isInitialized) {
         console.log('⚠️ Тест уже инициализирован');
@@ -73,24 +65,14 @@ function initTest() {
     console.log('📊 Задач в банке:', window.problemsBank.length);
     console.log('🎯 Максимальный балл:', window.TEST_CONFIG.maxScore);
     
-    // Устанавливаем заголовок теста (уже установлен в test.html)
-    
-    // Инициализируем вопросы
     initQuestions();
-    
-    // Настройка событий
     setupEventListeners();
-    
-    // Запуск античит системы
     setupAnticheatSystem();
     
     isInitialized = true;
     console.log('✅ Тест инициализирован успешно');
 }
 
-/**
- * Показать ошибку
- */
 function showError(message) {
     const studentInfoSection = document.getElementById('student-info-section');
     if (studentInfoSection) {
@@ -109,11 +91,7 @@ function showError(message) {
     }
 }
 
-/**
- * Инициализация вопросов и задач
- */
 function initQuestions() {
-    // Проверяем наличие вопросов
     if (!window.questionsBank || window.questionsBank.length < window.TEST_CONFIG.totalQuestions) {
         console.error('❌ Недостаточно теоретических вопросов');
         showError(`Недостаточно теоретических вопросов. Нужно: ${window.TEST_CONFIG.totalQuestions}, доступно: ${window.questionsBank ? window.questionsBank.length : 0}`);
@@ -126,49 +104,32 @@ function initQuestions() {
         return;
     }
     
-    // Случайный выбор вопросов
     selectedQuestions = getRandomQuestions(window.questionsBank, window.TEST_CONFIG.totalQuestions);
     selectedProblems = getRandomQuestions(window.problemsBank, window.TEST_CONFIG.totalProblems);
     
     console.log(`✅ Выбрано ${selectedQuestions.length} вопросов и ${selectedProblems.length} задач`);
 }
 
-/**
- * Получить случайные вопросы из банка
- */
 function getRandomQuestions(bank, count) {
     const shuffled = [...bank].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, count);
 }
 
-// ==================== ОСНОВНАЯ ЛОГИКА ТЕСТИРОВАНИЯ ====================
-
-/**
- * Настройка обработчиков событий
- */
 function setupEventListeners() {
-    // Проверяем, что элементы существуют
     if (!elements.startBtn || !elements.confirmBtn || !elements.finishBtn) {
         console.error('❌ Не найдены необходимые элементы DOM');
         return;
     }
     
-    // Кнопка начала теста
     elements.startBtn.addEventListener('click', startTest);
-    
-    // Кнопка подтверждения ответа
     elements.confirmBtn.addEventListener('click', confirmAnswer);
-    
-    // Кнопка завершения теста
     elements.finishBtn.addEventListener('click', finishTest);
     
-    // Античит система
     if (elements.passwordInput && elements.continueBtn) {
         elements.passwordInput.addEventListener('input', validatePassword);
         elements.continueBtn.addEventListener('click', unblockTest);
     }
     
-    // Блокировка горячих клавиш
     document.addEventListener('keydown', blockHotkeys);
     document.addEventListener('contextmenu', blockContextMenu);
     document.addEventListener('selectstart', blockSelection);
@@ -177,9 +138,6 @@ function setupEventListeners() {
     console.log('✅ Обработчики событий установлены');
 }
 
-/**
- * Начать тест
- */
 function startTest() {
     const name = elements.studentName.value.trim();
     const studentClass = elements.studentClass.value;
@@ -189,7 +147,6 @@ function startTest() {
         return;
     }
     
-    // Сохраняем данные ученика
     window.STUDENT_INFO = {
         name: name,
         class: studentClass,
@@ -197,7 +154,6 @@ function startTest() {
         testName: window.TEST_CONFIG.title
     };
     
-    // Скрываем форму ввода и показываем тест
     document.getElementById('student-info-section').style.display = 'none';
     elements.testContent.style.display = 'block';
     
@@ -206,18 +162,12 @@ function startTest() {
     userAnswers = [];
     score = 0;
     
-    // Показываем первый вопрос
     showQuestion();
-    
-    // Запускаем античит мониторинг
     startAnticheatMonitoring();
     
     console.log('✅ Тест начат для ученика:', name, studentClass);
 }
 
-/**
- * Показать текущий вопрос
- */
 function showQuestion() {
     const totalQuestions = selectedQuestions.length + selectedProblems.length;
     const allQuestions = [...selectedQuestions, ...selectedProblems];
@@ -230,25 +180,18 @@ function showQuestion() {
     const question = allQuestions[currentQuestionIndex];
     const isProblem = currentQuestionIndex >= selectedQuestions.length;
     
-    // Обновляем прогресс
     updateProgress(currentQuestionIndex, totalQuestions);
     
-    // Устанавливаем тип вопроса
     elements.questionType.textContent = isProblem ? 'ЗАДАЧА (3 балла)' : 'ВОПРОС (1 балл)';
-    
-    // Устанавливаем текст вопроса
     elements.questionText.textContent = `${currentQuestionIndex + 1}. ${question.text}`;
     
-    // Очищаем контейнер с вариантами
     elements.optionsContainer.innerHTML = '';
     
-    // Перемешиваем варианты ответов
     const shuffledOptions = [...question.options].sort(() => Math.random() - 0.5);
     const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
     
-    // Создаем кнопки вариантов
     shuffledOptions.forEach((option, index) => {
-        if (index >= letters.length) return; // Защита от выхода за пределы массива букв
+        if (index >= letters.length) return;
         
         const optionElement = document.createElement('div');
         optionElement.className = 'option';
@@ -261,39 +204,26 @@ function showQuestion() {
         elements.optionsContainer.appendChild(optionElement);
     });
     
-    // Сбрасываем выбранный вариант
     elements.confirmBtn.disabled = true;
     
-    // Сохраняем правильный ответ для проверки
     const correctOption = question.options.find(opt => opt.v === 'correct');
     window.currentCorrectAnswer = correctOption ? correctOption.t : '';
     
     console.log(`📝 Показан вопрос ${currentQuestionIndex + 1} из ${totalQuestions}`);
 }
 
-/**
- * Выбрать вариант ответа
- */
 function selectOption(optionElement, optionValue) {
-    // Снимаем выделение со всех вариантов
     document.querySelectorAll('.option').forEach(opt => {
         opt.classList.remove('selected');
     });
     
-    // Выделяем выбранный вариант
     optionElement.classList.add('selected');
-    
-    // Активируем кнопку подтверждения
     elements.confirmBtn.disabled = false;
     
-    // Сохраняем выбранный ответ
     window.selectedAnswer = optionValue;
     window.selectedAnswerText = optionElement.querySelector('.option-text').textContent;
 }
 
-/**
- * Подтвердить ответ
- */
 function confirmAnswer() {
     if (!window.selectedAnswer) return;
     
@@ -301,7 +231,6 @@ function confirmAnswer() {
     const currentQuestion = allQuestions[currentQuestionIndex];
     const isCorrect = window.selectedAnswer === 'correct';
     
-    // Сохраняем ответ пользователя
     userAnswers.push({
         question: currentQuestion.text,
         userAnswer: window.selectedAnswerText,
@@ -311,19 +240,14 @@ function confirmAnswer() {
         questionType: currentQuestionIndex < selectedQuestions.length ? 'question' : 'problem'
     });
     
-    // Добавляем баллы
     if (isCorrect) {
         score += currentQuestion.points;
     }
     
-    // Переходим к следующему вопросу
     currentQuestionIndex++;
-    
-    // Очищаем выбранный ответ
     window.selectedAnswer = null;
     window.selectedAnswerText = null;
     
-    // Показываем следующий вопрос или результаты
     if (currentQuestionIndex < allQuestions.length) {
         showQuestion();
     } else {
@@ -331,34 +255,23 @@ function confirmAnswer() {
     }
 }
 
-/**
- * Обновить прогресс
- */
 function updateProgress(current, total) {
     const percentage = ((current + 1) / total) * 100;
     elements.progressBar.style.width = `${percentage}%`;
     elements.progressText.textContent = `Вопрос ${current + 1} из ${total}`;
 }
 
-/**
- * Показать результаты
- */
 function showResults() {
     testCompleted = true;
-    
-    // Скрываем контейнер с вопросами
     elements.testContent.style.display = 'none';
     
-    // Рассчитываем оценку
     const grade = calculateGrade(score);
     const maxScore = window.TEST_CONFIG.maxScore;
     
-    // Обновляем результаты
     elements.scoreValue.textContent = score;
     elements.gradeValue.textContent = grade;
     elements.gradeValue.style.color = getGradeColor(grade);
     
-    // Формируем детализацию
     let breakdownHTML = '<h3>Детализация ответов:</h3>';
     let correctCount = 0;
     
@@ -378,14 +291,9 @@ function showResults() {
     });
     
     elements.pointsBreakdown.innerHTML = breakdownHTML;
-    
-    // Показываем результаты
     elements.results.style.display = 'block';
     
-    // Отправляем результаты в Telegram
     sendResultsToTelegram(grade, correctCount, userAnswers.length);
-    
-    // Показываем полноэкранный результат
     showFullscreenResult(grade, score, maxScore, breakdownHTML);
     
     console.log('📊 Тест завершен. Результаты:', {
@@ -396,9 +304,6 @@ function showResults() {
     });
 }
 
-/**
- * Рассчитать оценку по баллам
- */
 function calculateGrade(score) {
     const scale = window.TEST_CONFIG.gradingScale;
     
@@ -408,9 +313,6 @@ function calculateGrade(score) {
     return 2;
 }
 
-/**
- * Получить цвет для оценки
- */
 function getGradeColor(grade) {
     const colors = {
         5: '#4CAF50',
@@ -421,9 +323,6 @@ function getGradeColor(grade) {
     return colors[grade] || '#333';
 }
 
-/**
- * Показать полноэкранный результат
- */
 function showFullscreenResult(grade, score, maxScore, breakdown) {
     elements.fullscreenResult.style.display = 'flex';
     elements.fullscreenGrade.textContent = grade;
@@ -432,27 +331,13 @@ function showFullscreenResult(grade, score, maxScore, breakdown) {
     elements.fullscreenBreakdown.innerHTML = breakdown;
 }
 
-/**
- * Завершить тест
- */
 function finishTest() {
-    // Можно добавить дополнительную логику при завершении
     alert('Тест завершен! Результаты отправлены учителю.');
-    
-    // Закрываем полноэкранный результат
     elements.fullscreenResult.style.display = 'none';
-    
-    // Прокручиваем к началу результатов
     elements.results.scrollIntoView({ behavior: 'smooth' });
 }
 
-// ==================== АНТИЧИТ СИСТЕМА ====================
-
-/**
- * Настройка античит системы
- */
 function setupAnticheatSystem() {
-    // Сообщения при попытках обмана
     window.cheatMessages = [
         "Обнаружена попытка переключения вкладок!",
         "Не пытайтесь искать ответы в других окнах!",
@@ -463,51 +348,33 @@ function setupAnticheatSystem() {
     ];
 }
 
-/**
- * Начать мониторинг античит
- */
 function startAnticheatMonitoring() {
-    // Мониторинг потери фокуса
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', handleWindowBlur);
     window.addEventListener('focus', handleWindowFocus);
 }
 
-/**
- * Обработка изменения видимости страницы
- */
 function handleVisibilityChange() {
     if (document.hidden && testStarted && !testCompleted) {
         triggerAnticheat();
     }
 }
 
-/**
- * Обработка потери фокуса окна
- */
 function handleWindowBlur() {
     if (testStarted && !testCompleted) {
         triggerAnticheat();
     }
 }
 
-/**
- * Обработка получения фокуса окна
- */
 function handleWindowFocus() {
-    // Можно добавить логику при возвращении на страницу
 }
 
-/**
- * Запустить античит блокировку
- */
 function triggerAnticheat() {
     if (window.isBlocked) return;
     
     window.isBlocked = true;
     window.blockStartTime = Date.now();
     
-    // Случайное сообщение
     const randomMessage = window.cheatMessages[
         Math.floor(Math.random() * window.cheatMessages.length)
     ];
@@ -516,18 +383,12 @@ function triggerAnticheat() {
     elements.blockerOverlay.style.display = 'block';
     elements.anticheatModal.style.display = 'block';
     
-    // Запуск таймера
     startCountdown(window.TEST_CONFIG.anticheat.blockTime || 180);
-    
-    // Блокируем весь контент
     document.body.style.overflow = 'hidden';
     
     console.log('🚨 Античит система активирована');
 }
 
-/**
- * Запустить обратный отсчет
- */
 function startCountdown(seconds) {
     let remaining = seconds;
     
@@ -550,9 +411,6 @@ function startCountdown(seconds) {
     timer = setInterval(updateTimer, 1000);
 }
 
-/**
- * Валидация пароля
- */
 function validatePassword() {
     const password = elements.passwordInput.value;
     const correctPassword = window.TEST_CONFIG.anticheat.password || "3265";
@@ -564,27 +422,20 @@ function validatePassword() {
     }
 }
 
-/**
- * Разблокировать тест
- */
 function unblockTest() {
     window.isBlocked = false;
     
-    // Скрываем модалку
     elements.blockerOverlay.style.display = 'none';
     elements.anticheatModal.style.display = 'none';
     elements.passwordInput.value = '';
     
-    // Разблокируем контент
     document.body.style.overflow = 'auto';
     
-    // Очищаем таймер
     if (timer) {
         clearInterval(timer);
         timer = null;
     }
     
-    // Снимаем обработчики античита
     document.removeEventListener('visibilitychange', handleVisibilityChange);
     window.removeEventListener('blur', handleWindowBlur);
     window.removeEventListener('focus', handleWindowFocus);
@@ -592,15 +443,9 @@ function unblockTest() {
     console.log('✅ Античит система разблокирована');
 }
 
-// ==================== БЛОКИРОВКА ГОРЯЧИХ КЛАВИШ ====================
-
-/**
- * Блокировка горячих клавиш
- */
 function blockHotkeys(e) {
     if (!testStarted || testCompleted) return;
     
-    // Блокируем Ctrl+C, Ctrl+V, Ctrl+A, Ctrl+S, F12, Print Screen
     if (
         (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'a' || e.key === 's')) ||
         e.key === 'F12' ||
@@ -610,16 +455,12 @@ function blockHotkeys(e) {
         return false;
     }
     
-    // Блокируем контекстное меню (правая кнопка мыши)
     if (e.key === 'ContextMenu') {
         e.preventDefault();
         return false;
     }
 }
 
-/**
- * Блокировка контекстного меню
- */
 function blockContextMenu(e) {
     if (testStarted && !testCompleted) {
         e.preventDefault();
@@ -627,9 +468,6 @@ function blockContextMenu(e) {
     }
 }
 
-/**
- * Блокировка выделения текста
- */
 function blockSelection(e) {
     if (testStarted && !testCompleted) {
         e.preventDefault();
@@ -637,9 +475,6 @@ function blockSelection(e) {
     }
 }
 
-/**
- * Блокировка перетаскивания
- */
 function blockDrag(e) {
     if (testStarted && !testCompleted) {
         e.preventDefault();
@@ -647,11 +482,6 @@ function blockDrag(e) {
     }
 }
 
-// ==================== TELEGRAM ИНТЕГРАЦИЯ ====================
-
-/**
- * Отправить результаты в Telegram
- */
 async function sendResultsToTelegram(grade, correctCount, totalCount) {
     const config = window.TEST_CONFIG.telegram;
     
@@ -662,7 +492,6 @@ async function sendResultsToTelegram(grade, correctCount, totalCount) {
         return;
     }
     
-    // Проверяем, есть ли токен (не дефолтный)
     if (config.botToken === "ВАШ_BOT_TOKEN" || config.botToken === "DEMO_TOKEN") {
         console.warn('⚠️ Используется тестовый токен Telegram');
         elements.telegramStatus.innerHTML = 
@@ -674,7 +503,6 @@ async function sendResultsToTelegram(grade, correctCount, totalCount) {
     const testName = window.TEST_CONFIG.title;
     const maxScore = window.TEST_CONFIG.maxScore;
     
-    // Формируем сообщение
     const message = `
 📊 *РЕЗУЛЬТАТ ТЕСТА*
     
@@ -693,7 +521,6 @@ ${grade >= 3 ? '✅ Отличная работа!' : '❌ Нужно повто
     `;
     
     try {
-        // Отправляем запрос к Telegram Bot API
         const response = await fetch(
             `https://api.telegram.org/bot${config.botToken}/sendMessage`,
             {
@@ -725,13 +552,7 @@ ${grade >= 3 ? '✅ Отличная работа!' : '❌ Нужно повто
     }
 }
 
-// ==================== УТИЛИТЫ ====================
-
-/**
- * Добавить стили для детализации ответов
- */
 function addAnswerDetailStyles() {
-    // Проверяем, не добавлены ли стили уже
     if (document.getElementById('answer-detail-styles')) return;
     
     const style = document.createElement('style');
@@ -774,9 +595,6 @@ function addAnswerDetailStyles() {
     document.head.appendChild(style);
 }
 
-/**
- * Функция для тестирования Telegram (для отладки)
- */
 window.testTelegram = async function() {
     const config = window.TEST_CONFIG.telegram;
     
@@ -812,24 +630,17 @@ window.testTelegram = async function() {
     }
 };
 
-// ==================== ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ ====================
-
-// Добавляем стили для детализации
 addAnswerDetailStyles();
-
-// Экспортируем функции для глобального использования
 window.initTest = initTest;
 
 console.log('📚 Основной скрипт системы тестирования загружен');
 console.log('⏳ Ожидаем загрузку конфигурации теста...');
 
-// Если конфигурация уже загружена (например, в test.html скрипт теста загрузился раньше)
 if (window.TEST_CONFIG) {
     console.log('✅ Конфигурация теста уже загружена, инициализируем...');
     setTimeout(() => initTest(), 100);
 }
 
-// Отправляем событие о загрузке скрипта
 document.addEventListener('DOMContentLoaded', function() {
     const event = new Event('scriptLoaded');
     document.dispatchEvent(event);
