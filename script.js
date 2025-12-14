@@ -1,6 +1,6 @@
 // ====================================================================
 // ОСНОВНОЙ СКРИПТ СИСТЕМЫ ТЕСТИРОВАНИЯ
-// Версия 7.2 - Исправления для iPhone и преждевременной подсветки
+// Версия 7.3 - С системой идентификации учеников
 // ====================================================================
 
 // Глобальные переменные системы
@@ -17,7 +17,7 @@ let testCompleted = false;
 // Для сохранения прогресса
 let isTestRestored = false;
 let testStartTimestamp = 0;
-let skipQuestions = []; // Массив для хранения пропущенных вопросов
+let skipQuestions = [];
 
 // Переменные для отслеживания использования пасхалок
 let clipboardAttempts = 0;
@@ -76,7 +76,7 @@ const cheatMessages = [
 
 // DOM элементы
 let progressBar, progressText, questionText, questionType, optionsContainer, confirmBtn;
-let studentNameInput, studentClassSelect, fullscreenResult, fullscreenGrade;
+let fullscreenResult, fullscreenGrade;
 let fullscreenScore, fullscreenBreakdown, finishBtn, startTestBtn, refreshBtn;
 let studentInfoSection, testContent, blockerOverlay, anticheatModal;
 let cheatMessageElement, countdownTimer, passwordInput, continueBtn;
@@ -164,23 +164,18 @@ function restoreTest() {
     skipQuestions = progress.skipQuestions || [];
     window.STUDENT_INFO = progress.student;
     
-    // ВАЖНО: При восстановлении сбрасываем ответы на пропущенные вопросы
     skipQuestions.forEach(index => {
         userAnswers[index] = null;
     });
     
-    // ИСПРАВЛЕНИЕ: Восстанавливаем состояние, но сбрасываем isShowingAnswer
     testStarted = true;
     isTestRestored = true;
     testStartTimestamp = progress.startedAt;
-    isShowingAnswer = false; // ВАЖНО: сбрасываем флаг показа ответов
+    isShowingAnswer = false;
     
-    // Скрываем форму ввода
     if (studentInfoSection) studentInfoSection.style.display = 'none';
     if (testContent) testContent.style.display = 'block';
     
-    // ВАЖНО: При восстановлении теста сразу запускаем античит систему
-    // чтобы пользователь не мог обойти античит
     triggerAnticheat();
     
     console.log('🔄 Тест восстановлен с вопроса', currentQuestionIndex + 1);
@@ -201,7 +196,7 @@ function startAutoSave() {
         if (testStarted && !testCompleted) {
             saveProgress();
         }
-    }, 30000); // Сохраняем каждые 30 секунд
+    }, 30000);
     
     console.log('🔄 Автосохранение запущено');
 }
@@ -249,13 +244,9 @@ function initTest() {
     setupEventListeners();
     setupAnticopySystem();
     
-    // Пробуем восстановить тест
     if (!restoreTest()) {
         console.log('🆕 Начинаем новый тест');
-        // Показываем форму для ввода данных
-        if (studentInfoSection) studentInfoSection.style.display = 'block';
     } else {
-        // Если тест восстановлен, запускаем автосохранение
         startAutoSave();
     }
     
@@ -270,8 +261,6 @@ function cacheDOMElements() {
     optionsContainer = document.getElementById('options-container');
     confirmBtn = document.getElementById('confirm-btn');
     refreshBtn = document.getElementById('refresh-btn');
-    studentNameInput = document.getElementById('student-name');
-    studentClassSelect = document.getElementById('student-class');
     fullscreenResult = document.getElementById('fullscreen-result');
     fullscreenGrade = document.getElementById('fullscreen-grade');
     fullscreenScore = document.getElementById('fullscreen-score');
@@ -314,11 +303,6 @@ function showError(message) {
 // ==================== НАСТРОЙКА СИСТЕМЫ ====================
 
 function setupEventListeners() {
-    if (startTestBtn) {
-        startTestBtn.addEventListener('click', startTest);
-        console.log('✅ Обработчик для startTestBtn установлен');
-    }
-    
     if (confirmBtn) {
         confirmBtn.addEventListener('click', confirmAnswer);
         console.log('✅ Обработчик для confirmBtn установлен');
@@ -341,10 +325,9 @@ function setupEventListeners() {
         continueBtn.addEventListener('click', function() {
             if (!this.disabled) {
                 closeAntiCheat();
-                // После закрытия античит показываем вопрос
                 if (isTestRestored) {
                     showQuestion(currentQuestionIndex);
-                    isTestRestored = false; // Сбрасываем флаг восстановления
+                    isTestRestored = false;
                 }
             }
         });
@@ -365,12 +348,11 @@ function setupEventListeners() {
         });
     }
     
-    // Предотвращаем случайное обновление
     window.addEventListener('beforeunload', function(e) {
         if (testStarted && !testCompleted) {
             e.preventDefault();
             e.returnValue = 'Вы уверены, что хотите покинуть страницу? Весь прогресс теста будет сохранен.';
-            saveProgress(); // Сохраняем перед выходом
+            saveProgress();
             return 'Вы уверены, что хотите покинуть страницу? Весь прогресс теста будет сохранен.';
         }
     });
@@ -435,38 +417,21 @@ function setupAnticopySystem() {
 
 // ==================== ОСНОВНАЯ ЛОГИКА ТЕСТИРОВАНИЯ ====================
 
-function startTest() {
-    const name = studentNameInput.value.trim();
-    const studentClass = studentClassSelect.value;
-    
-    if (!name || !studentClass) {
-        alert('Пожалуйста, введите имя и выберите класс');
-        return;
-    }
-    
-    window.STUDENT_INFO = {
-        name: name,
-        class: studentClass,
-        startTime: new Date().toISOString(),
-        testName: window.TEST_CONFIG.title
-    };
-    
-    studentInfoSection.style.display = 'none';
-    testContent.style.display = 'block';
+window.startTestFromScript = function() {
+    console.log('🚀 Тест начат для ученика:', window.STUDENT_INFO);
     
     testStarted = true;
     testStartTimestamp = Date.now();
     
     startAnticheatMonitoring();
-    startAutoSave(); // Запускаем автосохранение
+    startAutoSave();
     
     initQuestions();
-    
     showQuestion(0);
     
-    console.log('✅ Тест начат для ученика:', name, studentClass);
+    console.log('✅ Тест начат');
     console.log('🚀 Античит мониторинг активирован');
-}
+};
 
 function initQuestions() {
     if (!window.questionsBank || window.questionsBank.length < window.TEST_CONFIG.totalQuestions) {
@@ -485,7 +450,6 @@ function initQuestions() {
     const selectedProblems = shuffleArray([...window.problemsBank]).slice(0, window.TEST_CONFIG.totalProblems);
     
     shuffledQuestionsAndProblems = [...selectedQuestions, ...selectedProblems];
-    
     shuffledQuestionsAndProblems = shuffleArray(shuffledQuestionsAndProblems);
     
     currentQuestionIndex = 0;
@@ -527,7 +491,6 @@ function showQuestion(index) {
     
     if (questionText) questionText.textContent = item.text;
     
-    // Показываем тип задания
     if (item.points === 3) {
         if (questionType) {
             questionType.textContent = "Задача (3 балла)";
@@ -541,31 +504,22 @@ function showQuestion(index) {
     }
     
     currentShuffledOptions = shuffleArray([...item.options]);
-    
-    // ИСПРАВЛЕНИЕ: Всегда сбрасываем флаг показа ответа при показе нового вопроса
     isShowingAnswer = false;
     
-    // Двойная проверка для отладки
     console.log(`🔍 Показ вопроса ${index + 1}, isShowingAnswer = ${isShowingAnswer}, userAnswers[${index}] = ${userAnswers[index]}`);
     
     if (optionsContainer) {
         optionsContainer.innerHTML = '';
         
-        // ИСПРАВЛЕНИЕ: При показе вопроса НИКОГДА не показываем подсветку ответов
-        // Даже если есть сохраненный ответ в userAnswers
-        // Подсветка должна появляться ТОЛЬКО после подтверждения ответа
         currentShuffledOptions.forEach((option, i) => {
             const label = document.createElement('label');
             label.className = 'option-label';
-            
-            // ВАЖНО: НЕ показываем никакую подсветку при первоначальном показе вопроса
-            // Подсветка будет добавлена только в функции highlightCorrectAnswer()
             
             const radio = document.createElement('input');
             radio.type = 'radio';
             radio.name = 'option';
             radio.value = option.v;
-            radio.disabled = isShowingAnswer; // Отключаем радиокнопки только в режиме показа ответа
+            radio.disabled = isShowingAnswer;
             
             label.appendChild(radio);
             label.appendChild(document.createTextNode(option.t));
@@ -579,8 +533,6 @@ function showQuestion(index) {
                     if (confirmBtn) confirmBtn.disabled = false;
                 });
             } else {
-                // В режиме показа ответа радиокнопки уже отключены
-                // Но нужно показать, какой вариант был выбран пользователем
                 if (userAnswers[index] === option.v) {
                     if (option.v === 'correct') {
                         label.classList.add('correct');
@@ -594,12 +546,8 @@ function showQuestion(index) {
         });
     }
     
-    // Управляем кнопками
     if (confirmBtn) confirmBtn.disabled = true;
     
-    // Кнопка пропуска активна всегда, кроме:
-    // 1. Когда мы показываем ответ (isShowingAnswer = true)
-    // 2. Когда это последний непропущенный вопрос
     if (refreshBtn) {
         const totalQuestions = shuffledQuestionsAndProblems.length;
         const answeredQuestions = userAnswers.filter(answer => answer !== null).length;
@@ -624,19 +572,12 @@ function highlightCorrectAnswer() {
         const radio = option.querySelector('input');
         const optionValue = currentShuffledOptions[index].v;
         
-        // Находим правильный ответ и подсвечиваем его ЗЕЛЕНЫМ
         if (optionValue === 'correct') {
             option.classList.add('correct');
         }
         
-        // Если пользователь выбрал неправильный вариант, отмечаем его КРАСНЫМ
         if (radio && radio.checked && optionValue === 'wrong') {
             option.classList.add('incorrect');
-        }
-        
-        // Также отмечаем, если пользователь выбрал правильный ответ
-        if (radio && radio.checked && optionValue === 'correct') {
-            // Уже подсвечено зеленым выше
         }
         
         if (radio) radio.disabled = true;
@@ -671,18 +612,14 @@ function confirmAnswer() {
     setTimeout(() => {
         isShowingAnswer = false;
         
-        // Сохраняем прогресс
         saveProgress();
         
-        // Удаляем текущий вопрос из списка пропущенных, если он там был
         if (skipQuestions.includes(currentQuestionIndex)) {
             skipQuestions = skipQuestions.filter(idx => idx !== currentQuestionIndex);
         }
         
-        // Определяем следующий вопрос
         let nextIndex = -1;
         
-        // 1. Ищем следующий вопрос, на который еще не отвечали
         for (let i = currentQuestionIndex + 1; i < shuffledQuestionsAndProblems.length; i++) {
             if (userAnswers[i] === null && !skipQuestions.includes(i)) {
                 nextIndex = i;
@@ -690,7 +627,6 @@ function confirmAnswer() {
             }
         }
         
-        // 2. Если не нашли, ищем с начала теста
         if (nextIndex === -1) {
             for (let i = 0; i < currentQuestionIndex; i++) {
                 if (userAnswers[i] === null && !skipQuestions.includes(i)) {
@@ -700,7 +636,6 @@ function confirmAnswer() {
             }
         }
         
-        // 3. Если все равно не нашли, проверяем пропущенные вопросы
         if (nextIndex === -1 && skipQuestions.length > 0) {
             nextIndex = skipQuestions[0];
             skipQuestions = skipQuestions.filter(idx => idx !== nextIndex);
@@ -710,7 +645,6 @@ function confirmAnswer() {
             currentQuestionIndex = nextIndex;
             showQuestion(currentQuestionIndex);
         } else {
-            // Все вопросы отвечены
             localStorage.removeItem('testProgress');
             stopAutoSave();
             showResults();
@@ -718,16 +652,12 @@ function confirmAnswer() {
     }, 2000);
 }
 
-/**
- * Пропустить вопрос
- */
 function skipQuestion() {
     if (!shuffledQuestionsAndProblems || currentQuestionIndex >= shuffledQuestionsAndProblems.length) {
         console.log('❌ Нельзя пропустить вопрос');
         return;
     }
     
-    // Проверяем, не последний ли это непропущенный вопрос
     const totalQuestions = shuffledQuestionsAndProblems.length;
     const answeredQuestions = userAnswers.filter(answer => answer !== null).length;
     const remainingQuestions = totalQuestions - answeredQuestions - skipQuestions.length;
@@ -739,18 +669,13 @@ function skipQuestion() {
     
     console.log('⏭️ Пропускаем вопрос', currentQuestionIndex + 1);
     
-    // Добавляем текущий вопрос в список пропущенных
     if (!skipQuestions.includes(currentQuestionIndex)) {
         skipQuestions.push(currentQuestionIndex);
     }
     
-    // Сбрасываем ответ для этого вопроса
     userAnswers[currentQuestionIndex] = null;
-    
-    // Сохраняем прогресс
     saveProgress();
     
-    // Ищем следующий непропущенный вопрос
     let nextIndex = -1;
     for (let i = currentQuestionIndex + 1; i < shuffledQuestionsAndProblems.length; i++) {
         if (userAnswers[i] === null && !skipQuestions.includes(i)) {
@@ -759,7 +684,6 @@ function skipQuestion() {
         }
     }
     
-    // Если не нашли, ищем с начала
     if (nextIndex === -1) {
         for (let i = 0; i < currentQuestionIndex; i++) {
             if (userAnswers[i] === null && !skipQuestions.includes(i)) {
@@ -776,8 +700,6 @@ function skipQuestion() {
         console.log('✅ Вопрос пропущен, переходим к вопросу', currentQuestionIndex + 1);
         console.log('⏭️ Всего пропущенных вопросов:', skipQuestions.length);
     } else {
-        // Все вопросы либо отвечены, либо пропущены
-        // Возвращаемся к первому пропущенному
         if (skipQuestions.length > 0) {
             nextIndex = skipQuestions[0];
             skipQuestions = skipQuestions.filter(idx => idx !== nextIndex);
@@ -818,7 +740,6 @@ function showResults() {
         }
     }
     
-    // Сохраняем для использования в других функциях
     window.TEST_CONFIG.correctQuestions = correctQuestions;
     window.TEST_CONFIG.correctProblems = correctProblems;
     
@@ -865,7 +786,6 @@ function showFullscreenResult(grade, score, maxScore, correctQuestions, correctP
     
     fullscreenResult.style.display = 'flex';
     
-    // Убедимся, что показывается правильный экран (с оценкой)
     const gradeScreen = document.getElementById('grade-screen');
     const acceptedScreen = document.getElementById('accepted-screen');
     
@@ -878,7 +798,6 @@ function showFullscreenResult(grade, score, maxScore, correctQuestions, correctP
     fullscreenGrade.style.color = getGradeColor(grade);
     fullscreenScore.textContent = `${score} из ${maxScore}`;
     
-    // Обновляем также элемент с максимальным баллом
     const fullscreenMaxScore = document.getElementById('fullscreen-max-score');
     if (fullscreenMaxScore) {
         fullscreenMaxScore.textContent = maxScore;
@@ -893,9 +812,6 @@ function showFullscreenResult(grade, score, maxScore, correctQuestions, correctP
     console.log('✅ Полноэкранный результат показан');
 }
 
-/**
- * Завершить полноэкранный режим (новая логика)
- */
 function finishFullScreen() {
     console.log('🔄 Нажата кнопка "Завершить"');
     
@@ -904,11 +820,9 @@ function finishFullScreen() {
         return;
     }
     
-    // Получаем данные для передачи на следующий экран
     const grade = fullscreenGrade.textContent;
     const scoreText = fullscreenScore.textContent;
     
-    // Извлекаем баллы из текста (например: "15 из 20")
     const scoreMatch = scoreText.match(/(\d+)\s*из\s*(\d+)/);
     let score = 0;
     let maxScore = window.TEST_CONFIG.maxScore;
@@ -920,7 +834,6 @@ function finishFullScreen() {
         console.warn('Не удалось извлечь баллы из текста:', scoreText);
     }
     
-    // Формируем детализацию для экрана "Работа принята"
     const breakdown = `
         <div style="margin-bottom: 8px;">Правильных вопросов: ${window.TEST_CONFIG.correctQuestions || 0} из ${window.TEST_CONFIG.totalQuestions}</div>
         <div style="margin-bottom: 8px;">Правильных задач: ${window.TEST_CONFIG.correctProblems || 0} из ${window.TEST_CONFIG.totalProblems}</div>
@@ -929,7 +842,6 @@ function finishFullScreen() {
     
     console.log('📤 Отправляем результаты в Telegram...');
     
-    // Отправляем результаты в Telegram
     sendResultsToTelegram(
         parseInt(grade),
         window.TEST_CONFIG.correctQuestions || 0,
@@ -940,7 +852,6 @@ function finishFullScreen() {
     
     console.log('🔄 Переключаем на экран "Работа принята"');
     
-    // Переключаем на экран "Работа принята"
     const gradeScreen = document.getElementById('grade-screen');
     const acceptedScreen = document.getElementById('accepted-screen');
     
@@ -948,7 +859,6 @@ function finishFullScreen() {
         gradeScreen.style.display = 'none';
         acceptedScreen.style.display = 'block';
         
-        // Заполняем данные на втором экране
         const acceptedGrade = document.getElementById('accepted-grade');
         const acceptedScore = document.getElementById('accepted-score');
         const acceptedMaxScore = document.getElementById('accepted-max-score');
@@ -962,7 +872,6 @@ function finishFullScreen() {
         
         console.log('⏱️ Запускаем таймер обратного отсчета...');
         
-        // Запускаем таймер обратного отсчета
         let seconds = 8;
         if (timerMessage) {
             timerMessage.textContent = `Через ${seconds} секунд вы будете перенаправлены на главную страницу...`;
@@ -1087,7 +996,6 @@ function closeAntiCheat() {
     if (anticheatModal) anticheatModal.style.display = 'none';
     if (passwordInput) passwordInput.value = '';
     
-    // Восстанавливаем античит мониторинг после закрытия окна
     if (testStarted && !testCompleted && !isTestRestored) {
         startAnticheatMonitoring();
     }
@@ -1136,14 +1044,13 @@ async function sendResultsToTelegram(grade, correctQuestions, correctProblems, q
         easterEggsStats.push(`🚨 Античит система: Не срабатывала ✅`);
     }
     
-    // Добавляем информацию о пропущенных вопросах
     if (skipQuestions.length > 0) {
         easterEggsStats.push(`⏭️ Пропущенных вопросов: ${skipQuestions.length}`);
     }
     
     let msg = `⚡ Результаты контрольной работы "${testName}":
 
-👤 Студент: ${student.name}
+👤 Студент: ${student.firstName} ${student.lastName}
 🏫 Класс: ${student.class}
 🎯 Баллы: ${totalScore}/${maxScore} (${Math.round(totalScore/maxScore*100)}%)
 📝 Оценка: ${grade}
@@ -1242,7 +1149,7 @@ window.testTelegram = async function() {
 
 window.initTest = initTest;
 
-console.log('📚 Основной скрипт системы тестирования загружен (версия с автосохранением и пропуском)');
+console.log('📚 Основной скрипт системы тестирования загружен (версия с системой идентификации)');
 console.log('⏳ Ожидаем загрузку конфигурации теста...');
 
 if (window.TEST_CONFIG) {

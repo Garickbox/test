@@ -9,63 +9,34 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    /* Дополнительные исправления для iPhone Safari */
     @supports (-webkit-touch-callout: none) {
-      /* Улучшаем отзывчивость тапов */
       button, input[type="radio"], .option-label {
         -webkit-tap-highlight-color: rgba(30, 147, 196, 0.15);
       }
       
-      /* Убираем задержку на тап */
       * {
         touch-action: manipulation;
       }
     }
+    
+    .identification-styles {
+      display: none;
+    }
   </style>
 </head>
 <body class="test-body winter-theme">
-  <!-- Canvas для снега -->
   <canvas id="snowCanvas"></canvas>
-  
-  <!-- Снежинки на заднем фоне -->
   <div class="snowflakes" id="snowflakes"></div>
-  
-  <!-- Снежные края контейнера -->
   <div class="snow-edges"></div>
   <div class="snow-edges bottom"></div>
   
-  <!-- Основной контейнер теста -->
   <div class="telegram-container winter-container">
     <div class="telegram-header winter-header">
       <h1 id="page-title">Загрузка теста...</h1>
     </div>
 
-    <div class="section" id="student-info-section">
-      <div class="section-title">
-        <i class="fas fa-user-circle"></i> Информация об ученике
-      </div>
-      <div class="student-info">
-        <div>
-          <label for="student-name">Имя:</label>
-          <input type="text" id="student-name" placeholder="Введите ваше имя" />
-        </div>
-        <div>
-          <label for="student-class">Класс:</label>
-          <select id="student-class">
-            <option value="">Выберите класс</option>
-            <option value="7">7 класс</option>
-            <option value="8">8 класс</option>
-            <option value="9">9 класс</option>
-            <option value="10">10 класс</option>
-            <option value="11">11 класс</option>
-          </select>
-        </div>
-      </div>
-      <button class="start-test-btn test-btn winter-btn" id="start-test-btn">
-        <i class="fas fa-play-circle"></i> Начать контрольную
-      </button>
-    </div>
-
+    <!-- Идентификация ученика будет вставлена здесь через JavaScript -->
+    
     <div id="test-content" style="display: none;">
       <div class="section">
         <div class="progress-container winter-progress">
@@ -92,9 +63,7 @@
     </div>
   </div>
 
-  <!-- Полноэкранный результат с двумя состояниями -->
   <div id="fullscreen-result" style="display: none;">
-    <!-- Состояние 1: Показ оценки (изначальное) -->
     <div class="fullscreen-content winter-fullscreen" id="grade-screen">
       <h2><i class="fas fa-trophy"></i> Ваш результат</h2>
       <div class="fullscreen-grade" id="fullscreen-grade">5</div>
@@ -105,7 +74,6 @@
       </button>
     </div>
     
-    <!-- Состояние 2: Работа принята (после нажатия "Завершить") -->
     <div class="fullscreen-content work-accepted winter-fullscreen" id="accepted-screen" style="display: none;">
       <div class="accepted-icon">
         <i class="fas fa-check-circle"></i>
@@ -123,9 +91,7 @@
           <i class="fas fa-chart-line" style="color: #4CAF50;"></i>
           Баллы: <span id="accepted-score">0</span> из <span id="accepted-max-score">0</span>
         </div>
-        <div id="accepted-breakdown" style="margin-top: 15px; padding: 15px; background: #f9f9f9; border-radius: 8px; font-size: 14px;">
-          <!-- Детализация результатов -->
-        </div>
+        <div id="accepted-breakdown" style="margin-top: 15px; padding: 15px; background: #f9f9f9; border-radius: 8px; font-size: 14px;"></div>
       </div>
       <div class="timer-message winter-timer-message" id="timer-message">
         Через 8 секунд вы будете перенаправлены на главную страницу...
@@ -133,7 +99,6 @@
     </div>
   </div>
 
-  <!-- Античит система -->
   <div class="blocker-overlay" id="blockerOverlay"></div>
   <div class="anticheat-modal winter-anticheat" id="anticheatModal">
     <div class="anticheat-title">🚨 АНТИЖУЛЬНИЧАТЕЛЬНЫЙ РЕЖИМ 🚨</div>
@@ -147,7 +112,6 @@
     <button class="continue-btn winter-continue-btn" id="continueBtn" disabled>Продолжить тест</button>
   </div>
 
-  <!-- Радио система для тестовой страницы (перенесена влево) -->
   <audio id="radioPlayer" crossorigin="anonymous" preload="none"></audio>
   
   <div class="radio-mini winter-radio-mini" id="radioMini" title="Радио Зайцев.FM - Нажмите для управления">
@@ -181,20 +145,19 @@
     <div class="station-list" id="stationList"></div>
   </div>
 
-  <!-- Скрипты -->
   <script src="script.js"></script>
+  <script src="students.js"></script>
+  <script src="identification.js"></script>
   <script src="radio.js"></script>
   
-  <!-- Скрипт загрузки теста -->
   <script>
-    // Получаем имя теста из URL
     const urlParams = new URLSearchParams(window.location.search);
     const testName = urlParams.get('test');
     
-    // Если тест не указан, показываем ошибку
     if (!testName) {
       document.getElementById('page-title').textContent = 'Ошибка: тест не указан';
-      document.getElementById('student-info-section').innerHTML = `
+      const container = document.querySelector('.telegram-container');
+      container.innerHTML = `
         <div style="text-align: center; padding: 40px;">
           <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #f44336;"></i>
           <h3 style="color: #f44336; margin: 20px 0;">Тест не найден</h3>
@@ -209,14 +172,12 @@
     } else {
       console.log(`🔄 Загружаем тест: ${testName}`);
       
-      // Создаем элемент script для загрузки теста
       const script = document.createElement('script');
       script.src = `test/${testName}.js`;
       
       script.onload = function() {
         console.log(`✅ Файл теста "${testName}.js" загружен успешно`);
         
-        // Проверяем, что все необходимые переменные загружены
         if (!window.TEST_CONFIG) {
           showError('Файл теста не содержит конфигурации TEST_CONFIG');
           return;
@@ -232,7 +193,6 @@
           return;
         }
         
-        // Устанавливаем заголовок страницы
         document.getElementById('page-title').textContent = window.TEST_CONFIG.title;
         document.title = window.TEST_CONFIG.title;
         
@@ -240,7 +200,6 @@
         console.log('📚 Вопросов:', window.questionsBank.length);
         console.log('🧮 Задач:', window.problemsBank.length);
         
-        // Если основной скрипт уже загружен, инициализируем тест
         if (window.initTest) {
           window.initTest();
         } else {
@@ -261,10 +220,10 @@
       document.head.appendChild(script);
     }
     
-    // Функция показа ошибки
     function showError(message) {
       document.getElementById('page-title').textContent = 'Ошибка загрузки теста';
-      document.getElementById('student-info-section').innerHTML = `
+      const container = document.querySelector('.telegram-container');
+      container.innerHTML = `
         <div style="text-align: center; padding: 40px;">
           <i class="fas fa-times-circle" style="font-size: 48px; color: #f44336;"></i>
           <h3 style="color: #f44336; margin: 20px 0;">Ошибка загрузки теста</h3>
@@ -278,14 +237,11 @@
       `;
     }
     
-    // Инициализируем тест после загрузки основного скрипта
     document.addEventListener('DOMContentLoaded', function() {
       console.log('📚 Система тестирования загружена, ожидаем тест...');
       
-      // Проверяем состояние эффектов из localStorage
       const effectsEnabled = localStorage.getItem('effectsEnabled') !== 'false';
       
-      // Инициализируем снег только если эффекты включены
       if (effectsEnabled) {
         if (typeof createSnowflakesCSS === 'function') {
           createSnowflakesCSS();
@@ -300,37 +256,48 @@
         }
       }
       
-      // Обработчик ресайза для снега (только если эффекты включены)
       window.addEventListener('resize', function() {
         if (effectsEnabled && typeof initSnow === 'function') {
           initSnow();
         }
       });
       
-      // Добавляем глобальную функцию для переключения на экран "Работа принята"
       window.showWorkAcceptedScreen = function(grade, score, maxScore, breakdown) {
-        // Переключаем экраны
-        document.getElementById('grade-screen').style.display = 'none';
-        document.getElementById('accepted-screen').style.display = 'block';
+        const gradeScreen = document.getElementById('grade-screen');
+        const acceptedScreen = document.getElementById('accepted-screen');
         
-        // Заполняем данные
-        document.getElementById('accepted-grade').textContent = grade;
-        document.getElementById('accepted-score').textContent = score;
-        document.getElementById('accepted-max-score').textContent = maxScore;
-        document.getElementById('accepted-breakdown').innerHTML = breakdown;
-        
-        // Запускаем таймер обратного отсчета
-        let seconds = 8;
-        const timerMessage = document.getElementById('timer-message');
-        const timerInterval = setInterval(() => {
-          seconds--;
-          timerMessage.textContent = `Через ${seconds} секунд вы будете перенаправлены на главную страницу...`;
+        if (gradeScreen && acceptedScreen) {
+          gradeScreen.style.display = 'none';
+          acceptedScreen.style.display = 'block';
           
-          if (seconds <= 0) {
-            clearInterval(timerInterval);
-            window.location.href = "index.html";
+          const acceptedGrade = document.getElementById('accepted-grade');
+          const acceptedScore = document.getElementById('accepted-score');
+          const acceptedMaxScore = document.getElementById('accepted-max-score');
+          const acceptedBreakdown = document.getElementById('accepted-breakdown');
+          const timerMessage = document.getElementById('timer-message');
+          
+          if (acceptedGrade) acceptedGrade.textContent = grade;
+          if (acceptedScore) acceptedScore.textContent = score;
+          if (acceptedMaxScore) acceptedMaxScore.textContent = maxScore;
+          if (acceptedBreakdown) acceptedBreakdown.innerHTML = breakdown;
+          
+          let seconds = 8;
+          if (timerMessage) {
+            timerMessage.textContent = `Через ${seconds} секунд вы будете перенаправлены на главную страницу...`;
           }
-        }, 1000);
+          
+          const timerInterval = setInterval(() => {
+            seconds--;
+            if (timerMessage) {
+              timerMessage.textContent = `Через ${seconds} секунд вы будете перенаправлены на главную страницу...`;
+            }
+            
+            if (seconds <= 0) {
+              clearInterval(timerInterval);
+              window.location.href = "index.html";
+            }
+          }, 1000);
+        }
       };
     });
   </script>
