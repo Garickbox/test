@@ -408,8 +408,6 @@ body.index-body {
     opacity: 0.8;
 }
 
-/* Блок kumir-note был удален здесь */
-
 .snow-edges {
     position: absolute;
     top: 0;
@@ -755,47 +753,6 @@ body.test-body {
     background: #1e93c4;
     border-radius: 2px;
     margin-right: 8px;
-}
-
-/* Информация об ученике */
-.student-info {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.student-info label {
-    display: block;
-    margin-bottom: 6px;
-    font-weight: 500;
-    color: #555;
-}
-
-.student-info input,
-.student-info select {
-    width: 100%;
-    padding: 14px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    font-size: 16px;
-    background: #f9f9f9;
-    transition: all 0.2s;
-}
-
-.student-info input:focus,
-.student-info select:focus {
-    outline: none;
-    border-color: #1e93c4;
-    background: white;
-    box-shadow: 0 0 0 2px rgba(30, 147, 196, 0.2);
-}
-
-.start-test-btn {
-    margin-top: 10px;
-    width: 100%;
-    padding: 16px;
-    font-size: 17px;
-    font-weight: 600;
 }
 
 /* Прогресс-бар */
@@ -1768,9 +1725,23 @@ body.test-body {
   font-size: 14px;
 }
 
+.student-id {
+  font-size: 12px;
+  color: #777;
+  margin-top: 2px;
+  font-family: monospace;
+}
+
 .success-message {
   color: #666;
   margin: 15px 0;
+}
+
+.success-message small {
+  font-size: 12px;
+  color: #666;
+  display: block;
+  margin-top: 5px;
 }
 
 .change-btn {
@@ -1792,13 +1763,23 @@ body.test-body {
   padding: 15px;
   margin-bottom: 20px;
   border: 1px solid #90caf9;
+  animation: slideInDown 0.5s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .welcome-admin, .welcome-student {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 10px;
 }
 
@@ -1811,26 +1792,56 @@ body.test-body {
   gap: 8px;
 }
 
-.continue-btn, .switch-btn {
-  padding: 8px 15px;
+.welcome-hint {
+  font-size: 14px;
+  color: #1565c0;
+  opacity: 0.8;
+  margin: 0;
+}
+
+.welcome-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.continue-btn.primary {
+  background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+  color: white;
   border: none;
-  border-radius: 6px;
+  padding: 10px 20px;
+  border-radius: 8px;
   font-size: 14px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
+  transition: all 0.3s;
 }
 
-.continue-btn {
-  background: #4CAF50;
-  color: white;
-}
-
-.switch-btn {
+.switch-btn.secondary {
   background: transparent;
-  color: #666;
-  border: 1px solid #ddd;
+  color: #1565c0;
+  border: 1px solid #1565c0;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s;
+}
+
+.continue-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.switch-btn.secondary:hover {
+  background: rgba(21, 101, 192, 0.1);
+  transform: translateY(-2px);
 }
 
 .admin-welcome {
@@ -1895,6 +1906,24 @@ body.test-body {
   margin: 10px 0 0 20px;
 }
 
+/* Стили для сообщения о сохранении ученика */
+.student-saved-message {
+  background: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  border-radius: 8px;
+  padding: 10px 15px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #2e7d32;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.student-saved-message i {
+  font-size: 16px;
+}
+
 @media (max-width: 768px) {
   .search-actions {
     flex-direction: column;
@@ -1916,8 +1945,12 @@ body.test-body {
     justify-content: center;
   }
   
-  .welcome-admin, .welcome-student {
+  .welcome-buttons {
     flex-direction: column;
-    align-items: flex-start;
+  }
+  
+  .continue-btn.primary, .switch-btn.secondary {
+    width: 100%;
+    justify-content: center;
   }
 }

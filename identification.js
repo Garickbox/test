@@ -1,5 +1,6 @@
 // ===============================================
 // СИСТЕМА ИДЕНТИФИКАЦИИ УЧЕНИКОВ
+// ВЕРСИЯ 2.0 - С улучшенным сохранением между тестами
 // ===============================================
 
 window.selectedStudent = null;
@@ -228,6 +229,9 @@ class StudentIdentification {
       isAdmin: false
     };
     
+    // ВАЖНОЕ ИСПРАВЛЕНИЕ: Сохраняем ученика сразу при выборе
+    this.saveStudentToLocalStorage();
+    
     this.showIdentificationSuccess(student);
     
     document.getElementById('start-test-btn').disabled = false;
@@ -253,11 +257,13 @@ class StudentIdentification {
             <div class="student-details">
               <h4>${student.lastName} ${student.firstName}</h4>
               <p>Класс: ${student.class}</p>
+              <p class="student-id">ID: ${student.id}</p>
             </div>
           </div>
         </div>
         <p class="success-message">
           Нажмите "Начать контрольную" для продолжения.
+          <br><small>Ученик сохранен для всех тестов</small>
         </p>
         <button id="change-student-btn" class="change-btn">
           <i class="fas fa-redo"></i> Это не я
@@ -265,14 +271,19 @@ class StudentIdentification {
       </div>
     `;
     
+    resultsDiv.style.display = 'block';
+    
     document.getElementById('change-student-btn').addEventListener('click', () => {
       window.selectedStudent = null;
-      document.getElementById('search-results').style.display = 'none';
+      localStorage.removeItem('lastStudent');
+      resultsDiv.style.display = 'none';
       document.getElementById('start-test-btn').disabled = true;
       document.getElementById('start-test-btn').innerHTML = `
         <i class="fas fa-play-circle"></i> Начать контрольную
       `;
-      document.getElementById('student-last-name').focus();
+      if (document.getElementById('student-last-name')) {
+        document.getElementById('student-last-name').focus();
+      }
     });
   }
   
@@ -336,6 +347,9 @@ class StudentIdentification {
         adminClass: className
       };
       
+      // ВАЖНОЕ ИСПРАВЛЕНИЕ: Сохраняем админа сразу при входе
+      this.saveStudentToLocalStorage();
+      
       this.showAdminWelcome(className);
       
       document.getElementById('start-test-btn').disabled = false;
@@ -373,6 +387,7 @@ class StudentIdentification {
     
     document.getElementById('admin-logout-btn').addEventListener('click', () => {
       window.selectedStudent = null;
+      localStorage.removeItem('lastStudent');
       resultsDiv.style.display = 'none';
       document.getElementById('start-test-btn').disabled = true;
       document.getElementById('start-test-btn').innerHTML = `
@@ -398,7 +413,9 @@ class StudentIdentification {
       startTime: new Date().toISOString()
     };
     
+    // ВАЖНОЕ ИСПРАВЛЕНИЕ: Сохраняем ученика в localStorage
     localStorage.setItem('lastStudent', JSON.stringify(window.STUDENT_INFO));
+    console.log('💾 Ученик сохранен в localStorage');
     
     document.getElementById('student-info-section').style.display = 'none';
     document.getElementById('test-content').style.display = 'block';
@@ -408,42 +425,77 @@ class StudentIdentification {
     }
   }
   
+  /**
+   * Сохраняет выбранного ученика в localStorage
+   * Это ключевое исправление для запоминания ученика
+   */
+  saveStudentToLocalStorage() {
+    if (window.selectedStudent) {
+      try {
+        localStorage.setItem('lastStudent', JSON.stringify({
+          id: window.selectedStudent.id,
+          lastName: window.selectedStudent.lastName,
+          firstName: window.selectedStudent.firstName,
+          class: window.selectedStudent.class,
+          isAdmin: window.selectedStudent.isAdmin || false
+        }));
+        console.log('💾 Ученик сохранен в localStorage');
+      } catch (e) {
+        console.error('Ошибка сохранения ученика:', e);
+      }
+    }
+  }
+  
   checkPreviousSession() {
     const lastStudent = JSON.parse(localStorage.getItem('lastStudent'));
     
     if (lastStudent) {
+      console.log('👋 Найден предыдущий сеанс ученика:', lastStudent);
+      
+      // Создаем улучшенный баннер приветствия
       const welcomeDiv = document.createElement('div');
-      welcomeDiv.className = 'welcome-back-banner';
+      welcomeDiv.className = 'welcome-back-banner improved';
       
       if (lastStudent.isAdmin) {
         welcomeDiv.innerHTML = `
           <div class="welcome-admin">
             <p><i class="fas fa-user-shield"></i> С возвращением, администратор ${lastStudent.class} класса!</p>
-            <button id="continue-as-admin" class="continue-btn">
-              <i class="fas fa-play"></i> Продолжить как админ
-            </button>
-            <button id="switch-user" class="switch-btn">
-              <i class="fas fa-exchange-alt"></i> Сменить пользователя
-            </button>
+            <p class="welcome-hint">Вы можете продолжить как администратор или выбрать другого пользователя</p>
+            <div class="welcome-buttons">
+              <button id="continue-as-admin" class="continue-btn primary">
+                <i class="fas fa-play"></i> Продолжить как администратор
+              </button>
+              <button id="switch-user" class="switch-btn secondary">
+                <i class="fas fa-exchange-alt"></i> Выбрать другого пользователя
+              </button>
+            </div>
           </div>
         `;
       } else {
         welcomeDiv.innerHTML = `
           <div class="welcome-student">
             <p><i class="fas fa-user-graduate"></i> С возвращением, ${lastStudent.firstName} ${lastStudent.lastName} (${lastStudent.class} класс)!</p>
-            <button id="continue-as-student" class="continue-btn">
-              <i class="fas fa-play"></i> Продолжить как ${lastStudent.firstName}
-            </button>
-            <button id="switch-user" class="switch-btn">
-              <i class="fas fa-exchange-alt"></i> Сменить пользователя
-            </button>
+            <p class="welcome-hint">Вы можете продолжить как ${lastStudent.firstName} или выбрать другого ученика</p>
+            <div class="welcome-buttons">
+              <button id="continue-as-student" class="continue-btn primary">
+                <i class="fas fa-play"></i> Продолжить как ${lastStudent.firstName}
+              </button>
+              <button id="switch-user" class="switch-btn secondary">
+                <i class="fas fa-exchange-alt"></i> Выбрать другого ученика
+              </button>
+            </div>
           </div>
         `;
       }
       
-      const identificationSection = document.querySelector('.identification-section');
+      const identificationSection = document.querySelector('.student-search');
       if (identificationSection) {
         identificationSection.parentNode.insertBefore(welcomeDiv, identificationSection);
+      } else {
+        const studentInfoSection = document.getElementById('student-info-section');
+        if (studentInfoSection) {
+          studentInfoSection.insertBefore(welcomeDiv, studentInfoSection.firstChild);
+        }
       }
       
       const continueBtn = document.getElementById('continue-as-admin') || document.getElementById('continue-as-student');
@@ -452,6 +504,19 @@ class StudentIdentification {
       if (continueBtn) {
         continueBtn.addEventListener('click', () => {
           window.selectedStudent = lastStudent;
+          this.saveStudentToLocalStorage();
+          
+          // Заполняем форму данными ученика
+          if (document.getElementById('student-last-name')) {
+            document.getElementById('student-last-name').value = lastStudent.lastName;
+          }
+          if (document.getElementById('student-first-name')) {
+            document.getElementById('student-first-name').value = lastStudent.firstName;
+          }
+          if (document.getElementById('student-class')) {
+            document.getElementById('student-class').value = lastStudent.class;
+          }
+          
           welcomeDiv.remove();
           document.getElementById('start-test-btn').disabled = false;
           if (lastStudent.isAdmin) {
@@ -463,6 +528,9 @@ class StudentIdentification {
               <i class="fas fa-play-circle"></i> Начать контрольную (${lastStudent.firstName} ${lastStudent.lastName})
             `;
           }
+          
+          // Автоматически показываем результаты поиска
+          this.showIdentificationSuccess(lastStudent);
         });
       }
       
@@ -471,13 +539,29 @@ class StudentIdentification {
           window.selectedStudent = null;
           localStorage.removeItem('lastStudent');
           welcomeDiv.remove();
-          document.getElementById('student-last-name').focus();
+          if (document.getElementById('student-last-name')) {
+            document.getElementById('student-last-name').focus();
+          }
         });
       }
     }
   }
 }
 
+// Инициализация системы идентификации при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('🎓 Инициализация системы идентификации...');
   window.studentIdentification = new StudentIdentification();
+  
+  // ВАЖНО: Проверяем наличие выбранного ученика сразу при загрузке
+  const savedStudent = localStorage.getItem('lastStudent');
+  if (savedStudent) {
+    try {
+      const studentData = JSON.parse(savedStudent);
+      console.log('✅ Восстановлен сохраненный ученик:', studentData);
+      window.selectedStudent = studentData;
+    } catch (e) {
+      console.error('Ошибка восстановления ученика:', e);
+    }
+  }
 });

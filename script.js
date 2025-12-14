@@ -1,6 +1,6 @@
 // ====================================================================
 // ОСНОВНОЙ СКРИПТ СИСТЕМЫ ТЕСТИРОВАНИЯ
-// Версия 7.3 - С системой идентификации учеников
+// Версия 7.4 - С исправлением запоминания ученика для всех тестов
 // ====================================================================
 
 // Глобальные переменные системы
@@ -25,6 +25,9 @@ let tabSwitchAttempts = 0;
 let cheatBlockTimeouts = 0;
 let clipboardBlocked = false;
 let antiCheatTriggered = false;
+
+// Глобальная переменная для выбранного ученика
+let selectedStudent = null;
 
 // ПАСХАЛКА 1: Антикопирование
 const clipboardMessages = [
@@ -164,6 +167,17 @@ function restoreTest() {
     skipQuestions = progress.skipQuestions || [];
     window.STUDENT_INFO = progress.student;
     
+    // Восстанавливаем выбранного ученика
+    if (window.STUDENT_INFO) {
+        selectedStudent = {
+            id: window.STUDENT_INFO.id,
+            lastName: window.STUDENT_INFO.lastName,
+            firstName: window.STUDENT_INFO.firstName,
+            class: window.STUDENT_INFO.class,
+            isAdmin: window.STUDENT_INFO.isAdmin || false
+        };
+    }
+    
     skipQuestions.forEach(index => {
         userAnswers[index] = null;
     });
@@ -244,6 +258,9 @@ function initTest() {
     setupEventListeners();
     setupAnticopySystem();
     
+    // ВАЖНОЕ ИСПРАВЛЕНИЕ: Проверяем наличие сохраненного ученика перед восстановлением теста
+    checkAndRestoreStudent();
+    
     if (!restoreTest()) {
         console.log('🆕 Начинаем новый тест');
     } else {
@@ -251,6 +268,71 @@ function initTest() {
     }
     
     console.log('✅ Тест инициализирован успешно');
+}
+
+/**
+ * Проверяем и восстанавливаем выбранного ученика из localStorage
+ * Это ключевое исправление для запоминания ученика между тестами
+ */
+function checkAndRestoreStudent() {
+    console.log('🔍 Проверяем сохраненного ученика...');
+    
+    // Пытаемся восстановить ученика из localStorage
+    const savedStudent = localStorage.getItem('lastStudent');
+    const savedTestProgress = localStorage.getItem('testProgress');
+    
+    if (savedStudent) {
+        try {
+            const studentData = JSON.parse(savedStudent);
+            console.log('🎯 Найден сохраненный ученик:', studentData);
+            
+            // Если у нас уже есть выбранный ученик, не перезаписываем его
+            if (!window.selectedStudent) {
+                window.selectedStudent = studentData;
+                console.log('✅ Восстановлен выбранный ученик');
+            }
+            
+            // Также восстанавливаем STUDENT_INFO для совместимости
+            if (!window.STUDENT_INFO && window.selectedStudent) {
+                window.STUDENT_INFO = {
+                    id: window.selectedStudent.id,
+                    name: window.selectedStudent.lastName + ' ' + window.selectedStudent.firstName,
+                    lastName: window.selectedStudent.lastName,
+                    firstName: window.selectedStudent.firstName,
+                    class: window.selectedStudent.class,
+                    isAdmin: window.selectedStudent.isAdmin || false
+                };
+                console.log('✅ Восстановлен STUDENT_INFO');
+            }
+            
+            // ВАЖНО: Если есть testProgress, но это другой тест,
+            // мы все равно должны сохранить ученика для текущего теста
+            if (savedTestProgress) {
+                try {
+                    const progress = JSON.parse(savedTestProgress);
+                    if (progress.testName !== window.TEST_CONFIG.title) {
+                        // Это другой тест, но ученик тот же
+                        console.log('📚 Другой тест, сохраняем ученика для нового теста');
+                        
+                        // Обновляем ученика в testProgress для текущего теста
+                        if (window.STUDENT_INFO) {
+                            progress.student = window.STUDENT_INFO;
+                            localStorage.setItem('testProgress', JSON.stringify(progress));
+                            console.log('✅ Обновлен ученик в testProgress');
+                        }
+                    }
+                } catch (e) {
+                    console.error('Ошибка при проверке testProgress:', e);
+                }
+            }
+            
+        } catch (e) {
+            console.error('Ошибка восстановления ученика:', e);
+            localStorage.removeItem('lastStudent');
+        }
+    } else {
+        console.log('📭 Сохраненный ученик не найден');
+    }
 }
 
 function cacheDOMElements() {
