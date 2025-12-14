@@ -1,6 +1,6 @@
 // ===============================================
 // СИСТЕМА ИДЕНТИФИКАЦИИ УЧЕНИКОВ
-// ВЕРСИЯ 2.0 - С улучшенным сохранением между тестами
+// ВЕРСИЯ 3.0 - Улучшенный интерфейс с переключением состояний
 // ===============================================
 
 window.selectedStudent = null;
@@ -11,93 +11,119 @@ class StudentIdentification {
   }
   
   init() {
-    this.createIdentificationForm();
+    this.createIdentificationInterface();
     this.setupEventListeners();
     this.checkPreviousSession();
   }
   
-  createIdentificationForm() {
+  createIdentificationInterface() {
     const identificationHTML = `
       <div class="section" id="student-info-section">
         <div class="section-title">
           <i class="fas fa-user-graduate"></i> Идентификация ученика
         </div>
         
-        <div class="student-search">
-          <div class="input-group">
-            <label for="student-last-name"><i class="fas fa-signature"></i> Фамилия:</label>
-            <input type="text" id="student-last-name" placeholder="Например: Иванов" autocomplete="off">
+        <!-- Блок 1: Приветствие (скрыт по умолчанию) -->
+        <div id="welcome-block" class="welcome-block" style="display: none;">
+          <div class="welcome-content">
+            <div class="welcome-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="welcome-text">
+              <h3>Ученик идентифицирован!</h3>
+              <div id="welcome-student-info" class="welcome-student-info">
+                <!-- Информация об ученике будет здесь -->
+              </div>
+              <p class="welcome-message">
+                Вы можете начать тест или выбрать другого пользователя
+              </p>
+            </div>
           </div>
           
-          <div class="input-group">
-            <label for="student-first-name"><i class="fas fa-user"></i> Имя:</label>
-            <input type="text" id="student-first-name" placeholder="Например: Иван" autocomplete="off">
-          </div>
-          
-          <div class="input-group">
-            <label for="student-class"><i class="fas fa-school"></i> Класс:</label>
-            <select id="student-class">
-              <option value="">Выберите класс</option>
-              <option value="7">7 класс</option>
-              <option value="8">8 класс</option>
-              <option value="9">9 класс</option>
-              <option value="10">10 класс</option>
-              <option value="11">11 класс</option>
-            </select>
-          </div>
-          
-          <div class="search-actions">
-            <button id="find-student-btn" class="search-btn">
-              <i class="fas fa-search"></i> Найти меня
+          <div class="welcome-actions">
+            <button id="start-test-btn" class="start-test-btn test-btn winter-btn">
+              <i class="fas fa-play-circle"></i> Выполнить тест
             </button>
+            <button id="change-user-btn" class="change-user-btn">
+              <i class="fas fa-exchange-alt"></i> Выбрать другого пользователя
+            </button>
+          </div>
+        </div>
+        
+        <!-- Блок 2: Форма идентификации (видима по умолчанию) -->
+        <div id="identification-form" class="identification-form">
+          <div class="student-search">
+            <div class="input-group">
+              <label for="student-last-name"><i class="fas fa-signature"></i> Фамилия:</label>
+              <input type="text" id="student-last-name" placeholder="Например: Иванов" autocomplete="off">
+            </div>
             
-            <button id="admin-login-btn" class="admin-btn">
-              <i class="fas fa-user-shield"></i> Вход для учителя
-            </button>
+            <div class="input-group">
+              <label for="student-first-name"><i class="fas fa-user"></i> Имя:</label>
+              <input type="text" id="student-first-name" placeholder="Например: Иван" autocomplete="off">
+            </div>
+            
+            <div class="input-group">
+              <label for="student-class"><i class="fas fa-school"></i> Класс:</label>
+              <select id="student-class">
+                <option value="">Выберите класс</option>
+                <option value="7">7 класс</option>
+                <option value="8">8 класс</option>
+                <option value="9">9 класс</option>
+                <option value="10">10 класс</option>
+                <option value="11">11 класс</option>
+              </select>
+            </div>
+            
+            <div class="search-actions">
+              <button id="find-student-btn" class="search-btn">
+                <i class="fas fa-search"></i> Найти меня
+              </button>
+              
+              <button id="admin-login-btn" class="admin-btn">
+                <i class="fas fa-user-shield"></i> Вход для учителя
+              </button>
+            </div>
+          </div>
+          
+          <div id="search-results" class="search-results" style="display: none;">
+            <h3><i class="fas fa-users"></i> Результаты поиска:</h3>
+            <div id="students-list" class="students-list"></div>
+          </div>
+          
+          <div id="admin-login-form" class="admin-login-form" style="display: none;">
+            <h3><i class="fas fa-lock"></i> Вход для администратора</h3>
+            
+            <div class="input-group">
+              <label for="admin-class">Класс:</label>
+              <select id="admin-class">
+                <option value="7">7 класс</option>
+                <option value="8">8 класс</option>
+                <option value="9">9 класс</option>
+                <option value="10">10 класс</option>
+                <option value="11">11 класс</option>
+              </select>
+            </div>
+            
+            <div class="input-group">
+              <label for="admin-password">Пароль:</label>
+              <input type="password" id="admin-password" placeholder="Введите пароль">
+            </div>
+            
+            <div class="admin-actions">
+              <button id="admin-login-confirm" class="admin-confirm-btn">
+                <i class="fas fa-sign-in-alt"></i> Войти
+              </button>
+              <button id="admin-login-cancel" class="admin-cancel-btn">
+                <i class="fas fa-times"></i> Отмена
+              </button>
+            </div>
+            
+            <div class="admin-hint">
+              <p><i class="fas fa-info-circle"></i> Для входа используйте пароль, полученный от администратора школы.</p>
+            </div>
           </div>
         </div>
-        
-        <div id="search-results" class="search-results" style="display: none;">
-          <h3><i class="fas fa-users"></i> Результаты поиска:</h3>
-          <div id="students-list" class="students-list"></div>
-        </div>
-        
-        <div id="admin-login-form" class="admin-login-form" style="display: none;">
-          <h3><i class="fas fa-lock"></i> Вход для администратора</h3>
-          
-          <div class="input-group">
-            <label for="admin-class">Класс:</label>
-            <select id="admin-class">
-              <option value="7">7 класс</option>
-              <option value="8">8 класс</option>
-              <option value="9">9 класс</option>
-              <option value="10">10 класс</option>
-              <option value="11">11 класс</option>
-            </select>
-          </div>
-          
-          <div class="input-group">
-            <label for="admin-password">Пароль:</label>
-            <input type="password" id="admin-password" placeholder="Введите пароль">
-          </div>
-          
-          <div class="admin-actions">
-            <button id="admin-login-confirm" class="admin-confirm-btn">
-              <i class="fas fa-sign-in-alt"></i> Войти
-            </button>
-            <button id="admin-login-cancel" class="admin-cancel-btn">
-              <i class="fas fa-times"></i> Отмена
-            </button>
-          </div>
-          
-          <div class="admin-hint">
-            <p><i class="fas fa-info-circle"></i> Для входа используйте пароль, полученный от администратора школы.</p>
-          </div>
-        </div>
-        
-        <button class="start-test-btn test-btn winter-btn" id="start-test-btn" disabled>
-          <i class="fas fa-play-circle"></i> Начать контрольную
-        </button>
       </div>
     `;
     
@@ -113,16 +139,20 @@ class StudentIdentification {
     document.getElementById('admin-login-confirm').addEventListener('click', () => this.adminLogin());
     document.getElementById('admin-login-cancel').addEventListener('click', () => this.hideAdminLogin());
     
-    ['student-last-name', 'student-first-name'].forEach(id => {
-      document.getElementById(id).addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') this.findStudent();
-      });
-    });
-    
     document.getElementById('start-test-btn').addEventListener('click', () => {
       if (window.selectedStudent) {
         this.startTestWithSelectedStudent();
       }
+    });
+    
+    document.getElementById('change-user-btn').addEventListener('click', () => {
+      this.showIdentificationForm();
+    });
+    
+    ['student-last-name', 'student-first-name'].forEach(id => {
+      document.getElementById(id).addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') this.findStudent();
+      });
     });
   }
   
@@ -229,62 +259,94 @@ class StudentIdentification {
       isAdmin: false
     };
     
-    // ВАЖНОЕ ИСПРАВЛЕНИЕ: Сохраняем ученика сразу при выборе
+    // Сохраняем ученика в localStorage
     this.saveStudentToLocalStorage();
     
-    this.showIdentificationSuccess(student);
+    // Показываем блок приветствия и скрываем форму
+    this.showWelcomeBlock(student);
     
-    document.getElementById('start-test-btn').disabled = false;
-    document.getElementById('start-test-btn').innerHTML = `
-      <i class="fas fa-play-circle"></i> Начать контрольную (${student.firstName} ${student.lastName})
-    `;
+    console.log('✅ Ученик выбран:', student);
   }
   
-  showIdentificationSuccess(student) {
-    const resultsDiv = document.getElementById('search-results');
+  showWelcomeBlock(student) {
+    const welcomeBlock = document.getElementById('welcome-block');
+    const identificationForm = document.getElementById('identification-form');
+    const welcomeStudentInfo = document.getElementById('welcome-student-info');
     
-    resultsDiv.innerHTML = `
-      <div class="success-identification">
-        <div class="success-icon">
-          <i class="fas fa-check-circle"></i>
-        </div>
-        <h3 style="color: #4CAF50;">Успешно идентифицирован!</h3>
-        <div class="identified-student">
-          <div class="student-card">
-            <div class="student-avatar">
-              ${student.firstName.charAt(0)}${student.lastName.charAt(0)}
-            </div>
-            <div class="student-details">
-              <h4>${student.lastName} ${student.firstName}</h4>
-              <p>Класс: ${student.class}</p>
-              <p class="student-id">ID: ${student.id}</p>
-            </div>
+    // Обновляем информацию об ученике
+    if (student.isAdmin) {
+      welcomeStudentInfo.innerHTML = `
+        <div class="student-card-welcome">
+          <div class="student-avatar-welcome admin-avatar">
+            <i class="fas fa-user-shield"></i>
+          </div>
+          <div class="student-details-welcome">
+            <h4>${student.lastName} ${student.firstName}</h4>
+            <p>Класс: ${student.class}</p>
+            <p class="student-type"><i class="fas fa-user-shield"></i> Администратор</p>
           </div>
         </div>
-        <p class="success-message">
-          Нажмите "Начать контрольную" для продолжения.
-          <br><small>Ученик сохранен для всех тестов</small>
-        </p>
-        <button id="change-student-btn" class="change-btn">
-          <i class="fas fa-redo"></i> Это не я
-        </button>
-      </div>
-    `;
-    
-    resultsDiv.style.display = 'block';
-    
-    document.getElementById('change-student-btn').addEventListener('click', () => {
-      window.selectedStudent = null;
-      localStorage.removeItem('lastStudent');
-      resultsDiv.style.display = 'none';
-      document.getElementById('start-test-btn').disabled = true;
-      document.getElementById('start-test-btn').innerHTML = `
-        <i class="fas fa-play-circle"></i> Начать контрольную
       `;
-      if (document.getElementById('student-last-name')) {
-        document.getElementById('student-last-name').focus();
-      }
-    });
+    } else {
+      welcomeStudentInfo.innerHTML = `
+        <div class="student-card-welcome">
+          <div class="student-avatar-welcome">
+            ${student.firstName.charAt(0)}${student.lastName.charAt(0)}
+          </div>
+          <div class="student-details-welcome">
+            <h4>${student.lastName} ${student.firstName}</h4>
+            <p>Класс: ${student.class}</p>
+            <p class="student-type"><i class="fas fa-user-graduate"></i> Ученик</p>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Обновляем текст кнопки
+    const startTestBtn = document.getElementById('start-test-btn');
+    if (student.isAdmin) {
+      startTestBtn.innerHTML = `<i class="fas fa-play-circle"></i> Выполнить тест (Админ)`;
+    } else {
+      startTestBtn.innerHTML = `<i class="fas fa-play-circle"></i> Выполнить тест (${student.firstName})`;
+    }
+    
+    // Показываем блок приветствия, скрываем форму
+    welcomeBlock.style.display = 'block';
+    identificationForm.style.display = 'none';
+    
+    // Скрываем результаты поиска
+    document.getElementById('search-results').style.display = 'none';
+    
+    // Очищаем поля формы
+    this.clearIdentificationForm();
+  }
+  
+  showIdentificationForm() {
+    const welcomeBlock = document.getElementById('welcome-block');
+    const identificationForm = document.getElementById('identification-form');
+    
+    // Скрываем блок приветствия, показываем форму
+    welcomeBlock.style.display = 'none';
+    identificationForm.style.display = 'block';
+    
+    // Сбрасываем выбранного ученика
+    window.selectedStudent = null;
+    
+    // Удаляем сохраненного ученика из localStorage
+    localStorage.removeItem('lastStudent');
+    
+    // Фокус на поле фамилии
+    document.getElementById('student-last-name').focus();
+    
+    console.log('🔄 Показываем форму идентификации');
+  }
+  
+  clearIdentificationForm() {
+    document.getElementById('student-last-name').value = '';
+    document.getElementById('student-first-name').value = '';
+    document.getElementById('student-class').value = '';
+    document.getElementById('search-results').style.display = 'none';
+    document.getElementById('admin-login-form').style.display = 'none';
   }
   
   showNoResults(userInput) {
@@ -347,54 +409,26 @@ class StudentIdentification {
         adminClass: className
       };
       
-      // ВАЖНОЕ ИСПРАВЛЕНИЕ: Сохраняем админа сразу при входе
+      // Сохраняем админа в localStorage
       this.saveStudentToLocalStorage();
       
-      this.showAdminWelcome(className);
+      // Создаем объект студента для отображения
+      const adminStudent = {
+        lastName: "Admin",
+        firstName: "Admin",
+        class: className,
+        isAdmin: true
+      };
       
-      document.getElementById('start-test-btn').disabled = false;
-      document.getElementById('start-test-btn').innerHTML = `
-        <i class="fas fa-play-circle"></i> Начать контрольную (Админ ${className} класса)
-      `;
+      // Показываем блок приветствия
+      this.showWelcomeBlock(adminStudent);
+      
+      console.log('✅ Администратор вошел:', window.selectedStudent);
     } else {
       alert('❌ Неверный пароль');
       document.getElementById('admin-password').value = '';
       document.getElementById('admin-password').focus();
     }
-  }
-  
-  showAdminWelcome(className) {
-    const resultsDiv = document.getElementById('search-results');
-    
-    resultsDiv.innerHTML = `
-      <div class="admin-welcome">
-        <div class="admin-icon">
-          <i class="fas fa-user-shield"></i>
-        </div>
-        <h3 style="color: #673AB7;">Вход выполнен как администратор</h3>
-        <div class="admin-info">
-          <p><strong>Класс:</strong> ${className}</p>
-          <p><strong>Права:</strong> Просмотр результатов, управление тестами</p>
-        </div>
-        <button id="admin-logout-btn" class="logout-btn">
-          <i class="fas fa-sign-out-alt"></i> Выйти
-        </button>
-      </div>
-    `;
-    
-    resultsDiv.style.display = 'block';
-    document.getElementById('admin-login-form').style.display = 'none';
-    
-    document.getElementById('admin-logout-btn').addEventListener('click', () => {
-      window.selectedStudent = null;
-      localStorage.removeItem('lastStudent');
-      resultsDiv.style.display = 'none';
-      document.getElementById('start-test-btn').disabled = true;
-      document.getElementById('start-test-btn').innerHTML = `
-        <i class="fas fa-play-circle"></i> Начать контрольную
-      `;
-      document.getElementById('student-last-name').focus();
-    });
   }
   
   startTestWithSelectedStudent() {
@@ -413,10 +447,11 @@ class StudentIdentification {
       startTime: new Date().toISOString()
     };
     
-    // ВАЖНОЕ ИСПРАВЛЕНИЕ: Сохраняем ученика в localStorage
+    // Сохраняем ученика в localStorage
     localStorage.setItem('lastStudent', JSON.stringify(window.STUDENT_INFO));
     console.log('💾 Ученик сохранен в localStorage');
     
+    // Скрываем блок идентификации и показываем тест
     document.getElementById('student-info-section').style.display = 'none';
     document.getElementById('test-content').style.display = 'block';
     
@@ -427,7 +462,6 @@ class StudentIdentification {
   
   /**
    * Сохраняет выбранного ученика в localStorage
-   * Это ключевое исправление для запоминания ученика
    */
   saveStudentToLocalStorage() {
     if (window.selectedStudent) {
@@ -447,104 +481,79 @@ class StudentIdentification {
   }
   
   checkPreviousSession() {
-    const lastStudent = JSON.parse(localStorage.getItem('lastStudent'));
+    const lastStudent = localStorage.getItem('lastStudent');
     
     if (lastStudent) {
-      console.log('👋 Найден предыдущий сеанс ученика:', lastStudent);
-      
-      // Создаем улучшенный баннер приветствия
-      const welcomeDiv = document.createElement('div');
-      welcomeDiv.className = 'welcome-back-banner improved';
-      
-      if (lastStudent.isAdmin) {
-        welcomeDiv.innerHTML = `
-          <div class="welcome-admin">
-            <p><i class="fas fa-user-shield"></i> С возвращением, администратор ${lastStudent.class} класса!</p>
-            <p class="welcome-hint">Вы можете продолжить как администратор или выбрать другого пользователя</p>
-            <div class="welcome-buttons">
-              <button id="continue-as-admin" class="continue-btn primary">
-                <i class="fas fa-play"></i> Продолжить как администратор
-              </button>
-              <button id="switch-user" class="switch-btn secondary">
-                <i class="fas fa-exchange-alt"></i> Выбрать другого пользователя
-              </button>
-            </div>
-          </div>
-        `;
-      } else {
-        welcomeDiv.innerHTML = `
-          <div class="welcome-student">
-            <p><i class="fas fa-user-graduate"></i> С возвращением, ${lastStudent.firstName} ${lastStudent.lastName} (${lastStudent.class} класс)!</p>
-            <p class="welcome-hint">Вы можете продолжить как ${lastStudent.firstName} или выбрать другого ученика</p>
-            <div class="welcome-buttons">
-              <button id="continue-as-student" class="continue-btn primary">
-                <i class="fas fa-play"></i> Продолжить как ${lastStudent.firstName}
-              </button>
-              <button id="switch-user" class="switch-btn secondary">
-                <i class="fas fa-exchange-alt"></i> Выбрать другого ученика
-              </button>
-            </div>
-          </div>
-        `;
+      try {
+        const studentData = JSON.parse(lastStudent);
+        console.log('👋 Найден предыдущий сеанс ученика:', studentData);
+        
+        // Восстанавливаем выбранного ученика
+        window.selectedStudent = studentData;
+        
+        // Создаем объект студента для отображения
+        const displayStudent = {
+          lastName: studentData.lastName,
+          firstName: studentData.firstName,
+          class: studentData.class,
+          isAdmin: studentData.isAdmin || false
+        };
+        
+        // Показываем блок приветствия
+        this.showWelcomeBlock(displayStudent);
+        
+        console.log('✅ Восстановлен сохраненный ученик');
+        
+      } catch (e) {
+        console.error('Ошибка восстановления ученика:', e);
+        localStorage.removeItem('lastStudent');
       }
-      
-      const identificationSection = document.querySelector('.student-search');
-      if (identificationSection) {
-        identificationSection.parentNode.insertBefore(welcomeDiv, identificationSection);
-      } else {
-        const studentInfoSection = document.getElementById('student-info-section');
-        if (studentInfoSection) {
-          studentInfoSection.insertBefore(welcomeDiv, studentInfoSection.firstChild);
-        }
-      }
-      
-      const continueBtn = document.getElementById('continue-as-admin') || document.getElementById('continue-as-student');
-      const switchBtn = document.getElementById('switch-user');
-      
-      if (continueBtn) {
-        continueBtn.addEventListener('click', () => {
-          window.selectedStudent = lastStudent;
-          this.saveStudentToLocalStorage();
-          
-          // Заполняем форму данными ученика
-          if (document.getElementById('student-last-name')) {
-            document.getElementById('student-last-name').value = lastStudent.lastName;
-          }
-          if (document.getElementById('student-first-name')) {
-            document.getElementById('student-first-name').value = lastStudent.firstName;
-          }
-          if (document.getElementById('student-class')) {
-            document.getElementById('student-class').value = lastStudent.class;
-          }
-          
-          welcomeDiv.remove();
-          document.getElementById('start-test-btn').disabled = false;
-          if (lastStudent.isAdmin) {
-            document.getElementById('start-test-btn').innerHTML = `
-              <i class="fas fa-play-circle"></i> Начать контрольную (Админ ${lastStudent.class} класса)
-            `;
-          } else {
-            document.getElementById('start-test-btn').innerHTML = `
-              <i class="fas fa-play-circle"></i> Начать контрольную (${lastStudent.firstName} ${lastStudent.lastName})
-            `;
-          }
-          
-          // Автоматически показываем результаты поиска
-          this.showIdentificationSuccess(lastStudent);
-        });
-      }
-      
-      if (switchBtn) {
-        switchBtn.addEventListener('click', () => {
-          window.selectedStudent = null;
-          localStorage.removeItem('lastStudent');
-          welcomeDiv.remove();
-          if (document.getElementById('student-last-name')) {
-            document.getElementById('student-last-name').focus();
-          }
-        });
-      }
+    } else {
+      console.log('📭 Сохраненный ученик не найден, показываем форму идентификации');
+      // Форма идентификации уже видна по умолчанию
     }
+  }
+  
+  showAllResults(results, userInput) {
+    const resultsDiv = document.getElementById('search-results');
+    const studentsList = document.getElementById('students-list');
+    
+    studentsList.innerHTML = '';
+    
+    results.forEach((result) => {
+      const student = result.student;
+      const matchPercent = Math.round(result.scores.total * 100);
+      
+      const studentItem = document.createElement('div');
+      studentItem.className = 'student-item expanded';
+      studentItem.innerHTML = `
+        <div class="student-info">
+          <div class="student-name">
+            <strong>${student.lastName} ${student.firstName}</strong>
+          </div>
+          <div class="student-class">
+            Класс: ${student.class}
+            ${student.isAdmin ? '<span class="admin-badge">👑 Админ</span>' : ''}
+          </div>
+          <div class="match-details">
+            <span class="match-label">Совпадение по фамилии: ${Math.round(result.scores.lastName * 100)}%</span>
+            <span class="match-label">Совпадение по имени: ${Math.round(result.scores.firstName * 100)}%</span>
+          </div>
+        </div>
+        <div class="student-match">
+          <div class="match-percent">${matchPercent}%</div>
+          <button class="select-student-btn" data-id="${student.id}">
+            <i class="fas fa-check"></i> Выбрать
+          </button>
+        </div>
+      `;
+      
+      studentsList.appendChild(studentItem);
+      
+      studentItem.querySelector('.select-student-btn').addEventListener('click', () => {
+        this.selectStudent(student.id, userInput);
+      });
+    });
   }
 }
 
@@ -552,16 +561,4 @@ class StudentIdentification {
 document.addEventListener('DOMContentLoaded', () => {
   console.log('🎓 Инициализация системы идентификации...');
   window.studentIdentification = new StudentIdentification();
-  
-  // ВАЖНО: Проверяем наличие выбранного ученика сразу при загрузке
-  const savedStudent = localStorage.getItem('lastStudent');
-  if (savedStudent) {
-    try {
-      const studentData = JSON.parse(savedStudent);
-      console.log('✅ Восстановлен сохраненный ученик:', studentData);
-      window.selectedStudent = studentData;
-    } catch (e) {
-      console.error('Ошибка восстановления ученика:', e);
-    }
-  }
 });

@@ -1,6 +1,6 @@
 // ====================================================================
 // ОСНОВНОЙ СКРИПТ СИСТЕМЫ ТЕСТИРОВАНИЯ
-// Версия 7.4 - С исправлением запоминания ученика для всех тестов
+// Версия 7.4 - С полной системой идентификации учеников
 // ====================================================================
 
 // Глобальные переменные системы
@@ -258,7 +258,7 @@ function initTest() {
     setupEventListeners();
     setupAnticopySystem();
     
-    // ВАЖНОЕ ИСПРАВЛЕНИЕ: Проверяем наличие сохраненного ученика перед восстановлением теста
+    // Проверяем наличие сохраненного ученика перед восстановлением теста
     checkAndRestoreStudent();
     
     if (!restoreTest()) {
@@ -272,12 +272,11 @@ function initTest() {
 
 /**
  * Проверяем и восстанавливаем выбранного ученика из localStorage
- * Это ключевое исправление для запоминания ученика между тестами
+ * Обновленная версия для совместимости с новым интерфейсом
  */
 function checkAndRestoreStudent() {
     console.log('🔍 Проверяем сохраненного ученика...');
     
-    // Пытаемся восстановить ученика из localStorage
     const savedStudent = localStorage.getItem('lastStudent');
     const savedTestProgress = localStorage.getItem('testProgress');
     
@@ -305,24 +304,15 @@ function checkAndRestoreStudent() {
                 console.log('✅ Восстановлен STUDENT_INFO');
             }
             
-            // ВАЖНО: Если есть testProgress, но это другой тест,
-            // мы все равно должны сохранить ученика для текущего теста
-            if (savedTestProgress) {
+            // Обновляем ученика в testProgress для текущего теста
+            if (savedTestProgress && window.STUDENT_INFO) {
                 try {
                     const progress = JSON.parse(savedTestProgress);
-                    if (progress.testName !== window.TEST_CONFIG.title) {
-                        // Это другой тест, но ученик тот же
-                        console.log('📚 Другой тест, сохраняем ученика для нового теста');
-                        
-                        // Обновляем ученика в testProgress для текущего теста
-                        if (window.STUDENT_INFO) {
-                            progress.student = window.STUDENT_INFO;
-                            localStorage.setItem('testProgress', JSON.stringify(progress));
-                            console.log('✅ Обновлен ученик в testProgress');
-                        }
-                    }
+                    progress.student = window.STUDENT_INFO;
+                    localStorage.setItem('testProgress', JSON.stringify(progress));
+                    console.log('✅ Обновлен ученик в testProgress');
                 } catch (e) {
-                    console.error('Ошибка при проверке testProgress:', e);
+                    console.error('Ошибка при обновлении testProgress:', e);
                 }
             }
             
@@ -1244,3 +1234,80 @@ document.addEventListener('DOMContentLoaded', function() {
     document.dispatchEvent(event);
     console.log('📢 Событие scriptLoaded отправлено');
 });
+
+// ==================== ГЛОБАЛЬНЫЕ ФУНКЦИИ ДЛЯ СИСТЕМЫ ИДЕНТИФИКАЦИИ ====================
+
+/**
+ * Очищает выбранного ученика (если понадобится)
+ */
+window.clearSelectedStudent = function() {
+    window.selectedStudent = null;
+    localStorage.removeItem('lastStudent');
+    console.log('🧹 Выбранный ученик очищен');
+    
+    // Если существует экземпляр studentIdentification, вызываем метод
+    if (window.studentIdentification && typeof window.studentIdentification.showIdentificationForm === 'function') {
+        window.studentIdentification.showIdentificationForm();
+    }
+};
+
+/**
+ * Принудительно показывает форму идентификации
+ */
+window.showIdentificationForm = function() {
+    if (window.studentIdentification && typeof window.studentIdentification.showIdentificationForm === 'function') {
+        window.studentIdentification.showIdentificationForm();
+    }
+};
+
+/**
+ * Принудительно показывает блок приветствия (для отладки)
+ */
+window.showWelcomeBlock = function(student) {
+    if (window.studentIdentification && typeof window.studentIdentification.showWelcomeBlock === 'function') {
+        window.studentIdentification.showWelcomeBlock(student);
+    }
+};
+
+/**
+ * Проверяет, выбран ли ученик
+ */
+window.isStudentSelected = function() {
+    return window.selectedStudent !== null && window.selectedStudent !== undefined;
+};
+
+/**
+ * Возвращает информацию о выбранном ученике
+ */
+window.getSelectedStudent = function() {
+    return window.selectedStudent;
+};
+
+/**
+ * Обновляет выбранного ученика (для внешнего использования)
+ */
+window.updateSelectedStudent = function(studentData) {
+    if (studentData && studentData.id && studentData.lastName && studentData.firstName && studentData.class) {
+        window.selectedStudent = {
+            id: studentData.id,
+            lastName: studentData.lastName,
+            firstName: studentData.firstName,
+            class: studentData.class,
+            isAdmin: studentData.isAdmin || false
+        };
+        
+        // Обновляем STUDENT_INFO
+        window.STUDENT_INFO = {
+            id: window.selectedStudent.id,
+            name: window.selectedStudent.lastName + ' ' + window.selectedStudent.firstName,
+            lastName: window.selectedStudent.lastName,
+            firstName: window.selectedStudent.firstName,
+            class: window.selectedStudent.class,
+            isAdmin: window.selectedStudent.isAdmin || false
+        };
+        
+        console.log('🔄 Обновлен выбранный ученик:', window.selectedStudent);
+        return true;
+    }
+    return false;
+};
