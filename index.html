@@ -577,28 +577,6 @@
             max-height: 180px;
             overflow-y: auto;
             padding-right: 5px;
-            /* Предотвращаем pull-to-refresh на мобильных */
-            overscroll-behavior: contain;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        /* Стили для скроллбара */
-        .station-list::-webkit-scrollbar {
-            width: 4px;
-        }
-        
-        .station-list::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 2px;
-        }
-        
-        .station-list::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-        }
-        
-        .station-list::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.3);
         }
         
         .station-item {
@@ -780,7 +758,7 @@
     </div>
 
     <!-- Аудио элемент для радио -->
-    <audio id="radioPlayer" crossorigin="anonymous" preload="none"></audio>
+    <audio id="radioPlayer" crossorigin="anonymous"></audio>
 
     <script>
         // ============ СНЕЖНЫЙ CANVAS ============
@@ -901,8 +879,6 @@
         let isMuted = false;
         let savedVolume = 0.3;
         let isPanelVisible = false;
-        let isTouching = false;
-        let touchStartY = 0;
         
         // Инициализация радио
         function initRadio() {
@@ -968,30 +944,15 @@
                 updateStatus("Пауза", "paused");
             });
             
-            audioElement.addEventListener('error', (e) => {
-                console.log("Ошибка радио (изолированная):", e);
+            audioElement.addEventListener('error', () => {
                 updateStatus("Ошибка подключения", "error");
                 isRadioPlaying = false;
                 updateRadioUI();
             });
             
-            audioElement.addEventListener('stalled', () => {
-                if (isRadioPlaying) {
-                    updateStatus("Переподключение...", "connecting");
-                    setTimeout(() => {
-                        if (isRadioPlaying && audioElement.src) {
-                            audioElement.load();
-                            audioElement.play().catch(() => {
-                                updateStatus("Требуется действие", "error");
-                            });
-                        }
-                    }, 3000);
-                }
-            });
-            
             // Клик по пиктограмме
             radioMini.addEventListener('click', function(e) {
-                e.stopPropagation();
+                e.stopPropagation(); // Предотвращаем всплытие
                 toggleRadioPanel();
             });
             
@@ -1018,52 +979,6 @@
                 }
                 updateVolumeDisplay();
             });
-            
-            // Предотвращаем pull-to-refresh на мобильных устройствах
-            // при прокрутке списка станций
-            stationList.addEventListener('touchstart', (e) => {
-                isTouching = true;
-                touchStartY = e.touches[0].clientY;
-            }, { passive: true });
-            
-            stationList.addEventListener('touchmove', (e) => {
-                if (!isTouching) return;
-                
-                const touchY = e.touches[0].clientY;
-                const diff = touchY - touchStartY;
-                
-                // Если пытаемся свайпнуть вниз при достижении верха списка,
-                // или свайпнуть вверх при достижении низа списка,
-                // предотвращаем стандартное поведение
-                const isAtTop = stationList.scrollTop === 0;
-                const isAtBottom = stationList.scrollHeight - stationList.scrollTop <= stationList.clientHeight + 1;
-                
-                if ((isAtTop && diff > 0) || (isAtBottom && diff < 0)) {
-                    e.preventDefault();
-                }
-            }, { passive: false });
-            
-            stationList.addEventListener('touchend', () => {
-                isTouching = false;
-            });
-        }
-        
-        // Прокрутка к активной станции
-        function scrollToActiveStation() {
-            if (!stationList) return;
-            
-            // Ждем немного, чтобы DOM обновился
-            setTimeout(() => {
-                const activeItem = stationList.querySelector('.station-item.active-128, .station-item.active-256');
-                if (activeItem) {
-                    // Плавная прокрутка к активному элементу
-                    activeItem.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center',
-                        inline: 'nearest'
-                    });
-                }
-            }, 50);
         }
         
         // Загрузка станции
@@ -1082,9 +997,6 @@
             currentStationName.textContent = `${station.name} (${quality}k)`;
             updateStationList();
             updateStatus("Подключение...", "connecting");
-            
-            // Прокручиваем к активной станции
-            scrollToActiveStation();
             
             // Меняем источник
             audioElement.src = streamUrl;
@@ -1129,11 +1041,12 @@
                 playPromise
                     .then(() => {
                         audioElement.volume = isMuted ? 0 : savedVolume;
-                        // isRadioPlaying устанавливается через событие 'playing'
+                        isRadioPlaying = true;
+                        updateRadioUI();
+                        updateStatus("В эфире", "playing");
                     })
                     .catch(error => {
                         updateStatus("Нажмите ▶ для запуска", "paused");
-                        console.log("Ошибка воспроизведения:", error);
                     });
             }
         }
@@ -1244,8 +1157,6 @@
             
             if (isPanelVisible) {
                 radioPanel.classList.add('show');
-                // При открытии панели прокручиваем к активной станции
-                setTimeout(scrollToActiveStation, 100);
             } else {
                 radioPanel.classList.remove('show');
             }
