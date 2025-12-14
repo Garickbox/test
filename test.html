@@ -237,7 +237,7 @@
       
       script.onerror = function() {
         console.error(`❌ Ошибка загрузки теста "${testName}"`);
-        showError(`Файл теста <strong>${testName}.js</strong> не найден в папке test/`);
+        showError(`Код <strong>${testName}</strong> не найден `);
       };
       
       document.head.appendChild(script);
