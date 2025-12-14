@@ -6,86 +6,15 @@
   <title>Загрузка теста...</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    /* Дополнительные стили для нового окна */
-    .work-accepted {
-      animation: fadeIn 0.5s ease;
-    }
-    
-    .accepted-icon {
-      font-size: 80px;
-      color: #4CAF50;
-      margin-bottom: 20px;
-    }
-    
-    .accepted-message {
-      font-size: 24px;
-      color: #4CAF50;
-      margin: 20px 0;
-      font-weight: bold;
-    }
-    
-    .timer-message {
-      font-size: 16px;
-      color: #666;
-      margin-top: 30px;
-      opacity: 0.8;
-    }
-    
-    /* Стили для кнопки повтора/обновления */
-    .refresh-btn {
-      background: linear-gradient(135deg, #9e9e9e, #757575);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      font-size: 18px;
-      cursor: pointer;
-      transition: all 0.3s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      margin-left: 10px;
-    }
-    
-    .refresh-btn:hover:not(:disabled) {
-      transform: rotate(45deg) scale(1.1);
-      background: linear-gradient(135deg, #757575, #616161);
-      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
-    }
-    
-    .refresh-btn:disabled {
-      background: #cccccc;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-      opacity: 0.6;
-    }
-    
-    .button-group {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 15px;
-      margin-top: 30px;
-      flex-wrap: wrap;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
 </head>
-<body>
-  <div class="container">
+<body class="test-body">
+  <!-- Основной контейнер теста -->
+  <div class="telegram-container">
     <div class="telegram-header">
       <h1 id="page-title">Загрузка теста...</h1>
     </div>
 
-    <div class="section" id="student-info-section">
+    <div class="test-section" id="student-info-section">
       <div class="section-title">
         <i class="fas fa-user-circle"></i> Информация об ученике
       </div>
@@ -106,26 +35,26 @@
           </select>
         </div>
       </div>
-      <button class="start-test-btn" id="start-test-btn">
+      <button class="start-test-btn test-btn" id="start-test-btn">
         <i class="fas fa-play-circle"></i> Начать контрольную
       </button>
     </div>
 
     <div id="test-content" style="display: none;">
-      <div class="section">
+      <div class="test-section">
         <div class="progress-container">
           <div class="progress-bar" id="progress-bar"></div>
         </div>
         <div class="progress-text" id="progress-text">Вопрос 0 из 0</div>
       </div>
 
-      <div class="section">
+      <div class="test-section">
         <div class="question-container">
           <div class="question-type" id="question-type"></div>
           <div class="question-text" id="question-text"></div>
           <div class="options-container" id="options-container"></div>
           <div class="button-group">
-            <button id="confirm-btn" disabled>
+            <button id="confirm-btn" class="test-btn" disabled>
               <i class="fas fa-check-circle"></i> Подтвердить ответ
             </button>
             <button id="refresh-btn" class="refresh-btn" disabled title="Вернуться к этому вопросу позже">
@@ -145,12 +74,12 @@
       <div class="fullscreen-grade" id="fullscreen-grade">5</div>
       <p style="margin: 15px 0; color: #666;">Набрано баллов: <span id="fullscreen-score">0</span> из <span id="fullscreen-max-score">0</span></p>
       <div id="fullscreen-breakdown" style="margin: 15px 0; color: #555; font-size: 14px;"></div>
-      <button class="fullscreen-btn" id="finish-btn">
+      <button class="fullscreen-btn test-btn" id="finish-btn">
         <i class="fas fa-check"></i> Завершить
       </button>
     </div>
     
-    <!-- Состояние 2: Работа принята (после нажатия "Завершить") -->
+    <!-- Состояние 2: Работа принята (после нажатия "Заверчить") -->
     <div class="fullscreen-content work-accepted" id="accepted-screen" style="display: none;">
       <div class="accepted-icon">
         <i class="fas fa-check-circle"></i>
@@ -192,9 +121,44 @@
     <button class="continue-btn" id="continueBtn" disabled>Продолжить тест</button>
   </div>
 
-  <!-- Основной скрипт системы -->
-  <script src="script.js"></script>
+  <!-- Радио система для тестовой страницы -->
+  <audio id="radioPlayer" crossorigin="anonymous" preload="none"></audio>
+  
+  <div class="radio-mini" id="radioMini" title="Радио Зайцев.FM - Нажмите для управления">
+    📻
+  </div>
+  
+  <div class="radio-panel" id="radioPanel">
+    <div class="station-info">
+      <div class="station-name" id="currentStationName">
+        <span id="radioIconMini">📻</span>
+        <span id="stationTitle">Выберите станцию</span>
+      </div>
+      <div class="station-status">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="stationStatus">Готово</span>
+      </div>
+    </div>
+    
+    <div class="radio-controls">
+      <button class="radio-btn" id="prevBtn" title="Предыдущая станция">⏮</button>
+      <button class="radio-btn" id="playPauseBtn" title="Воспроизведение/Пауза">▶</button>
+      <button class="radio-btn" id="nextBtn" title="Следующая станция">⏭</button>
+    </div>
+    
+    <div class="volume-control">
+      <span class="volume-icon" id="volumeIcon" title="Включить/выключить звук">🔊</span>
+      <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="30">
+      <span class="volume-value" id="volumeValue">30%</span>
+    </div>
+    
+    <div class="station-list" id="stationList"></div>
+  </div>
 
+  <!-- Скрипты -->
+  <script src="script.js"></script>
+  <script src="radio.js"></script>
+  
   <!-- Скрипт загрузки теста -->
   <script>
     // Получаем имя теста из URL
@@ -255,7 +219,6 @@
           window.initTest();
         } else {
           console.warn('⚠️ Основной скрипт еще не загружен, ожидаем...');
-          // Добавляем обработчик на случай, если script.js загрузится позже
           document.addEventListener('scriptLoaded', function() {
             if (window.initTest) {
               window.initTest();
