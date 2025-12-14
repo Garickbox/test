@@ -1,6 +1,6 @@
 // ВСЕГДА используй window. для глобальных переменных
 window.TEST_CONFIG = {
-    title: "ТЕСТ: Смехотворные науки (7-11 класс)",
+    title: "Смехотворные науки",
     totalQuestions: 15,
     totalProblems: 5,
     maxScore: 15*1 + 5*3,
