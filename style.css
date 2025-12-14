@@ -408,28 +408,7 @@ body.index-body {
     opacity: 0.8;
 }
 
-.kumir-note {
-    margin-top: 15px;
-    font-size: 14px;
-    color: #666;
-    text-align: center;
-    padding: 12px;
-    background: linear-gradient(135deg, #e8f4ff 0%, #d4e7ff 100%);
-    border-radius: 8px;
-    border-left: 4px solid #4b6cb7;
-    position: relative;
-    overflow: hidden;
-}
-
-.kumir-note::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #4b6cb7, transparent);
-}
+/* Блок kumir-note был удален здесь */
 
 .snow-edges {
     position: absolute;
