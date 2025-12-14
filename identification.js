@@ -34,7 +34,7 @@ class StudentIdentification {
               <div id="welcome-student-info" class="welcome-student-info">
                 <!-- Информация об ученике будет здесь -->
               </div>
-              <p class="welcome-message"></p>
+              <p class="welcome-message">Тест одобрен комитетом по запугиванию учеников! 👻</p>
             </div>
           </div>
           
