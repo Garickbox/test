@@ -1,6 +1,6 @@
 // ВСЕГДА используй window. для глобальных переменных
 window.TEST_CONFIG = {
-    title: "ТЕСТ: Основы алгоритмизации (8 класс)",
+    title: "ТЕСТ: Основы алгоритмизации",
     totalQuestions: 20,
     totalProblems: 4,
     maxScore: 32,
