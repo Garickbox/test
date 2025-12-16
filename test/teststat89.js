@@ -441,14 +441,14 @@ window.problemsBank = [
     {
         text: "Правильную игральную кость бросают 6 раз. Сколько раз, в среднем, следует ожидать выпадение шестёрки?",
         options: [
-            {t: "1", v: "wrong"},
+            {t: "1", v: "correct"},
             {t: "5", v: "wrong"},
             {t: "6", v: "wrong"},
             {t: "50", v: "wrong"},
             {t: "100", v: "wrong"},
             {t: "600", v: "wrong"},
             {t: "60", v: "wrong"},
-            {t: "10", v: "correct"}
+            {t: "10", v: "wrong"}
         ],
         points: 3
     },
