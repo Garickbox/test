@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестирование DeepSeek API</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            margin: 25px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .warning h3 {
+            color: #856404;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .warning h3::before {
+            content: "⚠️";
+            font-size: 1.5rem;
+        }
+
+        .warning ul {
+            margin-left: 20px;
+            color: #856404;
+        }
+
+        .warning li {
+            margin: 8px 0;
+        }
+
+        .controls {
+            padding: 0 25px 25px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-group {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+        }
+
+        .input-group h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ced4da;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input[type="password"] {
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+
+        .btn {
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(245, 87, 108, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .results {
+            padding: 0 25px 25px;
+        }
+
+        .status {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 2px solid #e9ecef;
+        }
+
+        .status h3 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .status-idle {
+            background: #6c757d;
+        }
+
+        .status-loading {
+            background: #ffc107;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-success {
+            background: #28a745;
+        }
+
+        .status-error {
+            background: #dc3545;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .log-panel {
+            background: #1a1a1a;
+            border-radius: 10px;
+            padding: 20px;
+            color: #f8f9fa;
+            font-family: 'Courier New', monospace;
+            height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .log-entry {
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+            display: flex;
+            gap: 15px;
+        }
+
+        .log-time {
+            color: #6c757d;
+            min-width: 100px;
+        }
+
+        .log-message {
+            flex: 1;
+        }
+
+        .log-info {
+            color: #17a2b8;
+        }
+
+        .log-success {
+            color: #28a745;
+        }
+
+        .log-error {
+            color: #dc3545;
+        }
+
+        .log-warning {
+            color: #ffc107;
+        }
+
+        .log-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .validity-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        .valid {
+            background: #28a745;
+        }
+
+        .invalid {
+            background: #dc3545;
+        }
+
+        .connection-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .proxy-info {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 10px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            border-top: 1px solid #dee2e6;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔌 Тестирование DeepSeek API</h1>
+            <p>Тестирование соединения с API DeepSeek через браузер</p>
+        </header>
+
+        <section class="warning">
+            <h3>Внимание: Предупреждение о безопасности</h3>
+            <ul>
+                <li><strong>Публичные прокси видят ваш API-ключ!</strong> Не используйте этот инструмент с production-ключами</li>
+                <li>Используйте только тестовые ключи, которые можно отозвать</li>
+                <li>Для продакшн-использования настройте собственный сервер-прокси</li>
+                <li>Ключи не сохраняются в localStorage и очищаются при перезагрузке страницы</li>
+            </ul>
+        </section>
+
+        <section class="controls">
+            <div class="input-group">
+                <h3>🔑 Настройки API</h3>
+                
+                <label for="apiKey">
+                    API-ключ DeepSeek:
+                    <span id="keyValidity" class="validity-indicator"></span>
+                </label>
+                <input type="password" id="apiKey" placeholder="sk-...">
+                <small style="color: #6c757d; display: block; margin-bottom: 15px;">
+                    Ключ должен начинаться с "sk-". Проверка происходит в реальном времени
+                </small>
+
+                <label for="proxySelect">🌐 Прокси-сервер:</label>
+                <select id="proxySelect">
+                    <option value="corsproxy">corsproxy.io (рекомендуется)</option>
+                    <option value="allorigins">allorigins.win</option>
+                    <option value="thingproxy">thingproxy.freeboard.io</option>
+                    <option value="direct">Прямое соединение (работает только с настроенным CORS)</option>
+                </select>
+                <div class="proxy-info" id="proxyInfo">
+                    Текущий прокси: https://corsproxy.io/? 
+                </div>
+
+                <label for="testMessage">📝 Тестовое сообщение:</label>
+                <textarea id="testMessage" rows="3">Привет! Это тестовое сообщение для проверки API.</textarea>
+
+                <div class="button-group">
+                    <button id="testBtn" class="btn btn-primary">
+                        <span>🔍 Проверить подключение</span>
+                    </button>
+                    <button id="clearKeyBtn" class="btn btn-danger">
+                        <span>🗑️ Очистить ключ</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <h3>⚙️ Дополнительные параметры</h3>
+                
+                <label for="modelSelect">🤖 Модель:</label>
+                <select id="modelSelect">
+                    <option value="deepseek-chat">deepseek-chat</option>
+                    <option value="deepseek-coder">deepseek-coder</option>
+                </select>
+
+                <label for="maxTokens">🎯 Максимальное количество токенов:</label>
+                <input type="number" id="maxTokens" value="100" min="1" max="4096">
+
+                <label for="temperature">🌡️ Температура:</label>
+                <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7">
+                <div style="display: flex; justify-content: space-between;">
+                    <span>0.0 (точный)</span>
+                    <span id="tempValue">0.7</span>
+                    <span>2.0 (креативный)</span>
+                </div>
+
+                <div class="connection-stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="successCount">0</div>
+                        <div class="stat-label">Успешных запросов</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="errorCount">0</div>
+                        <div class="stat-label">Ошибок</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="avgTime">0</div>
+                        <div class="stat-label">Ср. время (мс)</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="results">
+            <div class="status">
+                <h3>
+                    <span id="statusIndicator" class="status-indicator status-idle"></span>
+                    Статус: <span id="statusText">Готов к тестированию</span>
+                </h3>
+                <div id="statusDetails">Введите API-ключ и нажмите "Проверить подключение"</div>
+            </div>
+
+            <h3>📋 Журнал операций</h3>
+            <div class="log-actions">
+                <button id="clearLogBtn" class="btn btn-danger">Очистить журнал</button>
+                <button id="exportLogBtn" class="btn btn-primary">Экспорт лога</button>
+            </div>
+            <div class="log-panel" id="logPanel">
+                <!-- Логи будут добавляться сюда -->
+            </div>
+        </section>
+
+        <footer>
+            <p>DeepSeek API Tester v1.0 | Для тестирования API-соединения | Работает на GitHub Pages</p>
+            <p style="font-size: 0.9rem; margin-top: 5px;">
+                ⚠️ Используйте с осторожностью. Ключи удаляются при закрытии страницы.
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Конфигурация
+        const config = {
+            apiEndpoint: 'https://api.deepseek.com/chat/completions',
+            proxies: {
+                corsproxy: 'https://corsproxy.io/?',
+                allorigins: 'https://api.allorigins.win/get?url=',
+                thingproxy: 'https://thingproxy.freeboard.io/fetch/',
+                direct: ''
+            },
+            defaultModel: 'deepseek-chat',
+            testMessage: 'Привет! Это тестовое сообщение.'
+        };
+
+        // Состояние приложения
+        const state = {
+            apiKey: '',
+            isTesting: false,
+            logs: [],
+            stats: {
+                success: 0,
+                error: 0,
+                totalTime: 0,
+                requestCount: 0
+            }
+        };
+
+        // DOM элементы
+        const elements = {
+            apiKey: document.getElementById('apiKey'),
+            testBtn: document.getElementById('testBtn'),
+            clearKeyBtn: document.getElementById('clearKeyBtn'),
+            clearLogBtn: document.getElementById('clearLogBtn'),
+            exportLogBtn: document.getElementById('exportLogBtn'),
+            proxySelect: document.getElementById('proxySelect'),
+            proxyInfo: document.getElementById('proxyInfo'),
+            modelSelect: document.getElementById('modelSelect'),
+            maxTokens: document.getElementById('maxTokens'),
+            temperature: document.getElementById('temperature'),
+            tempValue: document.getElementById('tempValue'),
+            testMessage: document.getElementById('testMessage'),
+            statusIndicator: document.getElementById('statusIndicator'),
+            statusText: document.getElementById('statusText'),
+            statusDetails: document.getElementById('statusDetails'),
+            logPanel: document.getElementById('logPanel'),
+            keyValidity: document.getElementById('keyValidity'),
+            successCount: document.getElementById('successCount'),
+            errorCount: document.getElementById('errorCount'),
+            avgTime: document.getElementById('avgTime')
+        };
+
+        // Инициализация
+        function init() {
+            addLog('🟢 Приложение инициализировано', 'info');
+            updateStats();
+            
+            // Установка значения температуры
+            elements.tempValue.textContent = elements.temperature.value;
+            
+            // Обновление информации о прокси
+            updateProxyInfo();
+        }
+
+        // Валидация API-ключа
+        function validateApiKey(key) {
+            const isValid = key.startsWith('sk-') && key.length > 10;
+            elements.keyValidity.className = 'validity-indicator ' + (isValid ? 'valid' : 'invalid');
+            elements.testBtn.disabled = !isValid || state.isTesting;
+            return isValid;
+        }
+
+        // Обновление информации о прокси
+        function updateProxyInfo() {
+            const proxy = elements.proxySelect.value;
+            let info = '';
+            
+            switch(proxy) {
+                case 'corsproxy':
+                    info = 'Текущий прокси: https://corsproxy.io/? [Рекомендуемый, стабильный]';
+                    break;
+                case 'allorigins':
+                    info = 'Текущий прокси: https://api.allorigins.win/get?url= [Поддержка CORS]';
+                    break;
+                case 'thingproxy':
+                    info = 'Текущий прокси: https://thingproxy.freeboard.io/fetch/ [Альтернативный]';
+                    break;
+                case 'direct':
+                    info = '⚠️ Прямое соединение. Работает только если API поддерживает CORS';
+                    break;
+            }
+            
+            elements.proxyInfo.textContent = info;
+        }
+
+        // Добавление записи в лог
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = {
+                time: timestamp,
+                message: message,
+                type: type
+            };
+            
+            state.logs.push(logEntry);
+            
+            // Ограничиваем количество логов до 100
+            if (state.logs.length > 100) {
+                state.logs.shift();
+            }
+            
+            renderLogs();
+        }
+
+        // Отображение логов
+        function renderLogs() {
+            elements.logPanel.innerHTML = state.logs.map(log => `
+                <div class="log-entry">
+                    <span class="log-time">${log.time}</span>
+                    <span class="log-message log-${log.type}">${log.message}</span>
+                </div>
+            `).join('');
+            
+            // Прокрутка вниз
+            elements.logPanel.scrollTop = elements.logPanel.scrollHeight;
+        }
+
+        // Обновление статистики
+        function updateStats() {
+            elements.successCount.textContent = state.stats.success;
+            elements.errorCount.textContent = state.stats.error;
+            
+            const avgTime = state.stats.requestCount > 0 
+                ? Math.round(state.stats.totalTime / state.stats.requestCount)
+                : 0;
+            elements.avgTime.textContent = avgTime;
+        }
+
+        // Обновление статуса
+        function updateStatus(text, type = 'idle', details = '') {
+            elements.statusIndicator.className = `status-indicator status-${type}`;
+            elements.statusText.textContent = text;
+            elements.statusDetails.textContent = details;
+        }
+
+        // Тестирование соединения
+        async function testConnection() {
+            if (state.isTesting) return;
+            
+            const apiKey = elements.apiKey.value.trim();
+            if (!validateApiKey(apiKey)) {
+                addLog('❌ Неверный формат API-ключа', 'error');
+                updateStatus('Ошибка', 'error', 'Неверный формат API-ключа');
+                return;
+            }
+
+            state.isTesting = true;
+            elements.testBtn.disabled = true;
+            updateStatus('Тестирование...', 'loading', 'Отправка запроса к API');
+            
+            const proxy = elements.proxySelect.value;
+            const model = elements.modelSelect.value;
+            const maxTokens = parseInt(elements.maxTokens.value);
+            const temperature = parseFloat(elements.temperature.value);
+            const message = elements.testMessage.value || config.testMessage;
+            
+            addLog(`🚀 Отправка тестового запроса: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`, 'info');
+            
+            const startTime = Date.now();
+            
+            try {
+                const response = await sendApiRequest({
+                    apiKey,
+                    proxy,
+                    model,
+                    maxTokens,
+                    temperature,
+                    message
+                });
+                
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                state.stats.requestCount++;
+                state.stats.totalTime += duration;
+                
+                if (response.success) {
+                    state.stats.success++;
+                    addLog(`✅ Успешный ответ за ${duration}мс: ${response.data}`, 'success');
+                    updateStatus('Успешно', 'success', `Ответ получен за ${duration}мс`);
+                } else {
+                    state.stats.error++;
+                    addLog(`❌ Ошибка API: ${response.error}`, 'error');
+                    updateStatus('Ошибка API', 'error', response.error);
+                }
+            } catch (error) {
+                state.stats.error++;
+                addLog(`💥 Критическая ошибка: ${error.message}`, 'error');
+                updateStatus('Сетевая ошибка', 'error', error.message);
+            } finally {
+                state.isTesting = false;
+                elements.testBtn.disabled = !validateApiKey(apiKey);
+                updateStats();
+            }
+        }
+
+        // Отправка запроса к API
+        async function sendApiRequest(params) {
+            const { apiKey, proxy, model, maxTokens, temperature, message } = params;
+            
+            const requestBody = {
+                model: model,
+                messages: [
+                    {
+                        role: "user",
+                        content: message
+                    }
+                ],
+                max_tokens: maxTokens,
+                temperature: temperature,
+                stream: false
+            };
+            
+            const proxyUrl = config.proxies[proxy];
+            const targetUrl = config.apiEndpoint;
+            
+            let finalUrl;
+            let options = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify(requestBody)
+            };
+            
+            if (proxy === 'direct') {
+                finalUrl = targetUrl;
+            } else if (proxy === 'allorigins') {
+                // allorigins требует специальной обработки
+                finalUrl = `${proxyUrl}${encodeURIComponent(targetUrl)}`;
+                options = {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify(requestBody)
+                    })
+                };
+            } else {
+                finalUrl = `${proxyUrl}${encodeURIComponent(targetUrl)}`;
+            }
+            
+            const response = await fetch(finalUrl, options);
+            
+            if (proxy === 'allorigins') {
+                const data = await response.json();
+                if (data.contents) {
+                    const apiResponse = JSON.parse(data.contents);
+                    if (apiResponse.choices && apiResponse.choices[0]) {
+                        return {
+                            success: true,
+                            data: apiResponse.choices[0].message.content
+                        };
+                    }
+                }
+                throw new Error('Некорректный ответ от прокси');
+            }
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorMessage;
+                
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    errorMessage = errorJson.error?.message || errorText;
+                } catch {
+                    errorMessage = errorText;
+                }
+                
+                return {
+                    success: false,
+                    error: `HTTP ${response.status}: ${errorMessage}`
+                };
+            }
+            
+            const data = await response.json();
+            
+            if (data.choices && data.choices[0]) {
+                return {
+                    success: true,
+                    data: data.choices[0].message.content
+                };
+            } else {
+                return {
+                    success: false,
+                    error: 'Некорректный ответ от API'
+                };
+            }
+        }
+
+        // Очистка ключа
+        function clearApiKey() {
+            elements.apiKey.value = '';
+            validateApiKey('');
+            addLog('🗑️ API-ключ очищен', 'warning');
+            updateStatus('Готов к тестированию', 'idle', 'Введите API-ключ для начала тестирования');
+        }
+
+        // Очистка логов
+        function clearLogs() {
+            state.logs = [];
+            renderLogs();
+            addLog('📋 Журнал очищен', 'info');
+        }
+
+        // Экспорт логов
+        function exportLogs() {
+            const logText = state.logs.map(log => 
+                `[${log.time}] ${log.message}`
+            ).join('\n');
+            
+            const blob = new Blob([logText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `deepseek-test-logs-${new Date().toISOString().slice(0, 10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            addLog('💾 Логи экспортированы', 'info');
+        }
+
+        // Обработчики событий
+        elements.apiKey.addEventListener('input', (e) => {
+            validateApiKey(e.target.value);
+        });
+
+        elements.testBtn.addEventListener('click', testConnection);
+
+        elements.clearKeyBtn.addEventListener('click', clearApiKey);
+
+        elements.clearLogBtn.addEventListener('click', clearLogs);
+
+        elements.exportLogBtn.addEventListener('click', exportLogs);
+
+        elements.proxySelect.addEventListener('change', updateProxyInfo);
+
+        elements.temperature.addEventListener('input', (e) => {
+            elements.tempValue.textContent = e.target.value;
+        });
+
+        // Горячие клавиши
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                if (!state.isTesting && validateApiKey(elements.apiKey.value)) {
+                    testConnection();
+                }
+            }
+            
+            if (e.key === 'Escape') {
+                clearApiKey();
+            }
+        });
+
+        // Предупреждение при закрытии страницы
+        window.addEventListener('beforeunload', (e) => {
+            if (elements.apiKey.value) {
+                e.preventDefault();
+                e.returnValue = 'API-ключ будет потерян. Вы уверены?';
+            }
+        });
+
+        // Запуск приложения
+        init();
+    </script>
+</body>
+</html>
